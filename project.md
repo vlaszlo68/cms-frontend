@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository will contain an independent React frontend for the CMS backend. The backend is developed separately and exposes servlet based JSON endpoints under `/api`.
+This repository contains an independent React frontend for the CMS backend. The backend is developed separately and exposes servlet based JSON endpoints under `/api`.
 
 The frontend should have its own Git history, Node toolchain, build pipeline, and deployment flow.
 
@@ -15,6 +15,29 @@ The frontend should have its own Git history, Node toolchain, build pipeline, an
 - Backend session key for authenticated user: `user`
 
 On successful login, the backend stores the full `hu.laci.cms.model.User` object in the HTTP session.
+
+## Current Frontend State
+
+Implemented:
+
+- Vite React TypeScript scaffold
+- `fetch` based API client in `src/api/httpClient.ts`
+- auth API wrapper in `src/api/authApi.ts`
+- React auth context in `src/auth/AuthContext.tsx`
+- login page at `/login`
+- protected dashboard route at `/`
+- logout flow
+- Vite dev proxy for the backend
+
+The frontend intentionally uses relative API paths only, for example:
+
+```text
+/api/auth/login
+/api/auth/logout
+/api/auth/me
+```
+
+Do not put full `localhost` backend URLs in frontend `fetch` calls.
 
 ## Runtime URLs
 
@@ -30,13 +53,19 @@ Standalone Tomcat deployment with `cms-app.war`:
 http://localhost:8080/cms-app
 ```
 
-Recommended frontend env variable:
+Current verified backend URL:
 
-```env
-VITE_API_BASE_URL=http://localhost:8081
+```text
+http://localhost:8081/cms-app
 ```
 
-Standalone Tomcat alternative:
+Current frontend dev URL:
+
+```text
+http://127.0.0.1:5173
+```
+
+Historical/alternative frontend env variable if the project later switches away from proxy-only relative calls:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/cms-app
@@ -164,22 +193,44 @@ Initial routes:
 
 The backend currently has no dedicated CORS support. Use a Vite dev proxy for local development:
 
-- frontend dev server: `http://localhost:5173`
-- proxy `/api` to `http://localhost:8081`
+- frontend dev server: `http://127.0.0.1:5173`
+- frontend calls relative `/api/...` paths
+- proxy target: `http://localhost:8081`
+- proxy rewrite: `/api/...` -> `/cms-app/api/...`
+- proxy cookie path rewrite: backend `Path=/cms-app` cookies are rewritten to `Path=/`
 
-The backend `AuthFilter` currently compares `request.getRequestURI()` against exact public paths:
+Current `vite.config.ts` proxy behavior:
+
+```ts
+server: {
+  proxy: {
+    "/api": {
+      target: "http://localhost:8081",
+      changeOrigin: true,
+      cookiePathRewrite: "/",
+      rewrite: (path) => path.replace(/^\/api/, "/cms-app/api"),
+    },
+  },
+}
+```
+
+The backend `AuthFilter` may compare `request.getRequestURI()` against exact public paths:
 
 - `/api/auth/login`
 - `/api/auth/logout`
 
-This is safest when the backend is deployed at root context, such as Docker `ROOT.war`. Under `/cms-app`, those paths may become `/cms-app/api/auth/login` and `/cms-app/api/auth/logout`, which can affect auth behavior until the backend filter logic is normalized.
+During local verification, the backend did work under `/cms-app` on port `8081`:
 
-## First Deliverable
+- `POST http://localhost:8081/cms-app/api/auth/login`
+- `GET http://localhost:8081/cms-app/api/auth/me`
 
-The first useful frontend milestone should include:
+The frontend proxy rewrite is currently required because `http://localhost:8081/api/auth/me` returns Tomcat HTML `404`, while `http://localhost:8081/cms-app/api/auth/me` returns JSON.
+
+## First Deliverable Status
+
+The first useful frontend milestone now includes:
 
 - Vite React TypeScript scaffold
-- `.env.example`
 - API client
 - auth API module
 - auth context and session restore
@@ -188,10 +239,18 @@ The first useful frontend milestone should include:
 - authenticated app shell
 - dashboard placeholder
 - logout button
-- README with setup, env, proxy, and backend dependency notes
+- README with setup, proxy, and backend dependency notes
+- verified `npm run build`
+- verified proxied login and session restore
 
 ## Local Test User
 
-Backend verification uses a development-only user configured locally.
+Backend verification currently uses a development-only user configured locally:
+
+```text
+loginName: tester
+password: pw
+email: tester@example.com
+```
 
 This is a local test detail only, not a product requirement.

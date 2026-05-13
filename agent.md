@@ -35,9 +35,11 @@ Reasonable later additions:
 
 - The backend uses session based authentication.
 - Every auth or protected API request must send `credentials: 'include'`.
-- The API base URL should come from `VITE_API_BASE_URL`.
-- During local frontend development, prefer a Vite proxy for `/api` because the backend currently has no dedicated CORS layer.
-- Prefer the Docker/root-context backend at `http://localhost:8081` while the backend `AuthFilter` path matching remains context-path sensitive.
+- Frontend code should call relative `/api/...` paths, not full `localhost` URLs.
+- During local frontend development, use a Vite proxy for `/api` because the backend currently has no dedicated CORS layer.
+- Current verified local backend is `http://localhost:8081/cms-app`, so Vite rewrites `/api/...` to `/cms-app/api/...`.
+- Vite also uses `cookiePathRewrite: "/"` so backend session cookies work with frontend-origin `/api/...` requests.
+- Root-context backend at `http://localhost:8081` remains preferable long term while backend `AuthFilter` path matching remains context-path sensitive.
 - Treat any protected API `401` response as logged-out state.
 
 ## Initial Frontend Scope
@@ -56,7 +58,28 @@ Build the frontend in this order:
 
 Avoid implementing broader CMS features before the auth flow is stable.
 
+Current first milestone status: auth flow is implemented and verified through the Vite proxy with `tester` / `pw`.
+
 ## Suggested Structure
+
+Current implemented structure is simpler:
+
+```text
+src/
+  api/
+    authApi.ts
+    httpClient.ts
+  auth/
+    AuthContext.tsx
+  pages/
+    DashboardPage.tsx
+    LoginPage.tsx
+  App.tsx
+  main.tsx
+  styles.css
+```
+
+Longer-term suggested structure:
 
 ```text
 src/
@@ -98,4 +121,3 @@ Before calling the first auth milestone done, verify:
 - refresh after login restores the session through `/api/auth/me`
 - logout invalidates the backend session and clears frontend auth state
 - protected routes redirect unauthenticated users to `/login`
-

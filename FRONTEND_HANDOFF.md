@@ -23,6 +23,27 @@ The backend stores the full `hu.laci.cms.model.User` object in the HTTP session 
 
 The effective base URL depends on deployment mode.
 
+### Current verified local setup
+
+The backend is currently reachable on port `8081` under the `/cms-app` context:
+
+- base app URL: `http://localhost:8081/cms-app`
+- auth login URL: `http://localhost:8081/cms-app/api/auth/login`
+- auth me URL: `http://localhost:8081/cms-app/api/auth/me`
+
+The frontend dev server runs at:
+
+- `http://127.0.0.1:5173`
+
+The React app uses relative API paths only. The Vite dev proxy rewrites:
+
+```text
+/api/auth/login -> http://localhost:8081/cms-app/api/auth/login
+/api/auth/me    -> http://localhost:8081/cms-app/api/auth/me
+```
+
+The current `vite.config.ts` also uses `cookiePathRewrite: "/"` so the browser sends the session cookie back on frontend-origin `/api/...` requests.
+
 ### Local Tomcat manual deploy
 
 If the WAR is deployed as `cms-app.war` into a standalone Tomcat:
@@ -37,7 +58,7 @@ The Docker image copies the WAR as `ROOT.war`, so the app runs on the root conte
 - base app URL: `http://localhost:8081`
 - auth login URL: `http://localhost:8081/api/auth/login`
 
-For frontend environment variables, it is better to store the full backend base URL, for example:
+If the frontend later stops using a Vite proxy, it may need a full backend base URL, for example:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8081
@@ -193,7 +214,7 @@ Because authentication is session-based, the frontend must send cookies on every
 Recommended fetch usage:
 
 ```ts
-fetch(`${API_BASE_URL}/api/auth/me`, {
+fetch('/api/auth/me', {
   method: 'GET',
   credentials: 'include',
 })
@@ -221,8 +242,10 @@ Practical recommendation for frontend local development:
 
 Example direction:
 
-- React dev server on `localhost:5173`
-- proxy `/api` to `http://localhost:8081` or `http://localhost:8080/cms-app`
+- React dev server on `127.0.0.1:5173`
+- proxy `/api` to `http://localhost:8081`
+- in the current local setup, rewrite `/api` to `/cms-app/api`
+- rewrite cookie path to `/` when the backend sets a context-path cookie
 
 ### 2. AuthFilter public-path matching is context-path sensitive
 
@@ -242,9 +265,11 @@ Implication:
   - `/cms-app/api/auth/login`
   - `/cms-app/api/auth/logout`
 
-Frontend implication:
+Frontend/backend implication:
 
-- for the cleanest frontend integration, prefer the Docker/root-context backend during frontend development until this filter logic is normalized
+- root-context backend deployment remains the cleanest long-term option
+- the current frontend can still work with `/cms-app` through Vite path rewrite
+- if backend auth public-path checks are exact URI matches, backend should normalize context path handling before relying on non-root deployments broadly
 
 ## Recommended Frontend Auth Flow
 
@@ -254,7 +279,45 @@ Frontend implication:
 4. On login submit `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On logout call `POST /api/auth/logout` with `credentials: 'include'`, then clear frontend auth state.
 
-## Suggested Frontend Env Variables
+## Current Verified Frontend Implementation
+
+Files implemented:
+
+- `src/api/httpClient.ts`
+- `src/api/authApi.ts`
+- `src/auth/AuthContext.tsx`
+- `src/pages/LoginPage.tsx`
+- `src/pages/DashboardPage.tsx`
+- `src/App.tsx`
+- `vite.config.ts`
+
+Verified through the Vite proxy:
+
+```text
+POST http://127.0.0.1:5173/api/auth/login
+GET  http://127.0.0.1:5173/api/auth/me
+```
+
+with:
+
+```json
+{
+  "loginName": "tester",
+  "password": "pw"
+}
+```
+
+Response:
+
+```json
+{
+  "id": 1,
+  "loginName": "tester",
+  "email": "tester@example.com"
+}
+```
+
+## Optional Frontend Env Variables
 
 ```env
 VITE_API_BASE_URL=http://localhost:8081
@@ -268,7 +331,13 @@ VITE_API_BASE_URL=http://localhost:8080/cms-app
 
 ## Local Test User
 
-The backend was locally verified with a development-only user.
+The backend was locally verified with a development-only user:
+
+```text
+loginName: tester
+password: pw
+email: tester@example.com
+```
 
 Use locally configured test credentials when verifying the auth flow.
 

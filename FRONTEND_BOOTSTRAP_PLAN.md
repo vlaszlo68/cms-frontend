@@ -4,6 +4,8 @@
 
 Create a separate React frontend repository for the CMS backend described in `FRONTEND_HANDOFF.md`.
 
+Status: the initial auth-only frontend milestone has now been implemented in this repository.
+
 Recommended location:
 
 ```text
@@ -31,6 +33,31 @@ Optional but reasonable later additions:
 - React Testing Library
 
 ## Repo Structure
+
+Current implemented structure is intentionally smaller than the originally suggested long-term structure:
+
+```text
+cms-frontend/
+  src/
+    api/
+      authApi.ts
+      httpClient.ts
+    auth/
+      AuthContext.tsx
+    pages/
+      DashboardPage.tsx
+      LoginPage.tsx
+    App.tsx
+    main.tsx
+    styles.css
+  index.html
+  package.json
+  README.md
+  tsconfig.json
+  vite.config.ts
+```
+
+Original longer-term suggested structure:
 
 ```text
 cms-frontend/
@@ -86,7 +113,9 @@ Do not start with full CMS functionality. First make auth integration stable.
 
 ## Environment Variables
 
-Recommended `.env.example`:
+The current implementation does not require a frontend API base env var during development. It uses relative `/api/...` calls and Vite proxying.
+
+Optional `.env.example` if the project later switches away from proxy-only relative calls:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8081
@@ -104,7 +133,7 @@ VITE_API_BASE_URL=http://localhost:8080/cms-app
 
 Responsibilities:
 
-- prepend `VITE_API_BASE_URL`
+- call relative `/api/...` paths without hard-coded backend hostnames
 - set `credentials: 'include'`
 - set `Content-Type: application/json` for JSON requests
 - parse JSON responses
@@ -112,8 +141,8 @@ Responsibilities:
 
 Suggested shape:
 
-- `get<T>(path: string)`
-- `post<T>(path: string, body?: unknown)`
+- `apiGet<T>(path: string)`
+- `apiPost<T>(path: string, body?: unknown)`
 
 ### `src/api/authApi.ts`
 
@@ -183,15 +212,15 @@ Behavior:
 
 Suggested files:
 
-- `src/app/router.tsx`
-- `src/features/auth/pages/LoginPage.tsx`
-- `src/features/dashboard/pages/DashboardPage.tsx`
+- current: `src/App.tsx`
+- current: `src/pages/LoginPage.tsx`
+- current: `src/pages/DashboardPage.tsx`
 
 ## Local Dev Integration
 
 ## Preferred mode
 
-Use the backend through Docker/root context during frontend development when possible:
+Root-context backend remains the preferred long-term mode when possible:
 
 - backend app: `http://localhost:8081`
 
@@ -199,14 +228,24 @@ Reason:
 
 - current backend `AuthFilter` public path matching is safer in root-context deployment than in `/cms-app`
 
+Current verified local mode:
+
+- backend app: `http://localhost:8081/cms-app`
+- frontend app: `http://127.0.0.1:5173`
+- Vite proxy target: `http://localhost:8081`
+- Vite proxy rewrite: `/api/...` -> `/cms-app/api/...`
+- Vite proxy cookie path rewrite: `Path=/`
+
 ## Dev proxy recommendation
 
 Because the backend currently has no dedicated CORS support, use a Vite proxy.
 
 Example direction for `vite.config.ts`:
 
-- frontend dev server: `http://localhost:5173`
+- frontend dev server: `http://127.0.0.1:5173`
 - proxy `/api` to `http://localhost:8081`
+- for current `/cms-app` backend context, rewrite `/api` to `/cms-app/api`
+- use `cookiePathRewrite: "/"` so session cookies are sent on frontend-origin `/api/...` requests
 
 If you also need non-API backend resources later, proxy them explicitly.
 
@@ -249,16 +288,16 @@ Do not overbuild component libraries before the auth flow is proven.
 
 ## Bootstrap Sequence
 
-1. Create `cms-frontend` repo in a separate directory.
-2. Initialize Vite React TypeScript app.
-3. Add router and linting.
-4. Create `.env.example`.
-5. Implement `httpClient.ts`.
-6. Implement `authApi.ts`.
-7. Implement auth context and startup session restore.
-8. Implement login page.
-9. Implement protected route wrapper.
-10. Implement logout action.
+1. Create `cms-frontend` repo in a separate directory. Done.
+2. Initialize Vite React TypeScript app. Done.
+3. Add router. Done.
+4. Create `.env.example`. Deferred because the current app uses proxy-only relative API paths.
+5. Implement `httpClient.ts`. Done.
+6. Implement `authApi.ts`. Done.
+7. Implement auth context and startup session restore. Done.
+8. Implement login page. Done.
+9. Implement protected route wrapper. Done in `src/App.tsx`.
+10. Implement logout action. Done.
 11. Verify full flow against backend:
     - unauthenticated `me`
     - login success
@@ -307,9 +346,8 @@ Root-context backend is safer for frontend development until that logic is norma
 
 ## Recommended Next Step
 
-When ready to switch repos:
+Recommended next steps:
 
-1. create the `cms-frontend` directory
-2. initialize the React app there
-3. copy `FRONTEND_HANDOFF.md` into the new repo or keep it open as reference
-4. implement auth-only MVP first
+1. Keep the auth-only frontend stable before adding CMS features.
+2. Backend agent should consider normalizing `AuthFilter` path handling for context paths.
+3. Backend/root deployment should eventually decide whether API URLs are root-context `/api/...` or context-path `/cms-app/api/...`.
