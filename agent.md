@@ -54,11 +54,12 @@ Build the frontend in this order:
 6. Protected route shell.
 7. Placeholder dashboard.
 8. Logout action.
-9. README with setup and backend integration notes.
+9. Basic authenticated layout with header, navigation, and content area.
+10. README with setup and backend integration notes.
 
 Avoid implementing broader CMS features before the auth flow is stable.
 
-Current first milestone status: auth flow is implemented and verified through the Vite proxy with `tester` / `pw`.
+Current first milestone status: auth flow and authenticated app layout are implemented and verified through the Vite proxy with `tester` / `pw`.
 
 ## Suggested Structure
 
@@ -71,6 +72,11 @@ src/
     httpClient.ts
   auth/
     AuthContext.tsx
+  components/
+    layout/
+      AppLayout.tsx
+      Header.tsx
+      Navigation.tsx
   pages/
     DashboardPage.tsx
     LoginPage.tsx
@@ -121,3 +127,6 @@ Before calling the first auth milestone done, verify:
 - refresh after login restores the session through `/api/auth/me`
 - logout invalidates the backend session and clears frontend auth state
 - protected routes redirect unauthenticated users to `/login`
+- authenticated routes render through `AppLayout`
+- header shows the current user's `loginName`
+- navigation includes Dashboard, Users, and Pages links

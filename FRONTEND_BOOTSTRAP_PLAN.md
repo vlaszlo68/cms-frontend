@@ -44,6 +44,11 @@ cms-frontend/
       httpClient.ts
     auth/
       AuthContext.tsx
+    components/
+      layout/
+        AppLayout.tsx
+        Header.tsx
+        Navigation.tsx
     pages/
       DashboardPage.tsx
       LoginPage.tsx
@@ -108,6 +113,7 @@ The first usable frontend milestone should only solve auth and app shell concern
 3. Logout action
 4. Protected route shell
 5. Placeholder dashboard page after login
+6. Basic authenticated app layout with header, navigation, and content area
 
 Do not start with full CMS functionality. First make auth integration stable.
 
@@ -201,6 +207,8 @@ Suggested routes:
 
 - `/login`
 - `/`
+- `/users`
+- `/pages`
 
 Behavior:
 
@@ -208,13 +216,22 @@ Behavior:
   - if already authenticated, redirect to `/`
 - `/`
   - protected route
-  - render dashboard placeholder
+  - render dashboard inside authenticated app layout
+- `/users`
+  - protected route
+  - render users placeholder inside authenticated app layout
+- `/pages`
+  - protected route
+  - render pages placeholder inside authenticated app layout
 
 Suggested files:
 
 - current: `src/App.tsx`
 - current: `src/pages/LoginPage.tsx`
 - current: `src/pages/DashboardPage.tsx`
+- current: `src/components/layout/AppLayout.tsx`
+- current: `src/components/layout/Header.tsx`
+- current: `src/components/layout/Navigation.tsx`
 
 ## Local Dev Integration
 
@@ -231,7 +248,7 @@ Reason:
 Current verified local mode:
 
 - backend app: `http://localhost:8081/cms-app`
-- frontend app: `http://127.0.0.1:5173`
+- frontend app: `http://localhost:5173` or `http://127.0.0.1:5173`
 - Vite proxy target: `http://localhost:8081`
 - Vite proxy rewrite: `/api/...` -> `/cms-app/api/...`
 - Vite proxy cookie path rewrite: `Path=/`
@@ -257,6 +274,7 @@ Keep the first UI intentionally small and functional:
 - clear error banner for `401`
 - loading state during session restore
 - simple authenticated shell with top bar and logout button
+- placeholder side/top navigation for early CMS sections
 
 Do not overbuild component libraries before the auth flow is proven.
 
@@ -279,12 +297,24 @@ Do not overbuild component libraries before the auth flow is proven.
 - auth provider
 - router provider wrapper if needed
 
-### `src/components/layout/AppShell.tsx`
+### `src/components/layout/AppLayout.tsx`
 
 - authenticated layout
-- header
-- logout button
+- renders `Header`
+- renders `Navigation`
 - content outlet
+
+### `src/components/layout/Header.tsx`
+
+- app name
+- current authenticated user's `loginName`
+- logout button wired through `AuthContext.logout()`
+
+### `src/components/layout/Navigation.tsx`
+
+- Dashboard link
+- Users placeholder link
+- Pages placeholder link
 
 ## Bootstrap Sequence
 
@@ -298,7 +328,8 @@ Do not overbuild component libraries before the auth flow is proven.
 8. Implement login page. Done.
 9. Implement protected route wrapper. Done in `src/App.tsx`.
 10. Implement logout action. Done.
-11. Verify full flow against backend:
+11. Implement basic authenticated layout. Done.
+12. Verify full flow against backend:
     - unauthenticated `me`
     - login success
     - refresh after login
@@ -313,6 +344,8 @@ The first frontend PR/repo milestone should include:
 - auth API integration
 - login page
 - protected dashboard placeholder
+- authenticated app layout
+- placeholder navigation routes
 - logout button
 - Vite proxy config
 - README with startup instructions
@@ -349,5 +382,6 @@ Root-context backend is safer for frontend development until that logic is norma
 Recommended next steps:
 
 1. Keep the auth-only frontend stable before adding CMS features.
-2. Backend agent should consider normalizing `AuthFilter` path handling for context paths.
-3. Backend/root deployment should eventually decide whether API URLs are root-context `/api/...` or context-path `/cms-app/api/...`.
+2. Replace `/users` and `/pages` placeholders with real CMS screens when backend endpoints are ready.
+3. Backend agent should consider normalizing `AuthFilter` path handling for context paths.
+4. Backend/root deployment should eventually decide whether API URLs are root-context `/api/...` or context-path `/cms-app/api/...`.

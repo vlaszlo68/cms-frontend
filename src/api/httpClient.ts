@@ -1,17 +1,16 @@
-export type ApiErrorBody = {
-  error?: string;
-  message?: string;
-};
+import type { ApiError as ApiErrorBody, ApiResponse } from "./types";
 
 export class ApiError extends Error {
   status: number;
   body: unknown;
+  code?: string;
 
-  constructor(status: number, body: unknown, fallbackMessage: string) {
+  constructor(status: number, body: unknown, fallbackMessage: string, code?: string) {
     super(getErrorMessage(body, fallbackMessage));
     this.name = "ApiError";
     this.status = status;
     this.body = body;
+    this.code = code;
   }
 }
 
@@ -21,19 +20,35 @@ type RequestOptions = {
 };
 
 function getErrorMessage(body: unknown, fallbackMessage: string) {
-  if (body && typeof body === "object") {
-    const apiBody = body as ApiErrorBody;
-
-    if (apiBody.error) {
-      return apiBody.error;
-    }
-
-    if (apiBody.message) {
-      return apiBody.message;
-    }
+  if (isApiErrorBody(body)) {
+    return body.message;
   }
 
   return fallbackMessage;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function isApiErrorBody(value: unknown): value is ApiErrorBody {
+  return (
+    isRecord(value) &&
+    typeof value.code === "string" &&
+    typeof value.message === "string"
+  );
+}
+
+function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
+  if (!isRecord(value) || typeof value.success !== "boolean") {
+    return false;
+  }
+
+  if (value.success === true) {
+    return "data" in value;
+  }
+
+  return isApiErrorBody(value.error);
 }
 
 async function parseJson(response: Response) {
@@ -64,13 +79,26 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
 
-  const data = await parseJson(response);
+  const responseBody = await parseJson(response);
 
-  if (!response.ok) {
-    throw new ApiError(response.status, data, `Request failed with ${response.status}.`);
+  if (!isApiResponse<T>(responseBody)) {
+    throw new ApiError(response.status, responseBody, "Invalid API response.");
   }
 
-  return data as T;
+  if (!responseBody.success) {
+    throw new ApiError(
+      response.status,
+      responseBody.error,
+      `Request failed with ${response.status}.`,
+      responseBody.error.code,
+    );
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, responseBody, `Request failed with ${response.status}.`);
+  }
+
+  return responseBody.data;
 }
 
 export function apiGet<T>(path: string) {

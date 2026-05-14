@@ -24,8 +24,10 @@ Implemented:
 - `fetch` based API client in `src/api/httpClient.ts`
 - auth API wrapper in `src/api/authApi.ts`
 - React auth context in `src/auth/AuthContext.tsx`
+- authenticated layout components in `src/components/layout/`
 - login page at `/login`
 - protected dashboard route at `/`
+- protected placeholder routes at `/users` and `/pages`
 - logout flow
 - Vite dev proxy for the backend
 
@@ -62,6 +64,7 @@ http://localhost:8081/cms-app
 Current frontend dev URL:
 
 ```text
+http://localhost:5173
 http://127.0.0.1:5173
 ```
 
@@ -187,7 +190,15 @@ type AuthState = {
 Initial routes:
 
 - `/login`: login page; redirect to `/` if already authenticated
-- `/`: protected app shell with placeholder dashboard
+- `/`: protected app shell with dashboard
+- `/users`: protected app shell with users placeholder
+- `/pages`: protected app shell with pages placeholder
+
+Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
+
+- `Header.tsx`: app name, current `loginName`, logout button
+- `Navigation.tsx`: Dashboard, Users, and Pages links
+- main content area for route children
 
 ## Local Development Notes
 
@@ -237,7 +248,8 @@ The first useful frontend milestone now includes:
 - login page
 - protected route wrapper
 - authenticated app shell
-- dashboard placeholder
+- dashboard page
+- placeholder navigation routes for Users and Pages
 - logout button
 - README with setup, proxy, and backend dependency notes
 - verified `npm run build`

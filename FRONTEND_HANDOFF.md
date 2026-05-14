@@ -33,6 +33,7 @@ The backend is currently reachable on port `8081` under the `/cms-app` context:
 
 The frontend dev server runs at:
 
+- `http://localhost:5173`
 - `http://127.0.0.1:5173`
 
 The React app uses relative API paths only. The Vite dev proxy rewrites:
@@ -286,10 +287,27 @@ Files implemented:
 - `src/api/httpClient.ts`
 - `src/api/authApi.ts`
 - `src/auth/AuthContext.tsx`
+- `src/components/layout/AppLayout.tsx`
+- `src/components/layout/Header.tsx`
+- `src/components/layout/Navigation.tsx`
 - `src/pages/LoginPage.tsx`
 - `src/pages/DashboardPage.tsx`
 - `src/App.tsx`
 - `vite.config.ts`
+
+Current routes:
+
+- `/login` - public-only login page
+- `/` - protected dashboard rendered inside `AppLayout`
+- `/users` - protected placeholder rendered inside `AppLayout`
+- `/pages` - protected placeholder rendered inside `AppLayout`
+
+The authenticated layout currently provides:
+
+- app header with app name
+- current authenticated user's `loginName`
+- logout button that calls `AuthContext.logout()` and navigates to `/login`
+- simple navigation links for Dashboard, Users, and Pages
 
 Verified through the Vite proxy:
 

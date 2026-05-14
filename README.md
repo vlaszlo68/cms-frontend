@@ -20,7 +20,15 @@ All auth requests use relative paths and include cookies with `credentials: "inc
 ## Routes
 
 - `/login` - login page
-- `/` - protected dashboard placeholder
+- `/` - protected dashboard
+- `/users` - protected users placeholder
+- `/pages` - protected pages placeholder
+
+Authenticated pages render inside the shared app layout:
+
+- header with app name, current `loginName`, and logout button
+- navigation links for Dashboard, Users, and Pages
+- main content area for the active route
 
 ## Backend Dependency
 
