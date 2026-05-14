@@ -73,6 +73,36 @@ VITE_API_BASE_URL=http://localhost:8080/cms-app
 
 ## Auth Endpoints
 
+All API endpoints now use a common response envelope.
+
+Successful response shape:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+Error response shape:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message"
+  }
+}
+```
+
+Frontend implication:
+
+- `src/api/httpClient.ts` unwraps `data` for successful responses
+- `src/api/httpClient.ts` throws its shared `ApiError` class for `success: false`
+- backend `error.message` is shown to the user on login failures
+- `src/api/types.ts` contains the shared `ApiResponse` and backend error payload types
+
 ### `POST /api/auth/login`
 
 Request body:
@@ -91,9 +121,12 @@ Successful response:
 
 ```json
 {
-  "id": 1,
-  "loginName": "demo-user",
-  "email": "user@example.test"
+  "success": true,
+  "data": {
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test"
+  }
 }
 ```
 
@@ -103,7 +136,11 @@ Invalid credentials:
 
 ```json
 {
-  "error": "Invalid credentials"
+  "success": false,
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Invalid credentials"
+  }
 }
 ```
 
@@ -113,7 +150,11 @@ Invalid or incomplete JSON:
 
 ```json
 {
-  "error": "loginName and password are required."
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "loginName and password are required."
+  }
 }
 ```
 
@@ -121,7 +162,11 @@ or
 
 ```json
 {
-  "error": "Invalid JSON request body."
+  "success": false,
+  "error": {
+    "code": "INVALID_JSON",
+    "message": "Invalid JSON request body."
+  }
 }
 ```
 
@@ -141,7 +186,10 @@ Successful response:
 
 ```json
 {
-  "message": "Logged out"
+  "success": true,
+  "data": {
+    "message": "Logged out"
+  }
 }
 ```
 
@@ -157,9 +205,12 @@ Successful response:
 
 ```json
 {
-  "id": 1,
-  "loginName": "demo-user",
-  "email": "user@example.test"
+  "success": true,
+  "data": {
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test"
+  }
 }
 ```
 
@@ -169,16 +220,20 @@ Unauthenticated response expected by frontend:
 
 ```json
 {
-  "error": "Unauthorized"
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Unauthorized"
+  }
 }
 ```
 
 Important:
 
-- the `MeServlet` itself contains a `"Not authenticated"` branch
+- the `MeServlet` itself may contain a `"Not authenticated"` branch
 - however, because `/api/auth/me` is behind `AuthFilter`, the frontend should currently expect the filter-level response:
   - `401`
-  - `{"error":"Unauthorized"}`
+  - `{"success":false,"error":{"code":"UNAUTHORIZED","message":"Unauthorized"}}`
 
 ## Protected API Behavior
 
@@ -200,7 +255,11 @@ If there is no authenticated session, the filter returns:
 
 ```json
 {
-  "error": "Unauthorized"
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Unauthorized"
+  }
 }
 ```
 
@@ -275,8 +334,8 @@ Frontend/backend implication:
 ## Recommended Frontend Auth Flow
 
 1. On app startup call `GET /api/auth/me` with `credentials: 'include'`.
-2. If response is `200`, hydrate frontend auth state from the returned JSON.
-3. If response is `401`, treat the user as logged out.
+2. If response is `200` and `success: true`, hydrate frontend auth state from `data`.
+3. If response is `401` or `success: false`, treat the user as logged out when appropriate.
 4. On login submit `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On logout call `POST /api/auth/logout` with `credentials: 'include'`, then clear frontend auth state.
 
@@ -285,6 +344,7 @@ Frontend/backend implication:
 Files implemented:
 
 - `src/api/httpClient.ts`
+- `src/api/types.ts`
 - `src/api/authApi.ts`
 - `src/auth/AuthContext.tsx`
 - `src/components/layout/AppLayout.tsx`
@@ -329,9 +389,12 @@ Response:
 
 ```json
 {
-  "id": 1,
-  "loginName": "tester",
-  "email": "tester@example.com"
+  "success": true,
+  "data": {
+    "id": 1,
+    "loginName": "tester",
+    "email": "tester@example.com"
+  }
 }
 ```
 

@@ -42,6 +42,7 @@ cms-frontend/
     api/
       authApi.ts
       httpClient.ts
+      types.ts
     auth/
       AuthContext.tsx
     components/
@@ -135,6 +136,34 @@ VITE_API_BASE_URL=http://localhost:8080/cms-app
 
 ## API Layer Design
 
+The backend now returns a common response envelope for all API calls.
+
+Successful response shape:
+
+```ts
+type ApiSuccessResponse<T> = {
+  success: true;
+  data: T;
+};
+```
+
+Error response shape:
+
+```ts
+type ApiErrorResponse = {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+```
+
+Current implemented shared types live in `src/api/types.ts`:
+
+- `ApiResponse<T>`
+- backend error payload type `ApiError`
+
 ### `src/api/httpClient.ts`
 
 Responsibilities:
@@ -142,7 +171,10 @@ Responsibilities:
 - call relative `/api/...` paths without hard-coded backend hostnames
 - set `credentials: 'include'`
 - set `Content-Type: application/json` for JSON requests
-- parse JSON responses
+- parse JSON responses using the common `success/data/error` envelope
+- unwrap successful `data` values
+- throw the shared frontend `ApiError` class when `success: false`
+- preserve backend `error.code` and expose backend `error.message`
 - normalize `401` handling
 
 Suggested shape:
@@ -323,13 +355,14 @@ Do not overbuild component libraries before the auth flow is proven.
 3. Add router. Done.
 4. Create `.env.example`. Deferred because the current app uses proxy-only relative API paths.
 5. Implement `httpClient.ts`. Done.
-6. Implement `authApi.ts`. Done.
-7. Implement auth context and startup session restore. Done.
-8. Implement login page. Done.
-9. Implement protected route wrapper. Done in `src/App.tsx`.
-10. Implement logout action. Done.
-11. Implement basic authenticated layout. Done.
-12. Verify full flow against backend:
+6. Implement shared API response types in `src/api/types.ts`. Done.
+7. Implement `authApi.ts`. Done.
+8. Implement auth context and startup session restore. Done.
+9. Implement login page. Done.
+10. Implement protected route wrapper. Done in `src/App.tsx`.
+11. Implement logout action. Done.
+12. Implement basic authenticated layout. Done.
+13. Verify full flow against backend:
     - unauthenticated `me`
     - login success
     - refresh after login
@@ -342,6 +375,8 @@ The first frontend PR/repo milestone should include:
 
 - project scaffold
 - auth API integration
+- common API response types
+- central response unwrapping and error handling
 - login page
 - protected dashboard placeholder
 - authenticated app layout

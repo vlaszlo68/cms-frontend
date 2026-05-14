@@ -13,6 +13,10 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 - Follow the existing project structure once the React app is initialized.
 - Do not introduce Redux or heavier state libraries for the initial auth flow; use React context first.
 - Use plain `fetch` for HTTP unless the project later adopts a different standard.
+- API responses use the shared `{ success, data/error }` backend envelope.
+- Keep response envelope parsing centralized in `src/api/httpClient.ts`.
+- Put shared API response payload types in `src/api/types.ts`.
+- Backend `error.message` values should be surfaced through the frontend `ApiError` class.
 - Keep backend integration details visible in code comments or README only where they prevent mistakes.
 
 ## Expected Stack
@@ -70,6 +74,7 @@ src/
   api/
     authApi.ts
     httpClient.ts
+    types.ts
   auth/
     AuthContext.tsx
   components/
@@ -123,6 +128,9 @@ Before calling the first auth milestone done, verify:
 
 - unauthenticated startup calls `/api/auth/me` and reaches logged-out state on `401`
 - login posts `loginName` and `password` as JSON
+- successful API responses are unwrapped from `data`
+- backend `success: false` responses throw the shared frontend `ApiError`
+- login errors display the backend `error.message`
 - login stores the returned user in memory state
 - refresh after login restores the session through `/api/auth/me`
 - logout invalidates the backend session and clears frontend auth state

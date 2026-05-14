@@ -21,6 +21,7 @@ On successful login, the backend stores the full `hu.laci.cms.model.User` object
 Implemented:
 
 - Vite React TypeScript scaffold
+- shared API response types in `src/api/types.ts`
 - `fetch` based API client in `src/api/httpClient.ts`
 - auth API wrapper in `src/api/authApi.ts`
 - React auth context in `src/auth/AuthContext.tsx`
@@ -76,6 +77,25 @@ VITE_API_BASE_URL=http://localhost:8080/cms-app
 
 ## Auth API Contract
 
+All backend API responses use the common envelope:
+
+```ts
+type ApiResponse<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+      };
+    };
+```
+
+The frontend `httpClient` unwraps successful `data` values. For `success: false`, it throws the shared frontend `ApiError` class from `src/api/httpClient.ts`, with the backend error `message` exposed as `error.message` and the backend error `code` exposed as `error.code`.
+
 ### `POST /api/auth/login`
 
 Request:
@@ -91,9 +111,12 @@ Success response:
 
 ```json
 {
-  "id": 1,
-  "loginName": "demo-user",
-  "email": "user@example.test"
+  "success": true,
+  "data": {
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test"
+  }
 }
 ```
 
@@ -101,7 +124,11 @@ Invalid credentials:
 
 ```json
 {
-  "error": "Invalid credentials"
+  "success": false,
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Invalid credentials"
+  }
 }
 ```
 
@@ -109,13 +136,21 @@ Invalid request examples:
 
 ```json
 {
-  "error": "loginName and password are required."
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "loginName and password are required."
+  }
 }
 ```
 
 ```json
 {
-  "error": "Invalid JSON request body."
+  "success": false,
+  "error": {
+    "code": "INVALID_JSON",
+    "message": "Invalid JSON request body."
+  }
 }
 ```
 
@@ -127,7 +162,10 @@ Success response:
 
 ```json
 {
-  "message": "Logged out"
+  "success": true,
+  "data": {
+    "message": "Logged out"
+  }
 }
 ```
 
@@ -137,9 +175,12 @@ Authenticated response:
 
 ```json
 {
-  "id": 1,
-  "loginName": "demo-user",
-  "email": "user@example.test"
+  "success": true,
+  "data": {
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test"
+  }
 }
 ```
 
@@ -147,15 +188,19 @@ Expected unauthenticated response:
 
 ```json
 {
-  "error": "Unauthorized"
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Unauthorized"
+  }
 }
 ```
 
 ## Frontend Auth Flow
 
 1. On app startup, call `GET /api/auth/me` with `credentials: 'include'`.
-2. If the response is `200`, hydrate auth state from the returned user.
-3. If the response is `401`, treat the visitor as logged out.
+2. If the response is `200` and `success: true`, hydrate auth state from `data`.
+3. If the response is `401` or `success: false`, treat the visitor as logged out when appropriate.
 4. On login, call `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On logout, call `POST /api/auth/logout` with `credentials: 'include'`, then clear local auth state.
 6. If any protected API call returns `401`, clear auth state and redirect to login.
@@ -243,6 +288,8 @@ The first useful frontend milestone now includes:
 
 - Vite React TypeScript scaffold
 - API client
+- shared API response types
+- central response envelope parsing and backend error message handling
 - auth API module
 - auth context and session restore
 - login page

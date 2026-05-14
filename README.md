@@ -16,6 +16,28 @@ npm run dev
 
 The Vite dev server proxies `/api` requests to `http://localhost:8081`.
 All auth requests use relative paths and include cookies with `credentials: "include"`.
+API responses use the common backend envelope:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+Error responses use:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message"
+  }
+}
+```
+
+The frontend API client unwraps successful `data` values and exposes backend `error.message` values through the shared `ApiError` class.
 
 ## Routes
 
