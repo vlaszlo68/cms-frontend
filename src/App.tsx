@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 
@@ -47,7 +48,35 @@ export default function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <AppLayout>
+              <DashboardPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <div className="placeholder-page">
+                <h2>Users</h2>
+                <p>This section is a placeholder for user management.</p>
+              </div>
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <div className="placeholder-page">
+                <h2>Pages</h2>
+                <p>This section is a placeholder for page management.</p>
+              </div>
+            </AppLayout>
           </ProtectedRoute>
         }
       />

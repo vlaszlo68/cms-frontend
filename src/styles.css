@@ -100,8 +100,17 @@ button:disabled {
   padding: 0.75rem;
 }
 
-.dashboard-page {
+.app-layout {
   min-height: 100vh;
+}
+
+.app-layout__body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.app-layout__content {
   padding: 1.5rem;
 }
 
@@ -111,7 +120,19 @@ button:disabled {
   justify-content: space-between;
   gap: 1rem;
   border-bottom: 1px solid #d9e0ea;
-  padding-bottom: 1.25rem;
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+}
+
+.app-header__user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header__login-name {
+  color: #384354;
+  font-weight: 700;
 }
 
 .app-kicker {
@@ -121,15 +142,70 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.app-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border-right: 1px solid #d9e0ea;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.app-navigation__link {
+  border-radius: 6px;
+  color: #384354;
+  font-weight: 700;
+  padding: 0.7rem 0.8rem;
+  text-decoration: none;
+}
+
+.app-navigation__link:hover,
+.app-navigation__link--active {
+  background: #e9f1f5;
+  color: #17465f;
+}
+
 .secondary-button {
   background: #ffffff;
   border: 1px solid #c8d2df;
   color: #1d2433;
 }
 
+.dashboard-page,
+.placeholder-page {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.dashboard-page h2,
+.placeholder-page h2,
+.placeholder-page p {
+  margin: 0;
+}
+
+.placeholder-page p {
+  color: #5e6a7d;
+}
+
 @media (max-width: 520px) {
   .app-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .app-header__user {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-layout__body {
+    grid-template-columns: 1fr;
+  }
+
+  .app-navigation {
+    border-right: 0;
+    border-bottom: 1px solid #d9e0ea;
+    flex-direction: row;
+    overflow-x: auto;
   }
 }
