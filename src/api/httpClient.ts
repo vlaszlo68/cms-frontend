@@ -1,4 +1,5 @@
 import type { ApiError as ApiErrorBody, ApiResponse } from "./types";
+import { getCsrfToken } from "./authSession";
 
 export class ApiError extends Error {
   status: number;
@@ -15,9 +16,16 @@ export class ApiError extends Error {
 }
 
 type RequestOptions = {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
   body?: unknown;
 };
+
+const CSRF_PROTECTED_METHODS = new Set<RequestOptions["method"]>([
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+]);
 
 function getErrorMessage(body: unknown, fallbackMessage: string) {
   if (isApiErrorBody(body)) {
@@ -67,9 +75,14 @@ async function parseJson(response: Response) {
 
 async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> {
   const headers = new Headers();
+  const csrfToken = getCsrfToken();
 
   if (options.body !== undefined) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (csrfToken && CSRF_PROTECTED_METHODS.has(options.method)) {
+    headers.set("X-CSRF-Token", csrfToken);
   }
 
   const response = await fetch(path, {
@@ -107,4 +120,16 @@ export function apiGet<T>(path: string) {
 
 export function apiPost<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "POST", body });
+}
+
+export function apiPut<T>(path: string, body?: unknown) {
+  return apiRequest<T>(path, { method: "PUT", body });
+}
+
+export function apiPatch<T>(path: string, body?: unknown) {
+  return apiRequest<T>(path, { method: "PATCH", body });
+}
+
+export function apiDelete<T>(path: string, body?: unknown) {
+  return apiRequest<T>(path, { method: "DELETE", body });
 }

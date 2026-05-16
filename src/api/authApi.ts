@@ -8,7 +8,12 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  email: string;
+  emailAddress: string;
+};
+
+export type AuthSession = {
+  user: AuthUser;
+  csrfToken: string;
 };
 
 export type LogoutResponse = {
@@ -16,7 +21,7 @@ export type LogoutResponse = {
 };
 
 export function login(input: LoginRequest) {
-  return apiPost<AuthUser>("/api/auth/login", input);
+  return apiPost<AuthSession>("/api/auth/login", input);
 }
 
 export function logout() {
@@ -24,5 +29,5 @@ export function logout() {
 }
 
 export function me() {
-  return apiGet<AuthUser>("/api/auth/me");
+  return apiGet<AuthSession>("/api/auth/me");
 }
