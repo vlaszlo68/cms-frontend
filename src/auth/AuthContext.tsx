@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { ApiError } from "../api/httpClient";
 import { setCsrfToken as setStoredCsrfToken } from "../api/authSession";
 import * as authApi from "../api/authApi";
-import type { AuthUser, LoginRequest } from "../api/authApi";
+import type { AuthSession, AuthUser, LoginRequest } from "../api/authApi";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -28,11 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredCsrfToken(nextCsrfToken);
   }, []);
 
+  const setAuthenticatedSession = useCallback(
+    (session: AuthSession) => {
+      const { csrfToken: nextCsrfToken, ...nextUser } = session;
+      setSession(nextUser, nextCsrfToken);
+      return nextUser;
+    },
+    [setSession],
+  );
+
   const refreshUser = useCallback(async () => {
     try {
       const session = await authApi.me();
-      setSession(session.user, session.csrfToken);
-      return session.user;
+      return setAuthenticatedSession(session);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setSession(null, null);
@@ -44,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [setSession]);
+  }, [setAuthenticatedSession, setSession]);
 
   useEffect(() => {
     void refreshUser();
@@ -53,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (input: LoginRequest) => {
       const session = await authApi.login(input);
-      setSession(session.user, session.csrfToken);
+      setAuthenticatedSession(session);
     },
-    [setSession],
+    [setAuthenticatedSession],
   );
 
   const logout = useCallback(async () => {

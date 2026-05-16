@@ -8,11 +8,10 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  emailAddress: string;
+  email: string;
 };
 
-export type AuthSession = {
-  user: AuthUser;
+export type AuthSession = AuthUser & {
   csrfToken: string;
 };
 

@@ -40,15 +40,15 @@ Reasonable later additions:
 
 - The backend uses session based authentication.
 - Every auth or protected API request must send `credentials: 'include'`.
-- Login and `/api/auth/me` return `data.user` plus `data.csrfToken`.
+- Login and `/api/auth/me` return a flat `data` payload with `id`, `loginName`, `email`, and `csrfToken`.
 - Store the latest CSRF token in auth/session state and send it as `X-CSRF-Token` on `POST`, `PUT`, `PATCH`, and `DELETE`.
 - Do not send a CSRF header on `GET`, `HEAD`, or `OPTIONS`.
 - Logout and logged-out state must clear the stored CSRF token.
 - Frontend code should call relative `/api/...` paths, not full `localhost` URLs.
-- During local frontend development, use a Vite proxy for `/api` because the backend currently has no dedicated CORS layer.
+- During local frontend development, the Vite proxy for `/api` remains the simplest mode; the backend also has CORS configured for `http://localhost:5173` and `http://127.0.0.1:5173`.
 - Current verified local backend is `http://localhost:8081/cms-app`, so Vite rewrites `/api/...` to `/cms-app/api/...`.
 - Vite also uses `cookiePathRewrite: "/"` so backend session cookies work with frontend-origin `/api/...` requests.
-- Root-context backend at `http://localhost:8081` remains preferable long term while backend `AuthFilter` path matching remains context-path sensitive.
+- Backend `AuthFilter` public-path matching uses servlet paths and works both at root context and under `/cms-app`.
 - Treat any protected API `401` response as logged-out state.
 
 ## Initial Frontend Scope

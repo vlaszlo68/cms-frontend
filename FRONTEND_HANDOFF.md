@@ -6,7 +6,7 @@ This file summarizes the current backend API contract and runtime assumptions th
 
 Source of truth for this handoff:
 
-- current backend source code under `src/main/java/hu/laci/cms/servlet/`
+- current backend source code under `src/main/java/hu/laci/cms/backend/`
 - current Docker/Tomcat setup in `docker-compose.yml` and `docker/tomcat/Dockerfile`
 
 ## Backend Summary
@@ -17,8 +17,10 @@ Source of truth for this handoff:
 - CSRF model: login and `/api/auth/me` return `csrfToken`; mutating API requests send `X-CSRF-Token`
 - JSON library: Gson
 - Session key for authenticated user: `user`
+- CSRF session key: `csrfToken`
+- CSRF request header: `X-CSRF-Token`
 
-The backend stores the full `hu.laci.cms.model.User` object in the HTTP session on successful login.
+The backend stores a password-hash-free `hu.laci.cms.backend.dto.auth.AuthenticatedUser` object in the HTTP session on successful login. The backend also stores a CSRF token in the same session and returns it in successful login and `/api/auth/me` responses.
 
 ## API Base URL
 
@@ -50,8 +52,8 @@ The current `vite.config.ts` also uses `cookiePathRewrite: "/"` so the browser s
 
 If the WAR is deployed as `cms-app.war` into a standalone Tomcat:
 
-- base app URL: `http://localhost:8080/cms-app`
-- auth login URL: `http://localhost:8080/cms-app/api/auth/login`
+- base app URL: `http://localhost:8081/cms-app`
+- auth login URL: `http://localhost:8081/cms-app/api/auth/login`
 
 ### Docker Tomcat deploy
 
@@ -69,7 +71,7 @@ VITE_API_BASE_URL=http://localhost:8081
 or for local standalone Tomcat:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/cms-app
+VITE_API_BASE_URL=http://localhost:8081/cms-app
 ```
 
 ## Auth Endpoints
@@ -125,12 +127,10 @@ Successful response:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "loginName": "demo-user",
-      "emailAddress": "user@example.test"
-    },
-    "csrfToken": "..."
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test",
+    "csrfToken": "base64url-token"
   }
 }
 ```
@@ -157,7 +157,7 @@ Invalid or incomplete JSON:
 {
   "success": false,
   "error": {
-    "code": "VALIDATION_ERROR",
+    "code": "INVALID_REQUEST",
     "message": "loginName and password are required."
   }
 }
@@ -169,7 +169,7 @@ or
 {
   "success": false,
   "error": {
-    "code": "INVALID_JSON",
+    "code": "INVALID_REQUEST",
     "message": "Invalid JSON request body."
   }
 }
@@ -177,13 +177,19 @@ or
 
 Behavior:
 
-- on success the backend creates a session, stores the authenticated user under session attribute `user`, and returns the current CSRF token
+- on success the backend rotates the session id, stores the authenticated user under session attribute `user`, creates a session CSRF token, and returns it in `data.csrfToken`
 
 ### `POST /api/auth/logout`
 
 Request body:
 
 - none required
+
+Required header after login/session restore:
+
+```http
+X-CSRF-Token: <csrfToken>
+```
 
 Successful response:
 
@@ -200,7 +206,8 @@ Successful response:
 
 Behavior:
 
-- invalidates the current session using `request.getSession().invalidate()`
+- invalidates the current session if one exists
+- because logout is state-changing, it is protected by the CSRF filter
 
 ### `GET /api/auth/me`
 
@@ -212,12 +219,10 @@ Successful response:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "loginName": "demo-user",
-      "emailAddress": "user@example.test"
-    },
-    "csrfToken": "..."
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test",
+    "csrfToken": "base64url-token"
   }
 }
 ```
@@ -230,18 +235,17 @@ Unauthenticated response expected by frontend:
 {
   "success": false,
   "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Unauthorized"
+    "code": "AUTH_REQUIRED",
+    "message": "Authentication required"
   }
 }
 ```
 
 Important:
 
-- the `MeServlet` itself may contain a `"Not authenticated"` branch
-- however, because `/api/auth/me` is behind `AuthFilter`, the frontend should currently expect the filter-level response:
+- `/api/auth/me` is behind `AuthFilter`, so unauthenticated requests usually receive the filter-level response:
   - `401`
-  - `{"success":false,"error":{"code":"UNAUTHORIZED","message":"Unauthorized"}}`
+  - `{"success":false,"error":{"code":"AUTH_REQUIRED","message":"Authentication required"}}`
 
 ## Protected API Behavior
 
@@ -254,7 +258,7 @@ Public exceptions in code:
 - `/api/auth/login`
 - `/api/auth/logout`
 
-All other `/api/*` endpoints currently require a valid session with a non-null `user` attribute.
+All other `/api/*` endpoints currently require a valid session where the `user` attribute is an `AuthenticatedUser` object.
 
 If there is no authenticated session, the filter returns:
 
@@ -265,8 +269,8 @@ If there is no authenticated session, the filter returns:
 {
   "success": false,
   "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Unauthorized"
+    "code": "AUTH_REQUIRED",
+    "message": "Authentication required"
   }
 }
 ```
@@ -274,6 +278,38 @@ If there is no authenticated session, the filter returns:
 Frontend implication:
 
 - any protected API call returning `401` should be treated as logged-out state
+
+## CSRF Protection
+
+State-changing `/api/*` requests are protected by `CsrfFilter`.
+
+Protected HTTP methods:
+
+- `POST`
+- `PUT`
+- `PATCH`
+- `DELETE`
+
+Not checked:
+
+- `GET`
+- `HEAD`
+- `OPTIONS`
+- `POST /api/auth/login`
+
+Invalid or missing token response:
+
+- status: `403`
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CSRF_INVALID",
+    "message": "Invalid CSRF token"
+  }
+}
+```
 
 ## Cookies and Frontend Fetching
 
@@ -305,17 +341,21 @@ CSRF handling:
 
 ## Current Known Constraints
 
-### 1. No CORS layer is implemented yet
+### 1. CORS layer is implemented
 
-There is currently no dedicated CORS handling in the backend codebase.
+The backend has a dedicated CORS filter.
 
-Implication:
+Current allowed origins in `web.xml`:
 
-- if the React dev server runs on a different origin, direct browser calls may fail without backend CORS work
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+Credentialed CORS is enabled, so `credentials: 'include'` remains required for session auth. The backend also allows the `X-CSRF-Token` request header for CORS preflight.
 
 Practical recommendation for frontend local development:
 
-- prefer a dev proxy from the React app to the backend instead of cross-origin browser calls
+- the existing Vite dev proxy is still a good option
+- direct browser calls from the listed origins are also supported
 
 Example direction:
 
@@ -324,11 +364,11 @@ Example direction:
 - in the current local setup, rewrite `/api` to `/cms-app/api`
 - rewrite cookie path to `/` when the backend sets a context-path cookie
 
-### 2. AuthFilter public-path matching is context-path sensitive
+### 2. AuthFilter public-path matching is context-path safe
 
 Current filter code compares:
 
-- `request.getRequestURI()`
+- `request.getServletPath()`
 
 against exact strings:
 
@@ -337,25 +377,17 @@ against exact strings:
 
 Implication:
 
-- this works as expected when the app is deployed at root context, for example Docker `ROOT.war`
-- this may fail when the app is deployed under `/cms-app`, because the request URI then becomes:
-  - `/cms-app/api/auth/login`
-  - `/cms-app/api/auth/logout`
-
-Frontend/backend implication:
-
-- root-context backend deployment remains the cleanest long-term option
-- the current frontend can still work with `/cms-app` through Vite path rewrite
-- if backend auth public-path checks are exact URI matches, backend should normalize context path handling before relying on non-root deployments broadly
+- public auth endpoints work both at root context and when the app is deployed under `/cms-app`
 
 ## Recommended Frontend Auth Flow
 
 1. On app startup call `GET /api/auth/me` with `credentials: 'include'`.
-2. If response is `200` and `success: true`, hydrate frontend auth state from `data.user` and store `data.csrfToken`.
+2. If response is `200` and `success: true`, hydrate frontend auth state from `data` and store `data.csrfToken`.
 3. If response is `401` or `success: false`, treat the user as logged out when appropriate.
 4. On login submit `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On login success, replace any previous CSRF token with the returned token.
-6. On logout call `POST /api/auth/logout` with `credentials: 'include'` and the current CSRF token, then clear frontend auth state and the CSRF token.
+6. On logout call `POST /api/auth/logout` with `credentials: 'include'` and `X-CSRF-Token`, then clear frontend auth state and the CSRF token.
+7. Add `X-CSRF-Token` to all future state-changing API calls.
 
 ## Current Verified Frontend Implementation
 
@@ -410,12 +442,10 @@ Response:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "loginName": "tester",
-      "emailAddress": "tester@example.com"
-    },
-    "csrfToken": "..."
+    "id": 1,
+    "loginName": "tester",
+    "email": "tester@example.com",
+    "csrfToken": "base64url-token"
   }
 }
 ```
@@ -429,7 +459,7 @@ VITE_API_BASE_URL=http://localhost:8081
 If using standalone Tomcat instead:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/cms-app
+VITE_API_BASE_URL=http://localhost:8081/cms-app
 ```
 
 ## Local Test User
@@ -439,7 +469,7 @@ The backend was locally verified with a development-only user:
 ```text
 loginName: tester
 password: pw
-emailAddress: tester@example.com
+email: tester@example.com
 ```
 
 Use locally configured test credentials when verifying the auth flow.

@@ -133,7 +133,7 @@ VITE_API_BASE_URL=http://localhost:8081
 For standalone Tomcat instead of Docker:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/cms-app
+VITE_API_BASE_URL=http://localhost:8081/cms-app
 ```
 
 ## API Layer Design
@@ -215,11 +215,10 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  emailAddress: string;
+  email: string;
 };
 
-export type AuthSession = {
-  user: AuthUser;
+export type AuthSession = AuthUser & {
   csrfToken: string;
 };
 ```
@@ -250,6 +249,8 @@ Recommended behavior:
 - protected API `401`:
   - clear auth state and CSRF token
   - redirect to login
+- protected API `403` + `CSRF_INVALID`:
+  - refresh session through `me()` or force logout, depending on UX choice
 
 Keep auth state in React context first. No need for Redux or heavier state libraries at this stage.
 
@@ -289,13 +290,14 @@ Suggested files:
 
 ## Preferred mode
 
-Root-context backend remains the preferred long-term mode when possible:
+Use either supported backend context during frontend development:
 
 - backend app: `http://localhost:8081`
+- standalone Tomcat app: `http://localhost:8081/cms-app`
 
 Reason:
 
-- current backend `AuthFilter` public path matching is safer in root-context deployment than in `/cms-app`
+- the backend `AuthFilter` now uses servlet paths, so auth public-path matching works in both root-context and `/cms-app` deployments
 
 Current verified local mode:
 
@@ -307,7 +309,7 @@ Current verified local mode:
 
 ## Dev proxy recommendation
 
-Because the backend currently has no dedicated CORS support, use a Vite proxy.
+The backend now has CORS support for `http://localhost:5173` and `http://127.0.0.1:5173`, but a Vite proxy remains the simplest local development mode.
 
 Example direction for `vite.config.ts`:
 
@@ -435,9 +437,9 @@ Every request that depends on authentication must send credentials.
 
 Login and session restore must keep the returned `csrfToken`; `POST`, `PUT`, `PATCH`, and `DELETE` requests must send it in `X-CSRF-Token`.
 
-### 4. Current backend filter path logic is deployment-sensitive
+### 4. Backend filter path logic is context-path safe
 
-Root-context backend is safer for frontend development until that logic is normalized.
+The backend uses servlet paths for auth public-path matching, so both root context and `/cms-app` deployments are supported.
 
 ## Recommended Next Step
 
@@ -445,5 +447,4 @@ Recommended next steps:
 
 1. Keep the auth-only frontend stable before adding CMS features.
 2. Replace `/users` and `/pages` placeholders with real CMS screens when backend endpoints are ready.
-3. Backend agent should consider normalizing `AuthFilter` path handling for context paths.
-4. Backend/root deployment should eventually decide whether API URLs are root-context `/api/...` or context-path `/cms-app/api/...`.
+3. Keep the current local proxy rewrite aligned with whichever backend context is running.

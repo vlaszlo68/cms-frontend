@@ -13,9 +13,10 @@ The frontend should have its own Git history, Node toolchain, build pipeline, an
 - JSON library: Gson
 - Auth model: HTTP session based authentication
 - Backend session key for authenticated user: `user`
+- CSRF session key: `csrfToken`
 - CSRF model: login and `/api/auth/me` return `csrfToken`; mutating API requests send it as `X-CSRF-Token`
 
-On successful login, the backend stores the full `hu.laci.cms.model.User` object in the HTTP session.
+On successful login, the backend rotates the session id, stores a password-hash-free `AuthenticatedUser` object in the HTTP session, creates a session CSRF token, and returns that token in the auth response.
 
 ## Current Frontend State
 
@@ -55,7 +56,7 @@ http://localhost:8081
 Standalone Tomcat deployment with `cms-app.war`:
 
 ```text
-http://localhost:8080/cms-app
+http://localhost:8081/cms-app
 ```
 
 Current verified backend URL:
@@ -74,7 +75,7 @@ http://127.0.0.1:5173
 Historical/alternative frontend env variable if the project later switches away from proxy-only relative calls:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/cms-app
+VITE_API_BASE_URL=http://localhost:8081/cms-app
 ```
 
 ## Auth API Contract
@@ -100,6 +101,8 @@ The frontend `httpClient` unwraps successful `data` values. For `success: false`
 
 The frontend `httpClient` always uses `credentials: 'include'`. It also reads the current CSRF token from `src/api/authSession.ts` and sends `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` requests only. `GET`, `HEAD`, and `OPTIONS` requests do not receive a CSRF header.
 
+`POST /api/auth/login` is a public exception and does not require an existing CSRF token. Logout is state-changing and must send the current token after login/session restore.
+
 ### `POST /api/auth/login`
 
 Request:
@@ -117,12 +120,10 @@ Success response:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "loginName": "demo-user",
-      "emailAddress": "user@example.test"
-    },
-    "csrfToken": "..."
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test",
+    "csrfToken": "base64url-token"
   }
 }
 ```
@@ -145,7 +146,7 @@ Invalid request examples:
 {
   "success": false,
   "error": {
-    "code": "VALIDATION_ERROR",
+    "code": "INVALID_REQUEST",
     "message": "loginName and password are required."
   }
 }
@@ -155,7 +156,7 @@ Invalid request examples:
 {
   "success": false,
   "error": {
-    "code": "INVALID_JSON",
+    "code": "INVALID_REQUEST",
     "message": "Invalid JSON request body."
   }
 }
@@ -164,6 +165,12 @@ Invalid request examples:
 ### `POST /api/auth/logout`
 
 No request body is required.
+
+Required header after login/session restore:
+
+```http
+X-CSRF-Token: <csrfToken>
+```
 
 Success response:
 
@@ -184,12 +191,10 @@ Authenticated response:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "loginName": "demo-user",
-      "emailAddress": "user@example.test"
-    },
-    "csrfToken": "..."
+    "id": 1,
+    "loginName": "demo-user",
+    "email": "user@example.test",
+    "csrfToken": "base64url-token"
   }
 }
 ```
@@ -200,8 +205,20 @@ Expected unauthenticated response:
 {
   "success": false,
   "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Unauthorized"
+    "code": "AUTH_REQUIRED",
+    "message": "Authentication required"
+  }
+}
+```
+
+Invalid or missing CSRF token on state-changing requests:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CSRF_INVALID",
+    "message": "Invalid CSRF token"
   }
 }
 ```
@@ -209,7 +226,7 @@ Expected unauthenticated response:
 ## Frontend Auth Flow
 
 1. On app startup, call `GET /api/auth/me` with `credentials: 'include'`.
-2. If the response is `200` and `success: true`, hydrate auth state from `data.user` and store `data.csrfToken`.
+2. If the response is `200` and `success: true`, hydrate auth state from `data` and store `data.csrfToken`.
 3. If the response is `401` or `success: false`, treat the visitor as logged out when appropriate.
 4. On login, call `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On login success, replace any previous CSRF token with the token from the latest backend response.
@@ -227,11 +244,10 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  emailAddress: string;
+  email: string;
 };
 
-export type AuthSession = {
-  user: AuthUser;
+export type AuthSession = AuthUser & {
   csrfToken: string;
 };
 ```
@@ -264,13 +280,15 @@ Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which 
 
 ## Local Development Notes
 
-The backend currently has no dedicated CORS support. Use a Vite dev proxy for local development:
+The backend has dedicated CORS support for local dev origins, but the Vite dev proxy remains the simplest local development mode:
 
 - frontend dev server: `http://127.0.0.1:5173`
 - frontend calls relative `/api/...` paths
 - proxy target: `http://localhost:8081`
 - proxy rewrite: `/api/...` -> `/cms-app/api/...`
 - proxy cookie path rewrite: backend `Path=/cms-app` cookies are rewritten to `Path=/`
+- direct browser calls from `http://localhost:5173` and `http://127.0.0.1:5173` are also supported by backend CORS
+- the backend CORS preflight allows the `X-CSRF-Token` header
 
 Current `vite.config.ts` proxy behavior:
 
@@ -287,17 +305,19 @@ server: {
 }
 ```
 
-The backend `AuthFilter` may compare `request.getRequestURI()` against exact public paths:
+The backend `AuthFilter` compares `request.getServletPath()` against exact public paths:
 
 - `/api/auth/login`
 - `/api/auth/logout`
+
+This path matching is context-path safe, so public auth endpoints work both at root context and under `/cms-app`.
 
 During local verification, the backend did work under `/cms-app` on port `8081`:
 
 - `POST http://localhost:8081/cms-app/api/auth/login`
 - `GET http://localhost:8081/cms-app/api/auth/me`
 
-The frontend proxy rewrite is currently required because `http://localhost:8081/api/auth/me` returns Tomcat HTML `404`, while `http://localhost:8081/cms-app/api/auth/me` returns JSON.
+The current frontend proxy rewrite targets the local `/cms-app` deployment. Root-context backend deployment can use root `/api/...` paths.
 
 ## First Deliverable Status
 
@@ -327,7 +347,7 @@ Backend verification currently uses a development-only user configured locally:
 ```text
 loginName: tester
 password: pw
-emailAddress: tester@example.com
+email: tester@example.com
 ```
 
 This is a local test detail only, not a product requirement.
