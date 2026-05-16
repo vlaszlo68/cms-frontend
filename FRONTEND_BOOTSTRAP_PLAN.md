@@ -24,6 +24,7 @@ The frontend should be developed as an independent repository with its own Git h
 - React Router
 - plain `fetch` for HTTP
 - session-based auth using browser cookies
+- CSRF protection using the session token returned by login and `/api/auth/me`
 
 Optional but reasonable later additions:
 
@@ -40,6 +41,7 @@ Current implemented structure is intentionally smaller than the originally sugge
 cms-frontend/
   src/
     api/
+      authSession.ts
       authApi.ts
       httpClient.ts
       types.ts
@@ -170,6 +172,7 @@ Responsibilities:
 
 - call relative `/api/...` paths without hard-coded backend hostnames
 - set `credentials: 'include'`
+- add `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` when a token is available
 - set `Content-Type: application/json` for JSON requests
 - parse JSON responses using the common `success/data/error` envelope
 - unwrap successful `data` values
@@ -181,6 +184,17 @@ Suggested shape:
 
 - `apiGet<T>(path: string)`
 - `apiPost<T>(path: string, body?: unknown)`
+- `apiPut<T>(path: string, body?: unknown)`
+- `apiPatch<T>(path: string, body?: unknown)`
+- `apiDelete<T>(path: string, body?: unknown)`
+
+### `src/api/authSession.ts`
+
+Responsibilities:
+
+- keep the current CSRF token available to the shared API client
+- expose `getCsrfToken()` and `setCsrfToken(nextCsrfToken)`
+- keep storage in memory for now, matching the current auth context state
 
 ### `src/api/authApi.ts`
 
@@ -201,7 +215,12 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  email: string;
+  emailAddress: string;
+};
+
+export type AuthSession = {
+  user: AuthUser;
+  csrfToken: string;
 };
 ```
 
@@ -212,6 +231,7 @@ Suggested minimal auth state:
 ```ts
 type AuthState = {
   user: AuthUser | null;
+  csrfToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 };
@@ -221,14 +241,14 @@ Recommended behavior:
 
 - app start:
   - call `me()`
-  - `200` -> set authenticated user
-  - `401` -> set logged-out state
+  - `200` -> set authenticated user and CSRF token
+  - `401` -> set logged-out state and clear CSRF token
 - login success:
-  - store returned user in memory state
+  - store returned user and CSRF token in memory state
 - logout success:
-  - clear auth state
+  - clear auth state and CSRF token
 - protected API `401`:
-  - clear auth state
+  - clear auth state and CSRF token
   - redirect to login
 
 Keep auth state in React context first. No need for Redux or heavier state libraries at this stage.
@@ -356,7 +376,7 @@ Do not overbuild component libraries before the auth flow is proven.
 4. Create `.env.example`. Deferred because the current app uses proxy-only relative API paths.
 5. Implement `httpClient.ts`. Done.
 6. Implement shared API response types in `src/api/types.ts`. Done.
-7. Implement `authApi.ts`. Done.
+7. Implement `authSession.ts` and `authApi.ts`. Done.
 8. Implement auth context and startup session restore. Done.
 9. Implement login page. Done.
 10. Implement protected route wrapper. Done in `src/App.tsx`.
@@ -365,6 +385,8 @@ Do not overbuild component libraries before the auth flow is proven.
 13. Verify full flow against backend:
     - unauthenticated `me`
     - login success
+    - CSRF token is stored after login/me
+    - mutating requests send `X-CSRF-Token`
     - refresh after login
     - logout success
     - protected route redirect
@@ -375,8 +397,9 @@ The first frontend PR/repo milestone should include:
 
 - project scaffold
 - auth API integration
+- CSRF token handling for mutating API requests
 - common API response types
-- central response unwrapping and error handling
+- central response unwrapping, CSRF header injection, and error handling
 - login page
 - protected dashboard placeholder
 - authenticated app layout
@@ -408,7 +431,11 @@ Without proxy or backend CORS work, browser requests from a separate dev origin 
 
 Every request that depends on authentication must send credentials.
 
-### 3. Current backend filter path logic is deployment-sensitive
+### 3. Backend CSRF protection applies to mutating requests
+
+Login and session restore must keep the returned `csrfToken`; `POST`, `PUT`, `PATCH`, and `DELETE` requests must send it in `X-CSRF-Token`.
+
+### 4. Current backend filter path logic is deployment-sensitive
 
 Root-context backend is safer for frontend development until that logic is normalized.
 

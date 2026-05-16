@@ -15,6 +15,7 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 - Use plain `fetch` for HTTP unless the project later adopts a different standard.
 - API responses use the shared `{ success, data/error }` backend envelope.
 - Keep response envelope parsing centralized in `src/api/httpClient.ts`.
+- Keep CSRF header injection centralized in `src/api/httpClient.ts`.
 - Put shared API response payload types in `src/api/types.ts`.
 - Backend `error.message` values should be surfaced through the frontend `ApiError` class.
 - Keep backend integration details visible in code comments or README only where they prevent mistakes.
@@ -39,6 +40,10 @@ Reasonable later additions:
 
 - The backend uses session based authentication.
 - Every auth or protected API request must send `credentials: 'include'`.
+- Login and `/api/auth/me` return `data.user` plus `data.csrfToken`.
+- Store the latest CSRF token in auth/session state and send it as `X-CSRF-Token` on `POST`, `PUT`, `PATCH`, and `DELETE`.
+- Do not send a CSRF header on `GET`, `HEAD`, or `OPTIONS`.
+- Logout and logged-out state must clear the stored CSRF token.
 - Frontend code should call relative `/api/...` paths, not full `localhost` URLs.
 - During local frontend development, use a Vite proxy for `/api` because the backend currently has no dedicated CORS layer.
 - Current verified local backend is `http://localhost:8081/cms-app`, so Vite rewrites `/api/...` to `/cms-app/api/...`.
@@ -52,7 +57,7 @@ Build the frontend in this order:
 
 1. Project scaffold.
 2. API client with cookie credentials.
-3. Auth API wrapper.
+3. Auth API wrapper and CSRF token helper.
 4. Auth context and startup session restore through `/api/auth/me`.
 5. Login page.
 6. Protected route shell.
@@ -72,6 +77,7 @@ Current implemented structure is simpler:
 ```text
 src/
   api/
+    authSession.ts
     authApi.ts
     httpClient.ts
     types.ts
@@ -132,8 +138,10 @@ Before calling the first auth milestone done, verify:
 - backend `success: false` responses throw the shared frontend `ApiError`
 - login errors display the backend `error.message`
 - login stores the returned user in memory state
+- login stores the returned CSRF token in auth/session state
 - refresh after login restores the session through `/api/auth/me`
-- logout invalidates the backend session and clears frontend auth state
+- mutating API requests send `X-CSRF-Token`
+- logout invalidates the backend session and clears frontend auth state plus CSRF token
 - protected routes redirect unauthenticated users to `/login`
 - authenticated routes render through `AppLayout`
 - header shows the current user's `loginName`

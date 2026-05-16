@@ -13,6 +13,7 @@ The frontend should have its own Git history, Node toolchain, build pipeline, an
 - JSON library: Gson
 - Auth model: HTTP session based authentication
 - Backend session key for authenticated user: `user`
+- CSRF model: login and `/api/auth/me` return `csrfToken`; mutating API requests send it as `X-CSRF-Token`
 
 On successful login, the backend stores the full `hu.laci.cms.model.User` object in the HTTP session.
 
@@ -22,6 +23,7 @@ Implemented:
 
 - Vite React TypeScript scaffold
 - shared API response types in `src/api/types.ts`
+- in-memory auth session/CSRF token helper in `src/api/authSession.ts`
 - `fetch` based API client in `src/api/httpClient.ts`
 - auth API wrapper in `src/api/authApi.ts`
 - React auth context in `src/auth/AuthContext.tsx`
@@ -96,6 +98,8 @@ type ApiResponse<T> =
 
 The frontend `httpClient` unwraps successful `data` values. For `success: false`, it throws the shared frontend `ApiError` class from `src/api/httpClient.ts`, with the backend error `message` exposed as `error.message` and the backend error `code` exposed as `error.code`.
 
+The frontend `httpClient` always uses `credentials: 'include'`. It also reads the current CSRF token from `src/api/authSession.ts` and sends `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` requests only. `GET`, `HEAD`, and `OPTIONS` requests do not receive a CSRF header.
+
 ### `POST /api/auth/login`
 
 Request:
@@ -113,9 +117,12 @@ Success response:
 {
   "success": true,
   "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test"
+    "user": {
+      "id": 1,
+      "loginName": "demo-user",
+      "emailAddress": "user@example.test"
+    },
+    "csrfToken": "..."
   }
 }
 ```
@@ -177,9 +184,12 @@ Authenticated response:
 {
   "success": true,
   "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test"
+    "user": {
+      "id": 1,
+      "loginName": "demo-user",
+      "emailAddress": "user@example.test"
+    },
+    "csrfToken": "..."
   }
 }
 ```
@@ -199,11 +209,12 @@ Expected unauthenticated response:
 ## Frontend Auth Flow
 
 1. On app startup, call `GET /api/auth/me` with `credentials: 'include'`.
-2. If the response is `200` and `success: true`, hydrate auth state from `data`.
+2. If the response is `200` and `success: true`, hydrate auth state from `data.user` and store `data.csrfToken`.
 3. If the response is `401` or `success: false`, treat the visitor as logged out when appropriate.
 4. On login, call `POST /api/auth/login` with JSON body and `credentials: 'include'`.
-5. On logout, call `POST /api/auth/logout` with `credentials: 'include'`, then clear local auth state.
-6. If any protected API call returns `401`, clear auth state and redirect to login.
+5. On login success, replace any previous CSRF token with the token from the latest backend response.
+6. On logout, call `POST /api/auth/logout` with `credentials: 'include'` and the current CSRF token, then clear local auth state and the CSRF token.
+7. If any protected API call returns `401`, clear auth state and the CSRF token, then redirect to login.
 
 Suggested frontend auth types:
 
@@ -216,7 +227,12 @@ export type LoginRequest = {
 export type AuthUser = {
   id: number;
   loginName: string;
-  email: string;
+  emailAddress: string;
+};
+
+export type AuthSession = {
+  user: AuthUser;
+  csrfToken: string;
 };
 ```
 
@@ -225,6 +241,7 @@ Suggested auth state:
 ```ts
 type AuthState = {
   user: AuthUser | null;
+  csrfToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 };
@@ -288,8 +305,9 @@ The first useful frontend milestone now includes:
 
 - Vite React TypeScript scaffold
 - API client
+- in-memory CSRF token helper
 - shared API response types
-- central response envelope parsing and backend error message handling
+- central response envelope parsing, CSRF header injection, and backend error message handling
 - auth API module
 - auth context and session restore
 - login page
@@ -309,7 +327,7 @@ Backend verification currently uses a development-only user configured locally:
 ```text
 loginName: tester
 password: pw
-email: tester@example.com
+emailAddress: tester@example.com
 ```
 
 This is a local test detail only, not a product requirement.

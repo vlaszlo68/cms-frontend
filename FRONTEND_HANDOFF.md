@@ -14,6 +14,7 @@ Source of truth for this handoff:
 - Stack: Java 21, Servlet API, JDBC, PostgreSQL, Tomcat 9
 - Packaging: Maven WAR
 - Auth model: session-based authentication
+- CSRF model: login and `/api/auth/me` return `csrfToken`; mutating API requests send `X-CSRF-Token`
 - JSON library: Gson
 - Session key for authenticated user: `user`
 
@@ -100,6 +101,7 @@ Frontend implication:
 
 - `src/api/httpClient.ts` unwraps `data` for successful responses
 - `src/api/httpClient.ts` throws its shared `ApiError` class for `success: false`
+- `src/api/httpClient.ts` adds `X-CSRF-Token` to `POST`, `PUT`, `PATCH`, and `DELETE` when a token is available
 - backend `error.message` is shown to the user on login failures
 - `src/api/types.ts` contains the shared `ApiResponse` and backend error payload types
 
@@ -123,9 +125,12 @@ Successful response:
 {
   "success": true,
   "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test"
+    "user": {
+      "id": 1,
+      "loginName": "demo-user",
+      "emailAddress": "user@example.test"
+    },
+    "csrfToken": "..."
   }
 }
 ```
@@ -172,7 +177,7 @@ or
 
 Behavior:
 
-- on success the backend creates a session and stores the authenticated user under session attribute `user`
+- on success the backend creates a session, stores the authenticated user under session attribute `user`, and returns the current CSRF token
 
 ### `POST /api/auth/logout`
 
@@ -207,9 +212,12 @@ Successful response:
 {
   "success": true,
   "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test"
+    "user": {
+      "id": 1,
+      "loginName": "demo-user",
+      "emailAddress": "user@example.test"
+    },
+    "csrfToken": "..."
   }
 }
 ```
@@ -286,6 +294,15 @@ The same applies to:
 - logout
 - every protected `/api/*` request
 
+CSRF handling:
+
+- login and `/api/auth/me` success responses return `data.csrfToken`
+- the frontend stores the token in auth/session state
+- `POST`, `PUT`, `PATCH`, and `DELETE` requests send `X-CSRF-Token: <csrfToken>`
+- `GET`, `HEAD`, and `OPTIONS` requests do not need the CSRF header
+- logout clears the stored token after the request completes
+- a new login replaces any previous token with the latest backend response value
+
 ## Current Known Constraints
 
 ### 1. No CORS layer is implemented yet
@@ -334,16 +351,18 @@ Frontend/backend implication:
 ## Recommended Frontend Auth Flow
 
 1. On app startup call `GET /api/auth/me` with `credentials: 'include'`.
-2. If response is `200` and `success: true`, hydrate frontend auth state from `data`.
+2. If response is `200` and `success: true`, hydrate frontend auth state from `data.user` and store `data.csrfToken`.
 3. If response is `401` or `success: false`, treat the user as logged out when appropriate.
 4. On login submit `POST /api/auth/login` with JSON body and `credentials: 'include'`.
-5. On logout call `POST /api/auth/logout` with `credentials: 'include'`, then clear frontend auth state.
+5. On login success, replace any previous CSRF token with the returned token.
+6. On logout call `POST /api/auth/logout` with `credentials: 'include'` and the current CSRF token, then clear frontend auth state and the CSRF token.
 
 ## Current Verified Frontend Implementation
 
 Files implemented:
 
 - `src/api/httpClient.ts`
+- `src/api/authSession.ts`
 - `src/api/types.ts`
 - `src/api/authApi.ts`
 - `src/auth/AuthContext.tsx`
@@ -391,9 +410,12 @@ Response:
 {
   "success": true,
   "data": {
-    "id": 1,
-    "loginName": "tester",
-    "email": "tester@example.com"
+    "user": {
+      "id": 1,
+      "loginName": "tester",
+      "emailAddress": "tester@example.com"
+    },
+    "csrfToken": "..."
   }
 }
 ```
@@ -417,7 +439,7 @@ The backend was locally verified with a development-only user:
 ```text
 loginName: tester
 password: pw
-email: tester@example.com
+emailAddress: tester@example.com
 ```
 
 Use locally configured test credentials when verifying the auth flow.
