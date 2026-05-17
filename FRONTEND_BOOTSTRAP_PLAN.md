@@ -21,7 +21,7 @@ The frontend should be developed as an independent repository with its own Git h
 - React 19
 - TypeScript
 - Vite
-- React Router
+- React Router v7 from the `react-router` package
 - plain `fetch` for HTTP
 - session-based auth using browser cookies
 - CSRF protection using the session token returned by login and `/api/auth/me`
@@ -392,6 +392,8 @@ Do not overbuild component libraries before the auth flow is proven.
     - refresh after login
     - logout success
     - protected route redirect
+14. Add JSDoc documentation to the implemented TypeScript source files. Done.
+15. Replace deprecated React form event typing and use direct React Router v7 imports from `react-router`. Done.
 
 ## Recommended First Deliverable
 
@@ -409,6 +411,7 @@ The first frontend PR/repo milestone should include:
 - logout button
 - Vite proxy config
 - README with startup instructions
+- JSDoc comments for the implemented source files
 
 ## README Checklist For Frontend Repo
 

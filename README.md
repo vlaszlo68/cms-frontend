@@ -2,6 +2,14 @@
 
 React + TypeScript + Vite frontend for the Java Servlet CMS backend.
 
+## Stack
+
+- React 19
+- TypeScript
+- Vite
+- React Router v7 via the `react-router` package
+- plain `fetch` through the shared API client
+
 ## Install
 
 ```bash
@@ -39,6 +47,8 @@ Error responses use:
 ```
 
 The frontend API client unwraps successful `data` values and exposes backend `error.message` values through the shared `ApiError` class.
+
+The TypeScript source files include JSDoc comments for the current public API helpers, auth context, route guards, pages, and layout components.
 
 ## Routes
 

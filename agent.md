@@ -14,6 +14,8 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 - Do not introduce Redux or heavier state libraries for the initial auth flow; use React context first.
 - Use plain `fetch` for HTTP unless the project later adopts a different standard.
 - API responses use the shared `{ success, data/error }` backend envelope.
+- Use `react-router` imports for React Router v7; do not add new `react-router-dom` imports.
+- Avoid deprecated React event types such as `FormEvent`; prefer non-deprecated React event types when an explicit event type is needed.
 - Keep response envelope parsing centralized in `src/api/httpClient.ts`.
 - Keep CSRF header injection centralized in `src/api/httpClient.ts`.
 - Put shared API response payload types in `src/api/types.ts`.
@@ -25,7 +27,7 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 - React 19
 - TypeScript
 - Vite
-- React Router
+- React Router v7 from the `react-router` package
 - Browser cookie based session auth
 - Plain `fetch`
 

@@ -23,6 +23,7 @@ On successful login, the backend rotates the session id, stores a password-hash-
 Implemented:
 
 - Vite React TypeScript scaffold
+- React Router v7 imported from `react-router`
 - shared API response types in `src/api/types.ts`
 - in-memory auth session/CSRF token helper in `src/api/authSession.ts`
 - `fetch` based API client in `src/api/httpClient.ts`
@@ -34,6 +35,7 @@ Implemented:
 - protected placeholder routes at `/users` and `/pages`
 - logout flow
 - Vite dev proxy for the backend
+- JSDoc comments for the implemented TypeScript source files
 
 The frontend intentionally uses relative API paths only, for example:
 
@@ -337,6 +339,7 @@ The first useful frontend milestone now includes:
 - placeholder navigation routes for Users and Pages
 - logout button
 - README with setup, proxy, and backend dependency notes
+- JSDoc comments for implemented API, auth, routing, page, and layout files
 - verified `npm run build`
 - verified proxied login and session restore
 

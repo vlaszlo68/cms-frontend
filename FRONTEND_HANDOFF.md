@@ -406,6 +406,12 @@ Files implemented:
 - `src/App.tsx`
 - `vite.config.ts`
 
+Frontend dependency note:
+
+- React Router v7 is imported from `react-router`; `react-router-dom` is not used because the v7 package only re-exports `react-router` for upgrade compatibility.
+- React form submit handlers avoid the deprecated React `FormEvent` type and use `SyntheticEvent` where an event type is needed.
+- Current TypeScript source files include JSDoc comments for the implemented API helpers, auth context, route guards, pages, and layout components.
+
 Current routes:
 
 - `/login` - public-only login page
