@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 
 /**
  * Main navigation entries displayed in the authenticated app shell.

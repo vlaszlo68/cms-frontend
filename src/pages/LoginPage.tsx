@@ -1,5 +1,6 @@
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import type { SyntheticEvent } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { ApiError } from "../api/httpClient";
 import { useAuth } from "../auth/AuthContext";
 
@@ -17,7 +18,7 @@ export default function LoginPage() {
   /**
    * Submits credentials to the auth API and redirects to the dashboard on success.
    */
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setIsSubmitting(true);
