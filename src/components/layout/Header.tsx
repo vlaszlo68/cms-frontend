@@ -2,11 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 
+/**
+ * Renders the authenticated app header with account information and logout action.
+ */
 export default function Header() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  /**
+   * Logs the user out and returns them to the login route.
+   */
   async function handleLogout() {
     setIsLoggingOut(true);
 

@@ -5,6 +5,12 @@ import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 
+/**
+ * Guards routes that require an authenticated CMS session.
+ *
+ * While the current session is being checked, the route renders a lightweight
+ * loading state. Unauthenticated visitors are redirected to the login page.
+ */
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -19,6 +25,12 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return children;
 }
 
+/**
+ * Guards public-only routes, such as the login page.
+ *
+ * Authenticated users are redirected back to the dashboard so they cannot open
+ * the login screen again while an active session exists.
+ */
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -33,6 +45,9 @@ function PublicOnlyRoute({ children }: { children: ReactNode }) {
   return children;
 }
 
+/**
+ * Defines the client-side route table for the CMS admin application.
+ */
 export default function App() {
   return (
     <Routes>

@@ -5,6 +5,9 @@ import { setCsrfToken as setStoredCsrfToken } from "../api/authSession";
 import * as authApi from "../api/authApi";
 import type { AuthSession, AuthUser, LoginRequest } from "../api/authApi";
 
+/**
+ * Authentication state and actions exposed to the React component tree.
+ */
 type AuthContextValue = {
   user: AuthUser | null;
   csrfToken: string | null;
@@ -17,17 +20,26 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/**
+ * Provides authentication state, session refresh, login, and logout behavior.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * Updates both React state and the API client's in-memory CSRF token.
+   */
   const setSession = useCallback((nextUser: AuthUser | null, nextCsrfToken: string | null) => {
     setUser(nextUser);
     setCsrfToken(nextCsrfToken);
     setStoredCsrfToken(nextCsrfToken);
   }, []);
 
+  /**
+   * Splits a backend session payload into user state and CSRF token storage.
+   */
   const setAuthenticatedSession = useCallback(
     (session: AuthSession) => {
       const { csrfToken: nextCsrfToken, ...nextUser } = session;
@@ -37,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [setSession],
   );
 
+  /**
+   * Revalidates the current browser session against the backend.
+   */
   const refreshUser = useCallback(async () => {
     try {
       const session = await authApi.me();
@@ -58,6 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refreshUser();
   }, [refreshUser]);
 
+  /**
+   * Authenticates with credentials and stores the returned session.
+   */
   const login = useCallback(
     async (input: LoginRequest) => {
       const session = await authApi.login(input);
@@ -66,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [setAuthenticatedSession],
   );
 
+  /**
+   * Ends the backend session and clears local authentication state.
+   */
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -91,6 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Reads the current authentication context.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
 

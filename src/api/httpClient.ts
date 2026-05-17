@@ -1,6 +1,9 @@
 import type { ApiError as ApiErrorBody, ApiResponse } from "./types";
 import { getCsrfToken } from "./authSession";
 
+/**
+ * Error thrown when the backend response cannot be treated as a successful API result.
+ */
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -27,6 +30,9 @@ const CSRF_PROTECTED_METHODS = new Set<RequestOptions["method"]>([
   "DELETE",
 ]);
 
+/**
+ * Resolves a human-readable error message from a backend error payload.
+ */
 function getErrorMessage(body: unknown, fallbackMessage: string) {
   if (isApiErrorBody(body)) {
     return body.message;
@@ -35,10 +41,16 @@ function getErrorMessage(body: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+/**
+ * Narrows unknown JSON values to object records.
+ */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
 }
 
+/**
+ * Checks whether an unknown value matches the backend error payload format.
+ */
 function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return (
     isRecord(value) &&
@@ -47,6 +59,9 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
+/**
+ * Checks whether an unknown value matches the common backend response envelope.
+ */
 function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
   if (!isRecord(value) || typeof value.success !== "boolean") {
     return false;
@@ -59,6 +74,9 @@ function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
   return isApiErrorBody(value.error);
 }
 
+/**
+ * Parses a response body as JSON and raises an ApiError when the payload is invalid.
+ */
 async function parseJson(response: Response) {
   const text = await response.text();
 
@@ -73,6 +91,10 @@ async function parseJson(response: Response) {
   }
 }
 
+/**
+ * Sends an API request using the CMS conventions for credentials, JSON payloads,
+ * CSRF headers, and response envelopes.
+ */
 async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> {
   const headers = new Headers();
   const csrfToken = getCsrfToken();
@@ -114,22 +136,37 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
   return responseBody.data;
 }
 
+/**
+ * Sends a GET request and returns the unwrapped response data.
+ */
 export function apiGet<T>(path: string) {
   return apiRequest<T>(path, { method: "GET" });
 }
 
+/**
+ * Sends a POST request and returns the unwrapped response data.
+ */
 export function apiPost<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "POST", body });
 }
 
+/**
+ * Sends a PUT request and returns the unwrapped response data.
+ */
 export function apiPut<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "PUT", body });
 }
 
+/**
+ * Sends a PATCH request and returns the unwrapped response data.
+ */
 export function apiPatch<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "PATCH", body });
 }
 
+/**
+ * Sends a DELETE request and returns the unwrapped response data.
+ */
 export function apiDelete<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "DELETE", body });
 }

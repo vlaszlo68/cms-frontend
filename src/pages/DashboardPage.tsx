@@ -1,5 +1,8 @@
 import { useAuth } from "../auth/AuthContext";
 
+/**
+ * Renders the authenticated user's dashboard landing page.
+ */
 export default function DashboardPage() {
   const { user } = useAuth();
 

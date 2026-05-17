@@ -5,6 +5,9 @@ import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import "./styles.css";
 
+/**
+ * Mounts the React application and wires global providers used by every route.
+ */
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>

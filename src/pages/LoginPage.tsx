@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/httpClient";
 import { useAuth } from "../auth/AuthContext";
 
+/**
+ * Renders the CMS login form and stores the session after successful sign-in.
+ */
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -11,6 +14,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * Submits credentials to the auth API and redirects to the dashboard on success.
+   */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
