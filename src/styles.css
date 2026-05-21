@@ -19,7 +19,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -31,6 +32,10 @@ button {
   cursor: pointer;
   font-weight: 700;
   padding: 0.75rem 1rem;
+}
+
+a {
+  color: inherit;
 }
 
 button:disabled {
@@ -73,21 +78,26 @@ button:disabled {
   color: #5e6a7d;
 }
 
-.login-card label {
+.login-card label,
+.user-form label {
   display: grid;
   gap: 0.35rem;
   color: #384354;
   font-weight: 700;
 }
 
-.login-card input {
+.login-card input,
+.user-form input,
+.user-form select {
   width: 100%;
   border: 1px solid #c8d2df;
   border-radius: 6px;
   padding: 0.7rem 0.8rem;
 }
 
-.login-card input:focus {
+.login-card input:focus,
+.user-form input:focus,
+.user-form select:focus {
   border-color: #225c7a;
   outline: 3px solid rgb(34 92 122 / 0.16);
 }
@@ -172,19 +182,126 @@ button:disabled {
 }
 
 .dashboard-page,
-.placeholder-page {
+.placeholder-page,
+.users-page {
   display: grid;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .dashboard-page h2,
 .placeholder-page h2,
-.placeholder-page p {
+.placeholder-page p,
+.users-page h2,
+.users-page h3,
+.users-page p {
   margin: 0;
 }
 
-.placeholder-page p {
+.placeholder-page p,
+.page-heading p {
   color: #5e6a7d;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-actions,
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button-link,
+.secondary-link {
+  border-radius: 6px;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+}
+
+.button-link {
+  background: #225c7a;
+  color: #ffffff;
+}
+
+.secondary-link {
+  border: 1px solid #c8d2df;
+  background: #ffffff;
+  color: #1d2433;
+}
+
+.user-form,
+.users-table-wrap {
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.user-form {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.user-form--page {
+  width: min(100%, 560px);
+}
+
+.checkbox-field {
+  align-items: center;
+  grid-template-columns: auto 1fr;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
+.users-table-wrap {
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.users-table th,
+.users-table td {
+  border-bottom: 1px solid #edf1f6;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.users-table th {
+  color: #5e6a7d;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.table-actions button {
+  padding: 0.55rem 0.7rem;
+}
+
+.danger-button {
+  background: #a93636;
+}
+
+.inline-status {
+  color: #5e6a7d;
+  padding: 1rem;
 }
 
 @media (max-width: 520px) {
@@ -207,5 +324,12 @@ button:disabled {
     border-bottom: 1px solid #d9e0ea;
     flex-direction: row;
     overflow-x: auto;
+  }
+
+  .page-heading,
+  .page-actions,
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

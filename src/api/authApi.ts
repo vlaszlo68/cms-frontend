@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from "./httpClient";
+import type { UserRole } from "../models/user";
 
 /**
  * Credentials submitted from the login form.
@@ -15,6 +16,7 @@ export type AuthUser = {
   id: number;
   loginName: string;
   email: string;
+  role: UserRole;
 };
 
 /**

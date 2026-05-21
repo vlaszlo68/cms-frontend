@@ -4,6 +4,8 @@ import { useAuth } from "./auth/AuthContext";
 import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import UserFormPage from "./pages/UserFormPage";
+import UsersPage from "./pages/UsersPage";
 
 /**
  * Guards routes that require an authenticated CMS session.
@@ -20,6 +22,16 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+
+  if (user?.role !== "ADMIN") {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -73,12 +85,35 @@ export default function App() {
         path="/users"
         element={
           <ProtectedRoute>
-            <AppLayout>
-              <div className="placeholder-page">
-                <h2>Users</h2>
-                <p>This section is a placeholder for user management.</p>
-              </div>
-            </AppLayout>
+            <AdminRoute>
+              <AppLayout>
+                <UsersPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users/new"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <UserFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users/:userId/edit"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <UserFormPage />
+              </AppLayout>
+            </AdminRoute>
           </ProtectedRoute>
         }
       />
