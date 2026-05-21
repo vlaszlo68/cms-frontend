@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as userApi from "../api/userApi";
+import ButtonLabel from "../components/ui/ButtonLabel";
 import type { CreateUserRequest, RegistrationStatus, UpdateUserRequest, User, UserRole } from "../models/user";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 const roles: UserRole[] = ["USER", "ADMIN"];
 const registrationStatuses: RegistrationStatus[] = [
@@ -51,6 +53,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function UserFormPage() {
   const navigate = useNavigate();
+  const { t } = usePreferences();
   const { userId } = useParams();
   const editedUserId = userId === undefined ? null : Number(userId);
   const isEditMode = editedUserId !== null;
@@ -75,14 +78,14 @@ export default function UserFormPage() {
         const user = await userApi.getUser(id);
         setForm(toFormState(user));
       } catch (caughtError) {
-        setError(getErrorMessage(caughtError, "User could not be loaded."));
+        setError(getErrorMessage(caughtError, t("userCouldNotBeLoaded")));
       } finally {
         setIsLoading(false);
       }
     }
 
     void loadUser(editedUserId);
-  }, [editedUserId]);
+  }, [editedUserId, t]);
 
   if (hasInvalidUserId) {
     return <Navigate to="/users" replace />;
@@ -123,7 +126,7 @@ export default function UserFormPage() {
 
       navigate("/users");
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "User could not be saved."));
+      setError(getErrorMessage(caughtError, t("userCouldNotBeSaved")));
     } finally {
       setIsSubmitting(false);
     }
@@ -133,23 +136,23 @@ export default function UserFormPage() {
     <section className="users-page">
       <div className="page-heading">
         <div>
-          <h2>{isEditMode ? "Edit user" : "Create user"}</h2>
-          <p>{isEditMode ? "Update account details and access." : "Add a new CMS account."}</p>
+          <h2>{isEditMode ? t("editUser") : t("createUser")}</h2>
+          <p>{isEditMode ? t("updateAccount") : t("addCmsAccount")}</p>
         </div>
         <Link className="secondary-link" to="/users">
-          Back to users
+          <ButtonLabel icon="back">{t("backToUsers")}</ButtonLabel>
         </Link>
       </div>
 
       <form className="user-form user-form--page" onSubmit={handleSubmit}>
         {isLoading ? (
-          <div className="inline-status">Loading user...</div>
+          <div className="inline-status">{t("loadingUser")}</div>
         ) : (
           <>
             {error && <div className="error-message">{error}</div>}
 
             <label>
-              Login name
+              {t("loginName")}
               <input
                 name="loginName"
                 onChange={(event) => updateForm("loginName", event.target.value)}
@@ -160,7 +163,7 @@ export default function UserFormPage() {
             </label>
 
             <label>
-              User name
+              {t("userName")}
               <input
                 name="userName"
                 onChange={(event) => updateForm("userName", event.target.value)}
@@ -171,7 +174,7 @@ export default function UserFormPage() {
             </label>
 
             <label>
-              Email
+              {t("email")}
               <input
                 autoComplete="email"
                 name="emailAddress"
@@ -183,7 +186,7 @@ export default function UserFormPage() {
             </label>
 
             <label>
-              Password
+              {t("password")}
               <input
                 autoComplete={isEditMode ? "new-password" : "current-password"}
                 name="password"
@@ -195,7 +198,7 @@ export default function UserFormPage() {
             </label>
 
             <label>
-              Role
+              {t("role")}
               <select
                 name="role"
                 onChange={(event) => updateForm("role", event.target.value as UserRole)}
@@ -211,7 +214,7 @@ export default function UserFormPage() {
             </label>
 
             <label>
-              Registration status
+              {t("registrationStatus")}
               <select
                 name="registrationStatus"
                 onChange={(event) =>
@@ -234,15 +237,17 @@ export default function UserFormPage() {
                 onChange={(event) => updateForm("active", event.target.checked)}
                 type="checkbox"
               />
-              Active
+              {t("active")}
             </label>
 
             <div className="form-actions">
               <button disabled={isSubmitting} type="submit">
-                {isSubmitting ? "Saving..." : isEditMode ? "Save changes" : "Create user"}
+                <ButtonLabel icon={isEditMode ? "save" : "create"}>
+                  {isSubmitting ? t("saving") : isEditMode ? t("saveChanges") : t("createUser")}
+                </ButtonLabel>
               </button>
               <Link className="secondary-link" to="/users">
-                Cancel
+                <ButtonLabel icon="cancel">{t("cancel")}</ButtonLabel>
               </Link>
             </div>
           </>

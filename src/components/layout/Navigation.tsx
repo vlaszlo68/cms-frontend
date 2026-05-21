@@ -1,13 +1,16 @@
 import { NavLink } from "react-router";
 import { useAuth } from "../../auth/AuthContext";
+import type { TranslationKey } from "../../i18n/translations";
+import { usePreferences } from "../../preferences/PreferencesContext";
 
 /**
  * Main navigation entries displayed in the authenticated app shell.
  */
 const navigationItems = [
-  { label: "Dashboard", to: "/" },
-  { label: "Users", to: "/users" },
-  { label: "Pages", to: "/pages" },
+  { labelKey: "dashboard", to: "/" },
+  { labelKey: "users", to: "/users" },
+  { labelKey: "pages", to: "/pages" },
+  { labelKey: "settings", to: "/settings" },
 ] as const;
 
 /**
@@ -15,6 +18,7 @@ const navigationItems = [
  */
 export default function Navigation() {
   const { user } = useAuth();
+  const { t } = usePreferences();
   const visibleItems = navigationItems.filter((item) => item.to !== "/users" || user?.role === "ADMIN");
 
   return (
@@ -28,7 +32,7 @@ export default function Navigation() {
           key={item.to}
           to={item.to}
         >
-          {item.label}
+          {t(item.labelKey as TranslationKey)}
         </NavLink>
       ))}
     </nav>

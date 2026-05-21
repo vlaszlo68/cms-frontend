@@ -2,20 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as userApi from "../api/userApi";
+import ButtonLabel from "../components/ui/ButtonLabel";
 import type { User } from "../models/user";
+import type { DateFormat } from "../preferences/PreferencesContext";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
+function formatDate(value: string, language: string, dateFormat: DateFormat) {
+  return new Intl.DateTimeFormat(language === "hu" ? "hu-HU" : "en-US", {
+    dateStyle: dateFormat === "long" ? "full" : "medium",
+    timeStyle: dateFormat === "long" ? "medium" : "short",
   }).format(new Date(value));
 }
 
 export default function UsersPage() {
+  const { dateFormat, language, t } = usePreferences();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,7 +36,7 @@ export default function UsersPage() {
     try {
       setUsers(await userApi.getUsers());
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Users could not be loaded."));
+      setError(getErrorMessage(caughtError, t("usersCouldNotBeLoaded")));
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +47,7 @@ export default function UsersPage() {
   }, []);
 
   async function handleDeactivate(user: User) {
-    const confirmed = window.confirm(`Deactivate ${user.loginName}?`);
+    const confirmed = window.confirm(`${t("deactivateConfirm")} ${user.loginName}?`);
 
     if (!confirmed) {
       return;
@@ -57,7 +61,7 @@ export default function UsersPage() {
         current.map((item) => (item.id === deactivatedUser.id ? deactivatedUser : item)),
       );
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "User could not be deactivated."));
+      setError(getErrorMessage(caughtError, t("userCouldNotBeDeactivated")));
     }
   }
 
@@ -65,15 +69,15 @@ export default function UsersPage() {
     <section className="users-page">
       <div className="page-heading">
         <div>
-          <h2>Users</h2>
-          <p>Manage CMS accounts, roles, and active access.</p>
+          <h2>{t("users")}</h2>
+          <p>{t("manageUsers")}</p>
         </div>
         <div className="page-actions">
           <button className="secondary-button" onClick={() => void loadUsers()} type="button">
-            Refresh
+            <ButtonLabel icon="refresh">{t("refresh")}</ButtonLabel>
           </button>
           <Link className="button-link" to="/users/new">
-            New user
+            <ButtonLabel icon="create">{t("newUser")}</ButtonLabel>
           </Link>
         </div>
       </div>
@@ -82,21 +86,21 @@ export default function UsersPage() {
 
       <div className="users-table-wrap">
         {isLoading ? (
-          <div className="inline-status">Loading users...</div>
+          <div className="inline-status">{t("loadingUsers")}</div>
         ) : sortedUsers.length === 0 ? (
-          <div className="inline-status">No users yet.</div>
+          <div className="inline-status">{t("noUsers")}</div>
         ) : (
           <table className="users-table">
             <thead>
               <tr>
-                <th>Login name</th>
-                <th>User name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Active</th>
-                <th>Registration</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>{t("loginName")}</th>
+                <th>{t("userName")}</th>
+                <th>{t("email")}</th>
+                <th>{t("role")}</th>
+                <th>{t("active")}</th>
+                <th>{t("registration")}</th>
+                <th>{t("created")}</th>
+                <th>{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -106,13 +110,13 @@ export default function UsersPage() {
                   <td>{user.userName}</td>
                   <td>{user.emailAddress}</td>
                   <td>{user.role}</td>
-                  <td>{user.active ? "Yes" : "No"}</td>
+                  <td>{user.active ? t("yes") : t("no")}</td>
                   <td>{user.registrationStatus}</td>
-                  <td>{formatDate(user.createdAt)}</td>
+                  <td>{formatDate(user.createdAt, language, dateFormat)}</td>
                   <td>
                     <div className="table-actions">
                       <Link className="secondary-link" to={`/users/${user.id}/edit`}>
-                        Edit
+                        <ButtonLabel icon="edit">{t("edit")}</ButtonLabel>
                       </Link>
                       <button
                         className="danger-button"
@@ -120,7 +124,7 @@ export default function UsersPage() {
                         onClick={() => void handleDeactivate(user)}
                         type="button"
                       >
-                        Deactivate
+                        <ButtonLabel icon="deactivate">{t("deactivate")}</ButtonLabel>
                       </button>
                     </div>
                   </td>

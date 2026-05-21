@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { useAuth } from "./auth/AuthContext";
 import AppLayout from "./components/layout/AppLayout";
+import { usePreferences } from "./preferences/PreferencesContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import SettingsPage from "./pages/SettingsPage";
 import UserFormPage from "./pages/UserFormPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -15,9 +17,10 @@ import UsersPage from "./pages/UsersPage";
  */
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = usePreferences();
 
   if (isLoading) {
-    return <div className="page-status">Loading...</div>;
+    return <div className="page-status">{t("loading")}</div>;
   }
 
   if (!isAuthenticated) {
@@ -45,9 +48,10 @@ function AdminRoute({ children }: { children: ReactNode }) {
  */
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = usePreferences();
 
   if (isLoading) {
-    return <div className="page-status">Loading...</div>;
+    return <div className="page-status">{t("loading")}</div>;
   }
 
   if (isAuthenticated) {
@@ -123,14 +127,34 @@ export default function App() {
           <ProtectedRoute>
             <AppLayout>
               <div className="placeholder-page">
-                <h2>Pages</h2>
-                <p>This section is a placeholder for page management.</p>
+                <PagePlaceholder />
               </div>
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <SettingsPage />
             </AppLayout>
           </ProtectedRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+}
+
+function PagePlaceholder() {
+  const { t } = usePreferences();
+
+  return (
+    <>
+      <h2>{t("pages")}</h2>
+      <p>{t("pagesPlaceholder")}</p>
+    </>
   );
 }

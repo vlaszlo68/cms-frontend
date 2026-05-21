@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ApiError } from "../api/httpClient";
 import { useAuth } from "../auth/AuthContext";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 /**
  * Renders the CMS login form and stores the session after successful sign-in.
@@ -10,6 +11,7 @@ import { useAuth } from "../auth/AuthContext";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = usePreferences();
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export default function LoginPage() {
       if (caughtError instanceof ApiError) {
         setError(caughtError.message);
       } else {
-        setError("Login failed. Please try again.");
+        setError(t("loginFailed"));
       }
     } finally {
       setIsSubmitting(false);
@@ -41,14 +43,14 @@ export default function LoginPage() {
     <main className="login-page">
       <form className="login-card" onSubmit={handleSubmit}>
         <div>
-          <h1>CMS Login</h1>
-          <p>Sign in with your CMS account.</p>
+          <h1>{t("cmsLogin")}</h1>
+          <p>{t("signInPrompt")}</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}
 
         <label>
-          Login name
+          {t("loginName")}
           <input
             autoComplete="username"
             name="loginName"
@@ -60,7 +62,7 @@ export default function LoginPage() {
         </label>
 
         <label>
-          Password
+          {t("password")}
           <input
             autoComplete="current-password"
             name="password"
@@ -72,7 +74,7 @@ export default function LoginPage() {
         </label>
 
         <button disabled={isSubmitting} type="submit">
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting ? t("signingIn") : t("signIn")}
         </button>
       </form>
     </main>
