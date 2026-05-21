@@ -4,7 +4,7 @@
 
 Create a separate React frontend repository for the CMS backend described in `FRONTEND_HANDOFF.md`.
 
-Status: the initial auth-only frontend milestone has now been implemented in this repository.
+Status: the initial auth frontend milestone and the User CRUD frontend slice have now been implemented in this repository.
 
 Recommended location:
 
@@ -52,9 +52,20 @@ cms-frontend/
         AppLayout.tsx
         Header.tsx
         Navigation.tsx
+      ui/
+        ButtonLabel.tsx
+    i18n/
+      translations.ts
+    models/
+      user.ts
     pages/
       DashboardPage.tsx
       LoginPage.tsx
+      SettingsPage.tsx
+      UserFormPage.tsx
+      UsersPage.tsx
+    preferences/
+      PreferencesContext.tsx
     App.tsx
     main.tsx
     styles.css
@@ -261,7 +272,10 @@ Suggested routes:
 - `/login`
 - `/`
 - `/users`
+- `/users/new`
+- `/users/:userId/edit`
 - `/pages`
+- `/settings`
 
 Behavior:
 
@@ -271,11 +285,20 @@ Behavior:
   - protected route
   - render dashboard inside authenticated app layout
 - `/users`
-  - protected route
-  - render users placeholder inside authenticated app layout
+  - ADMIN-only route
+  - render user list inside authenticated app layout
+- `/users/new`
+  - ADMIN-only route
+  - render user create form inside authenticated app layout
+- `/users/:userId/edit`
+  - ADMIN-only route
+  - render user edit form inside authenticated app layout
 - `/pages`
   - protected route
   - render pages placeholder inside authenticated app layout
+- `/settings`
+  - protected route
+  - render appearance/preferences settings inside authenticated app layout
 
 Suggested files:
 
@@ -285,6 +308,9 @@ Suggested files:
 - current: `src/components/layout/AppLayout.tsx`
 - current: `src/components/layout/Header.tsx`
 - current: `src/components/layout/Navigation.tsx`
+- current: `src/pages/UsersPage.tsx`
+- current: `src/pages/UserFormPage.tsx`
+- current: `src/pages/SettingsPage.tsx`
 
 ## Local Dev Integration
 
@@ -367,8 +393,14 @@ Do not overbuild component libraries before the auth flow is proven.
 ### `src/components/layout/Navigation.tsx`
 
 - Dashboard link
-- Users placeholder link
+- ADMIN-only Users link
 - Pages placeholder link
+- Settings link
+
+### `src/preferences/PreferencesContext.tsx`
+
+- persisted local UI preferences
+- language, theme, menu layout/behavior, date/time display, date format, density, table striping, content width, reduced motion, and button icons
 
 ## Bootstrap Sequence
 
@@ -444,10 +476,23 @@ Login and session restore must keep the returned `csrfToken`; `POST`, `PUT`, `PA
 
 The backend uses servlet paths for auth public-path matching, so both root context and `/cms-app` deployments are supported.
 
+## Current Feature Status
+
+Implemented beyond the auth shell:
+
+- User CRUD frontend vertical slice
+- ADMIN-only user routes and navigation visibility
+- settings/preferences page
+- English/Hungarian labels
+- light, vivid, semidark, and dark themes
+- configurable navigation layout and behavior
+- configurable header date/time display
+- display density, table striping, content width, reduced motion, and button icon options
+
 ## Recommended Next Step
 
 Recommended next steps:
 
-1. Keep the auth-only frontend stable before adding CMS features.
-2. Replace `/users` and `/pages` placeholders with real CMS screens when backend endpoints are ready.
+1. Keep the auth and User CRUD frontend stable against backend changes.
+2. Replace `/pages` placeholder with real CMS screens when backend endpoints are ready.
 3. Keep the current local proxy rewrite aligned with whichever backend context is running.

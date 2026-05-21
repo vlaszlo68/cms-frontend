@@ -32,10 +32,15 @@ Implemented:
 - authenticated layout components in `src/components/layout/`
 - login page at `/login`
 - protected dashboard route at `/`
-- protected placeholder routes at `/users` and `/pages`
+- ADMIN-only User CRUD routes at `/users`, `/users/new`, and `/users/:userId/edit`
+- protected placeholder route at `/pages`
+- protected settings route at `/settings`
 - logout flow
 - Vite dev proxy for the backend
-- JSDoc comments for the implemented TypeScript source files
+- User CRUD API wrapper and TypeScript models
+- local appearance/preferences context
+- English/Hungarian UI labels
+- theme, menu, date/time, density, table, content-width, reduced-motion, and button-icon settings
 
 The frontend intentionally uses relative API paths only, for example:
 
@@ -247,6 +252,7 @@ export type AuthUser = {
   id: number;
   loginName: string;
   email: string;
+  role: "ADMIN" | "USER";
 };
 
 export type AuthSession = AuthUser & {
@@ -267,18 +273,23 @@ type AuthState = {
 
 ## Routing
 
-Initial routes:
+Current routes:
 
 - `/login`: login page; redirect to `/` if already authenticated
 - `/`: protected app shell with dashboard
-- `/users`: protected app shell with users placeholder
+- `/users`: ADMIN-only user list
+- `/users/new`: ADMIN-only user create form
+- `/users/:userId/edit`: ADMIN-only user edit form
 - `/pages`: protected app shell with pages placeholder
+- `/settings`: protected settings page
 
 Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
 
 - `Header.tsx`: app name, current `loginName`, logout button
-- `Navigation.tsx`: Dashboard, Users, and Pages links
+- `Navigation.tsx`: Dashboard, Users, Pages, and Settings links
 - main content area for route children
+
+The Users navigation entry and user routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
 
 ## Local Development Notes
 
@@ -336,12 +347,46 @@ The first useful frontend milestone now includes:
 - protected route wrapper
 - authenticated app shell
 - dashboard page
-- placeholder navigation routes for Users and Pages
+- ADMIN-only User CRUD UI and API integration
+- placeholder route for Pages
+- Settings page with persisted appearance preferences
 - logout button
 - README with setup, proxy, and backend dependency notes
 - JSDoc comments for implemented API, auth, routing, page, and layout files
 - verified `npm run build`
 - verified proxied login and session restore
+
+## User CRUD Frontend Slice
+
+Implemented files:
+
+- `src/models/user.ts`
+- `src/api/userApi.ts`
+- `src/pages/UsersPage.tsx`
+- `src/pages/UserFormPage.tsx`
+
+API methods:
+
+```ts
+getUsers(): Promise<User[]>
+getUser(id: number): Promise<User>
+createUser(input: CreateUserRequest): Promise<User>
+updateUser(id: number, input: UpdateUserRequest): Promise<User>
+deleteUser(id: number): Promise<User>
+```
+
+The delete action is a soft deactivate flow. The UI calls `DELETE /api/users/{id}` and updates the list with the returned inactive user.
+
+## Preferences And Appearance
+
+Implemented files:
+
+- `src/preferences/PreferencesContext.tsx`
+- `src/i18n/translations.ts`
+- `src/pages/SettingsPage.tsx`
+- `src/components/ui/ButtonLabel.tsx`
+
+Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, content width, reduced motion, and button icons.
 
 ## Local Test User
 

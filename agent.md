@@ -8,7 +8,8 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 
 ## Working Principles
 
-- Keep the first frontend milestone focused on authentication and the authenticated app shell.
+- Keep the current frontend architecture explicit and lightweight.
+- Auth and the User CRUD frontend slice are already implemented; preserve those patterns.
 - Prefer small, verifiable changes over broad framework setup.
 - Follow the existing project structure once the React app is initialized.
 - Do not introduce Redux or heavier state libraries for the initial auth flow; use React context first.
@@ -53,24 +54,22 @@ Reasonable later additions:
 - Backend `AuthFilter` public-path matching uses servlet paths and works both at root context and under `/cms-app`.
 - Treat any protected API `401` response as logged-out state.
 
-## Initial Frontend Scope
+## Current Frontend Scope
 
-Build the frontend in this order:
+Implemented:
 
-1. Project scaffold.
-2. API client with cookie credentials.
-3. Auth API wrapper and CSRF token helper.
-4. Auth context and startup session restore through `/api/auth/me`.
-5. Login page.
-6. Protected route shell.
-7. Placeholder dashboard.
-8. Logout action.
-9. Basic authenticated layout with header, navigation, and content area.
-10. README with setup and backend integration notes.
+- API client with cookie credentials and CSRF injection
+- Auth API wrapper and CSRF token helper
+- Auth context and startup session restore through `/api/auth/me`
+- Login, logout, protected route shell, dashboard, and authenticated layout
+- ADMIN-only User CRUD frontend routes and API wrapper
+- Settings page with persisted appearance preferences
+- English/Hungarian labels
+- configurable themes, menu layout/behavior, date/time display, date format, density, table striping, content width, reduced motion, and button icons
 
-Avoid implementing broader CMS features before the auth flow is stable.
+Avoid introducing heavy state libraries or UI frameworks unless the project explicitly adopts them.
 
-Current first milestone status: auth flow and authenticated app layout are implemented and verified through the Vite proxy with `tester` / `pw`.
+Current milestone status: auth flow, authenticated app layout, User CRUD frontend, and settings/preferences UI are implemented. The project is repeatedly verified with `npm run build`.
 
 ## Suggested Structure
 
@@ -90,9 +89,20 @@ src/
       AppLayout.tsx
       Header.tsx
       Navigation.tsx
+    ui/
+      ButtonLabel.tsx
+  i18n/
+    translations.ts
+  models/
+    user.ts
   pages/
     DashboardPage.tsx
     LoginPage.tsx
+    SettingsPage.tsx
+    UserFormPage.tsx
+    UsersPage.tsx
+  preferences/
+    PreferencesContext.tsx
   App.tsx
   main.tsx
   styles.css
@@ -147,4 +157,6 @@ Before calling the first auth milestone done, verify:
 - protected routes redirect unauthenticated users to `/login`
 - authenticated routes render through `AppLayout`
 - header shows the current user's `loginName`
-- navigation includes Dashboard, Users, and Pages links
+- navigation includes Dashboard, Users, Pages, and Settings links
+- Users navigation/routes are available only for ADMIN users
+- settings changes persist in localStorage and apply immediately

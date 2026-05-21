@@ -54,14 +54,32 @@ The TypeScript source files include JSDoc comments for the current public API he
 
 - `/login` - login page
 - `/` - protected dashboard
-- `/users` - protected users placeholder
+- `/users` - ADMIN-only user list
+- `/users/new` - ADMIN-only user create form
+- `/users/:userId/edit` - ADMIN-only user edit form
 - `/pages` - protected pages placeholder
+- `/settings` - protected appearance and preference settings
 
 Authenticated pages render inside the shared app layout:
 
 - header with app name, current `loginName`, and logout button
-- navigation links for Dashboard, Users, and Pages
+- navigation links for Dashboard, Users, Pages, and Settings
 - main content area for the active route
+
+The Users navigation item and user-management routes are available only to authenticated users with the `ADMIN` role.
+
+## Implemented Features
+
+- Session login, logout, and startup session restore
+- Common API response envelope handling through `src/api/httpClient.ts`
+- CSRF header injection for mutating requests
+- User CRUD frontend slice with list, create, edit, and soft deactivate flow
+- Role-based frontend authorization for user management
+- Settings page backed by localStorage preferences
+- English/Hungarian UI labels
+- Configurable themes, including light, vivid, semidark, and dark options
+- Configurable navigation layout and behavior
+- Optional header date/time, date format, density, striped tables, content width, reduced motion, and button icons
 
 ## Backend Dependency
 
@@ -70,5 +88,10 @@ The backend must expose:
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `DELETE /api/users/{id}`
 
 Session authentication is cookie based, so requests must be made through the same dev origin via the Vite proxy. State-changing requests also require the latest CSRF token from the authenticated session.

@@ -22,6 +22,8 @@ Source of truth for this handoff:
 
 The backend stores a password-hash-free `hu.laci.cms.backend.dto.auth.AuthenticatedUser` object in the HTTP session on successful login. The backend also stores a CSRF token in the same session and returns it in successful login and `/api/auth/me` responses.
 
+Current frontend authorization expects the authenticated user payload to include a `role` field with values such as `"ADMIN"` or `"USER"`. User-management routes and navigation are gated on `role === "ADMIN"`.
+
 ## API Base URL
 
 The effective base URL depends on deployment mode.
@@ -130,6 +132,7 @@ Successful response:
     "id": 1,
     "loginName": "demo-user",
     "email": "user@example.test",
+    "role": "ADMIN",
     "csrfToken": "base64url-token"
   }
 }
@@ -222,6 +225,7 @@ Successful response:
     "id": 1,
     "loginName": "demo-user",
     "email": "user@example.test",
+    "role": "ADMIN",
     "csrfToken": "base64url-token"
   }
 }
@@ -397,12 +401,20 @@ Files implemented:
 - `src/api/authSession.ts`
 - `src/api/types.ts`
 - `src/api/authApi.ts`
+- `src/api/userApi.ts`
 - `src/auth/AuthContext.tsx`
 - `src/components/layout/AppLayout.tsx`
 - `src/components/layout/Header.tsx`
 - `src/components/layout/Navigation.tsx`
+- `src/components/ui/ButtonLabel.tsx`
+- `src/i18n/translations.ts`
+- `src/models/user.ts`
 - `src/pages/LoginPage.tsx`
 - `src/pages/DashboardPage.tsx`
+- `src/pages/UsersPage.tsx`
+- `src/pages/UserFormPage.tsx`
+- `src/pages/SettingsPage.tsx`
+- `src/preferences/PreferencesContext.tsx`
 - `src/App.tsx`
 - `vite.config.ts`
 
@@ -416,15 +428,38 @@ Current routes:
 
 - `/login` - public-only login page
 - `/` - protected dashboard rendered inside `AppLayout`
-- `/users` - protected placeholder rendered inside `AppLayout`
+- `/users` - ADMIN-only user list rendered inside `AppLayout`
+- `/users/new` - ADMIN-only user create form rendered inside `AppLayout`
+- `/users/:userId/edit` - ADMIN-only user edit form rendered inside `AppLayout`
 - `/pages` - protected placeholder rendered inside `AppLayout`
+- `/settings` - protected settings page rendered inside `AppLayout`
 
 The authenticated layout currently provides:
 
 - app header with app name
 - current authenticated user's `loginName`
 - logout button that calls `AuthContext.logout()` and navigates to `/login`
-- simple navigation links for Dashboard, Users, and Pages
+- navigation links for Dashboard, Users, Pages, and Settings
+- ADMIN-only visibility for the Users navigation item
+- persisted appearance preferences, themes, language selection, menu layout/behavior, date/time controls, density, content width, table striping, reduced motion, and button icons
+
+## User CRUD Frontend Contract
+
+The frontend currently calls these backend endpoints through `src/api/userApi.ts`:
+
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `DELETE /api/users/{id}`
+
+All responses use the common envelope. Mutating requests rely on the shared `httpClient` for CSRF header injection.
+
+The UI assumes:
+
+- only ADMIN users can open user-management screens
+- `DELETE /api/users/{id}` performs soft deactivate and returns the updated user
+- user responses never contain passwords or password hashes
 
 Verified through the Vite proxy:
 
