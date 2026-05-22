@@ -22,3 +22,11 @@ export function updateUser(id: number, input: UpdateUserRequest) {
 export function deleteUser(id: number) {
   return apiDelete<User>(`${USERS_PATH}/${id}`);
 }
+
+export function approveUser(id: number) {
+  return apiPost<User>(`${USERS_PATH}/${id}/approve`);
+}
+
+export function rejectUser(id: number) {
+  return apiPost<User>(`${USERS_PATH}/${id}/reject`);
+}

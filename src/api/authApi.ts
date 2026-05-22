@@ -1,5 +1,5 @@
-import { apiGet, apiPost } from "./httpClient";
-import type { UserRole } from "../models/user";
+import { apiGet, apiPost, apiPublicPost } from "./httpClient";
+import type { User, UserRole } from "../models/user";
 
 /**
  * Credentials submitted from the login form.
@@ -7,6 +7,27 @@ import type { UserRole } from "../models/user";
 export type LoginRequest = {
   loginName: string;
   password: string;
+  captchaId?: string;
+  captchaAnswer?: string;
+};
+
+export type RegisterRequest = {
+  loginName: string;
+  userName: string;
+  emailAddress: string;
+  password: string;
+  captchaId?: string;
+  captchaAnswer?: string;
+};
+
+export type CaptchaChallenge = {
+  captchaId: string;
+  svgText: string;
+};
+
+export type AuthConfig = {
+  loginCaptchaEnabled: boolean;
+  registrationCaptchaEnabled: boolean;
 };
 
 /**
@@ -38,6 +59,44 @@ export type LogoutResponse = {
  */
 export function login(input: LoginRequest) {
   return apiPost<AuthSession>("/api/auth/login", input);
+}
+
+/**
+ * Loads public authentication UI flags used by login and registration screens.
+ */
+export function getAuthConfig() {
+  return apiGet<AuthConfig>("/api/auth/config");
+}
+
+/**
+ * Creates a public registration request. Registration does not establish a session.
+ */
+export function register(input: RegisterRequest) {
+  return apiPublicPost<User>("/api/auth/register", input);
+}
+
+/**
+ * Loads a fresh SVG CAPTCHA challenge for the public registration form.
+ */
+export async function getCaptcha(): Promise<CaptchaChallenge> {
+  const response = await fetch("/api/auth/captcha", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load captcha.");
+  }
+
+  const captchaId = response.headers.get("X-Captcha-Id");
+  const svgText = await response.text();
+
+  if (!captchaId) {
+    throw new Error("Missing captcha id.");
+  }
+
+  return { captchaId, svgText };
 }
 
 /**

@@ -8,6 +8,7 @@ export class ApiError extends Error {
   status: number;
   body: unknown;
   code?: string;
+  validationErrors?: string[];
 
   constructor(status: number, body: unknown, fallbackMessage: string, code?: string) {
     super(getErrorMessage(body, fallbackMessage));
@@ -15,12 +16,14 @@ export class ApiError extends Error {
     this.status = status;
     this.body = body;
     this.code = code;
+    this.validationErrors = isApiErrorBody(body) ? body.validationErrors : undefined;
   }
 }
 
 type RequestOptions = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
   body?: unknown;
+  skipCsrf?: boolean;
 };
 
 const CSRF_PROTECTED_METHODS = new Set<RequestOptions["method"]>([
@@ -55,7 +58,10 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return (
     isRecord(value) &&
     typeof value.code === "string" &&
-    typeof value.message === "string"
+    typeof value.message === "string" &&
+    (value.validationErrors === undefined ||
+      (Array.isArray(value.validationErrors) &&
+        value.validationErrors.every((item) => typeof item === "string")))
   );
 }
 
@@ -103,7 +109,7 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
     headers.set("Content-Type", "application/json");
   }
 
-  if (csrfToken && CSRF_PROTECTED_METHODS.has(options.method)) {
+  if (!options.skipCsrf && csrfToken && CSRF_PROTECTED_METHODS.has(options.method)) {
     headers.set("X-CSRF-Token", csrfToken);
   }
 
@@ -148,6 +154,13 @@ export function apiGet<T>(path: string) {
  */
 export function apiPost<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "POST", body });
+}
+
+/**
+ * Sends a public POST request without attaching a CSRF token.
+ */
+export function apiPublicPost<T>(path: string, body?: unknown) {
+  return apiRequest<T>(path, { method: "POST", body, skipCsrf: true });
 }
 
 /**

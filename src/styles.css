@@ -292,6 +292,24 @@ button:disabled {
   box-shadow: 0 18px 45px rgb(25 37 62 / 0.08);
 }
 
+.register-card {
+  gap: 0.75rem;
+  padding: 1.15rem;
+  width: min(100%, 480px);
+}
+
+.register-card p {
+  margin-top: 0.2rem;
+}
+
+.register-card label {
+  gap: 0.25rem;
+}
+
+.register-card input {
+  padding: 0.55rem 0.7rem;
+}
+
 .login-card h1,
 .app-header h1 {
   margin: 0;
@@ -338,6 +356,101 @@ button:disabled {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
   padding: 0.75rem;
+}
+
+.success-message {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-primary-hover-bg);
+  color: var(--color-primary-hover-text);
+  font-weight: 700;
+  padding: 0.75rem;
+}
+
+.field-error {
+  color: var(--color-danger-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.auth-inline-link {
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.password-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: -0.35rem 0 0;
+}
+
+.password-requirement {
+  align-items: center;
+  border: 1px solid var(--color-table-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 0.3rem;
+  line-height: 1.1;
+  padding: 0.28rem 0.48rem;
+}
+
+.password-requirement::before {
+  content: "";
+  border-radius: 999px;
+  background: var(--color-danger-text);
+  color: var(--color-danger-text);
+  height: 0.42rem;
+  width: 0.42rem;
+}
+
+.password-requirement--met::before {
+  background: var(--color-primary);
+}
+
+.captcha-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.captcha-field__heading {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.captcha-refresh {
+  padding: 0.45rem 0.65rem;
+}
+
+.captcha-row {
+  align-items: stretch;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: minmax(160px, 1fr) minmax(96px, 130px);
+}
+
+.captcha-image {
+  align-items: center;
+  border: 1px solid var(--color-field-border);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  min-height: 52px;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.captcha-image img {
+  display: block;
+  max-height: 58px;
+  max-width: 100%;
 }
 
 .app-layout {
@@ -676,6 +789,7 @@ button:disabled {
 
 .settings-form__group--first {
   border-top: 0;
+  gap: 1rem;
   padding-top: 0;
 }
 
@@ -823,6 +937,10 @@ button:disabled {
   .form-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .captcha-row {
+    grid-template-columns: 1fr;
   }
 }
 

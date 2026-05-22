@@ -14,8 +14,8 @@ export type User = {
   role: UserRole;
   active: boolean;
   registrationStatus: RegistrationStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | null;
+  updatedAt: string | null;
 };
 
 export type CreateUserRequest = {

@@ -152,7 +152,6 @@ export default function SettingsPage() {
           </label>
 
           <div className="settings-form__group">
-            <span className="settings-form__legend">{t("headerDateTime")}</span>
             <label>
               {t("dateFormat")}
               <select
@@ -187,7 +186,6 @@ export default function SettingsPage() {
 
         <div className="settings-form__column">
           <div className="settings-form__group settings-form__group--first">
-            <span className="settings-form__legend">{t("appearance")}</span>
             <label>
               {t("density")}
               <select

@@ -11,7 +11,11 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
 }
 
-function formatDate(value: string, language: string, dateFormat: DateFormat) {
+function formatDate(value: string | null, language: string, dateFormat: DateFormat) {
+  if (!value) {
+    return "-";
+  }
+
   return new Intl.DateTimeFormat(language === "hu" ? "hu-HU" : "en-US", {
     dateStyle: dateFormat === "long" ? "full" : "medium",
     timeStyle: dateFormat === "long" ? "medium" : "short",
@@ -23,6 +27,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingActionUserId, setPendingActionUserId] = useState<number | null>(null);
 
   const sortedUsers = useMemo(
     () => [...users].sort((left, right) => left.loginName.localeCompare(right.loginName)),
@@ -62,6 +67,30 @@ export default function UsersPage() {
       );
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("userCouldNotBeDeactivated")));
+    }
+  }
+
+  async function handleApprovalAction(user: User, action: "approve" | "reject") {
+    setError("");
+    setPendingActionUserId(user.id);
+
+    try {
+      const updatedUser =
+        action === "approve"
+          ? await userApi.approveUser(user.id)
+          : await userApi.rejectUser(user.id);
+      setUsers((current) =>
+        current.map((item) => (item.id === updatedUser.id ? updatedUser : item)),
+      );
+    } catch (caughtError) {
+      setError(
+        getErrorMessage(
+          caughtError,
+          action === "approve" ? t("userCouldNotBeApproved") : t("userCouldNotBeRejected"),
+        ),
+      );
+    } finally {
+      setPendingActionUserId(null);
     }
   }
 
@@ -126,6 +155,25 @@ export default function UsersPage() {
                       >
                         <ButtonLabel icon="deactivate">{t("deactivate")}</ButtonLabel>
                       </button>
+                      {user.registrationStatus === "PENDING" && (
+                        <>
+                          <button
+                            disabled={pendingActionUserId === user.id}
+                            onClick={() => void handleApprovalAction(user, "approve")}
+                            type="button"
+                          >
+                            <ButtonLabel icon="save">{t("approve")}</ButtonLabel>
+                          </button>
+                          <button
+                            className="danger-button"
+                            disabled={pendingActionUserId === user.id}
+                            onClick={() => void handleApprovalAction(user, "reject")}
+                            type="button"
+                          >
+                            <ButtonLabel icon="cancel">{t("reject")}</ButtonLabel>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

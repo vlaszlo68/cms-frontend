@@ -5,6 +5,7 @@ import AppLayout from "./components/layout/AppLayout";
 import { usePreferences } from "./preferences/PreferencesContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
 import UserFormPage from "./pages/UserFormPage";
 import UsersPage from "./pages/UsersPage";
@@ -72,6 +73,14 @@ export default function App() {
         element={
           <PublicOnlyRoute>
             <LoginPage />
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicOnlyRoute>
+            <RegisterPage />
           </PublicOnlyRoute>
         }
       />
