@@ -1,8 +1,16 @@
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
+import * as authApi from "../api/authApi";
 import { ApiError } from "../api/httpClient";
 import * as userApi from "../api/userApi";
+import {
+  getPasswordValidationErrors,
+  isPasswordValidationCode,
+  normalizePasswordPolicy,
+  type PasswordValidationCode,
+} from "../auth/passwordPolicy";
+import PasswordRequirements from "../components/auth/PasswordRequirements";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import type { CreateUserRequest, RegistrationStatus, UpdateUserRequest, User, UserRole } from "../models/user";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -58,12 +66,18 @@ export default function UserFormPage() {
   const editedUserId = userId === undefined ? null : Number(userId);
   const isEditMode = editedUserId !== null;
   const [form, setForm] = useState<UserFormState>(emptyForm);
-  const [isLoading, setIsLoading] = useState(isEditMode);
+  const [authConfig, setAuthConfig] = useState<authApi.AuthConfig | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(isEditMode);
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [configError, setConfigError] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState<PasswordValidationCode[]>([]);
   const hasInvalidUserId =
     userId !== undefined &&
     (editedUserId === null || !Number.isInteger(editedUserId) || editedUserId <= 0);
+  const passwordPolicy = useMemo(() => normalizePasswordPolicy(authConfig), [authConfig]);
+  const isLoading = isUserLoading || isConfigLoading;
 
   useEffect(() => {
     if (!editedUserId) {
@@ -71,7 +85,7 @@ export default function UserFormPage() {
     }
 
     async function loadUser(id: number) {
-      setIsLoading(true);
+      setIsUserLoading(true);
       setError("");
 
       try {
@@ -80,12 +94,43 @@ export default function UserFormPage() {
       } catch (caughtError) {
         setError(getErrorMessage(caughtError, t("userCouldNotBeLoaded")));
       } finally {
-        setIsLoading(false);
+        setIsUserLoading(false);
       }
     }
 
     void loadUser(editedUserId);
   }, [editedUserId, t]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadConfig() {
+      setIsConfigLoading(true);
+      setConfigError("");
+
+      try {
+        const nextConfig = await authApi.getAuthConfig();
+
+        if (isMounted) {
+          setAuthConfig(nextConfig);
+        }
+      } catch {
+        if (isMounted) {
+          setConfigError(t("authConfigCouldNotBeLoaded"));
+        }
+      } finally {
+        if (isMounted) {
+          setIsConfigLoading(false);
+        }
+      }
+    }
+
+    void loadConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [t]);
 
   if (hasInvalidUserId) {
     return <Navigate to="/users" replace />;
@@ -98,6 +143,19 @@ export default function UserFormPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setPasswordErrors([]);
+
+    const shouldValidatePassword = !isEditMode || form.password.length > 0;
+    const nextPasswordErrors = shouldValidatePassword
+      ? getPasswordValidationErrors(form.password, passwordPolicy)
+      : [];
+
+    if (nextPasswordErrors.length > 0) {
+      setPasswordErrors(nextPasswordErrors);
+      setError(t("passwordValidationFailed"));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -126,6 +184,12 @@ export default function UserFormPage() {
 
       navigate("/users");
     } catch (caughtError) {
+      if (caughtError instanceof ApiError) {
+        setPasswordErrors(
+          caughtError.validationErrors?.filter(isPasswordValidationCode) ?? [],
+        );
+      }
+
       setError(getErrorMessage(caughtError, t("userCouldNotBeSaved")));
     } finally {
       setIsSubmitting(false);
@@ -146,7 +210,9 @@ export default function UserFormPage() {
 
       <form className="user-form user-form--page" onSubmit={handleSubmit}>
         {isLoading ? (
-          <div className="inline-status">{t("loadingUser")}</div>
+          <div className="inline-status">{isUserLoading ? t("loadingUser") : t("loading")}</div>
+        ) : configError ? (
+          <div className="error-message">{configError}</div>
         ) : (
           <>
             {error && <div className="error-message">{error}</div>}
@@ -196,6 +262,12 @@ export default function UserFormPage() {
                 value={form.password}
               />
             </label>
+
+            <PasswordRequirements
+              password={form.password}
+              passwordErrors={passwordErrors}
+              passwordPolicy={passwordPolicy}
+            />
 
             <label>
               {t("role")}

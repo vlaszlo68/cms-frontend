@@ -3,8 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as authApi from "../api/authApi";
+import {
+  getPasswordValidationErrors,
+  isPasswordValidationCode,
+  normalizePasswordPolicy,
+  type PasswordValidationCode,
+} from "../auth/passwordPolicy";
 import { useCaptchaChallenge } from "../auth/useCaptchaChallenge";
 import CaptchaField from "../components/auth/CaptchaField";
+import PasswordRequirements from "../components/auth/PasswordRequirements";
 import { usePreferences } from "../preferences/PreferencesContext";
 
 type RegisterFormState = {
@@ -16,24 +23,6 @@ type RegisterFormState = {
   captchaAnswer: string;
 };
 
-type PasswordValidationCode =
-  | "TOO_SHORT"
-  | "MISSING_UPPERCASE"
-  | "MISSING_LOWERCASE"
-  | "MISSING_DIGIT"
-  | "MISSING_SPECIAL";
-
-type PasswordRequirement = {
-  code: PasswordValidationCode;
-  labelKey:
-    | "passwordMinLengthRequirement"
-    | "passwordUppercaseRequirement"
-    | "passwordLowercaseRequirement"
-    | "passwordDigitRequirement"
-    | "passwordSpecialRequirement";
-  isMet: (password: string) => boolean;
-};
-
 const emptyForm: RegisterFormState = {
   loginName: "",
   userName: "",
@@ -42,38 +31,6 @@ const emptyForm: RegisterFormState = {
   passwordConfirmation: "",
   captchaAnswer: "",
 };
-
-const passwordRequirements: PasswordRequirement[] = [
-  {
-    code: "TOO_SHORT",
-    labelKey: "passwordMinLengthRequirement",
-    isMet: (password) => password.length >= 8,
-  },
-  {
-    code: "MISSING_UPPERCASE",
-    labelKey: "passwordUppercaseRequirement",
-    isMet: (password) => /[A-Z]/.test(password),
-  },
-  {
-    code: "MISSING_LOWERCASE",
-    labelKey: "passwordLowercaseRequirement",
-    isMet: (password) => /[a-z]/.test(password),
-  },
-  {
-    code: "MISSING_DIGIT",
-    labelKey: "passwordDigitRequirement",
-    isMet: (password) => /\d/.test(password),
-  },
-  {
-    code: "MISSING_SPECIAL",
-    labelKey: "passwordSpecialRequirement",
-    isMet: (password) => /[^A-Za-z0-9]/.test(password),
-  },
-];
-
-function isPasswordValidationCode(value: string): value is PasswordValidationCode {
-  return passwordRequirements.some((requirement) => requirement.code === value);
-}
 
 export default function RegisterPage() {
   const { t } = usePreferences();
@@ -93,8 +50,8 @@ export default function RegisterPage() {
     loadCaptcha,
   } = useCaptchaChallenge(t("captchaCouldNotBeLoaded"));
 
-  const passwordErrorSet = useMemo(() => new Set(passwordErrors), [passwordErrors]);
   const registrationCaptchaEnabled = authConfig?.registrationCaptchaEnabled === true;
+  const passwordPolicy = useMemo(() => normalizePasswordPolicy(authConfig), [authConfig]);
 
   const refreshCaptcha = useCallback(async () => {
     setForm((current) => ({ ...current, captchaAnswer: "" }));
@@ -166,6 +123,14 @@ export default function RegisterPage() {
       return;
     }
 
+    const nextPasswordErrors = getPasswordValidationErrors(form.password, passwordPolicy);
+
+    if (nextPasswordErrors.length > 0) {
+      setPasswordErrors(nextPasswordErrors);
+      setFormError(t("registrationValidationFailed"));
+      return;
+    }
+
     if (registrationCaptchaEnabled && !captchaId) {
       setFormError(t("captchaRequired"));
       return;
@@ -228,104 +193,90 @@ export default function RegisterPage() {
 
             {authConfig !== null && !configError && (
               <>
-            <label>
-              {t("loginName")}
-              <input
-                autoComplete="username"
-                name="loginName"
-                onChange={(event) => updateForm("loginName", event.target.value)}
-                required
-                type="text"
-                value={form.loginName}
-              />
-            </label>
+                <label>
+                  {t("loginName")}
+                  <input
+                    autoComplete="username"
+                    name="loginName"
+                    onChange={(event) => updateForm("loginName", event.target.value)}
+                    required
+                    type="text"
+                    value={form.loginName}
+                  />
+                </label>
 
-            <label>
-              {t("userName")}
-              <input
-                autoComplete="name"
-                name="userName"
-                onChange={(event) => updateForm("userName", event.target.value)}
-                required
-                type="text"
-                value={form.userName}
-              />
-            </label>
+                <label>
+                  {t("userName")}
+                  <input
+                    autoComplete="name"
+                    name="userName"
+                    onChange={(event) => updateForm("userName", event.target.value)}
+                    required
+                    type="text"
+                    value={form.userName}
+                  />
+                </label>
 
-            <label>
-              {t("email")}
-              <input
-                autoComplete="email"
-                name="emailAddress"
-                onChange={(event) => updateForm("emailAddress", event.target.value)}
-                required
-                type="email"
-                value={form.emailAddress}
-              />
-            </label>
+                <label>
+                  {t("email")}
+                  <input
+                    autoComplete="email"
+                    name="emailAddress"
+                    onChange={(event) => updateForm("emailAddress", event.target.value)}
+                    required
+                    type="email"
+                    value={form.emailAddress}
+                  />
+                </label>
 
-            <label>
-              {t("password")}
-              <input
-                autoComplete="new-password"
-                name="password"
-                onChange={(event) => updateForm("password", event.target.value)}
-                required
-                type="password"
-                value={form.password}
-              />
-            </label>
+                <label>
+                  {t("password")}
+                  <input
+                    autoComplete="new-password"
+                    name="password"
+                    onChange={(event) => updateForm("password", event.target.value)}
+                    required
+                    type="password"
+                    value={form.password}
+                  />
+                </label>
 
-            <div className="password-requirements" aria-label={t("passwordRequirements")}>
-              {passwordRequirements.map((requirement) => {
-                const isMet = requirement.isMet(form.password);
-                const hasBackendError = passwordErrorSet.has(requirement.code);
+                <PasswordRequirements
+                  password={form.password}
+                  passwordErrors={passwordErrors}
+                  passwordPolicy={passwordPolicy}
+                />
 
-                return (
-                  <span
-                    className={
-                      isMet && !hasBackendError
-                        ? "password-requirement password-requirement--met"
-                        : "password-requirement"
-                    }
-                    key={requirement.code}
-                  >
-                    {t(requirement.labelKey)}
-                  </span>
-                );
-              })}
-            </div>
+                <label>
+                  {t("passwordConfirmation")}
+                  <input
+                    autoComplete="new-password"
+                    name="passwordConfirmation"
+                    onChange={(event) => updateForm("passwordConfirmation", event.target.value)}
+                    required
+                    type="password"
+                    value={form.passwordConfirmation}
+                  />
+                </label>
 
-            <label>
-              {t("passwordConfirmation")}
-              <input
-                autoComplete="new-password"
-                name="passwordConfirmation"
-                onChange={(event) => updateForm("passwordConfirmation", event.target.value)}
-                required
-                type="password"
-                value={form.passwordConfirmation}
-              />
-            </label>
+                {registrationCaptchaEnabled && (
+                  <CaptchaField
+                    captchaError={captchaError}
+                    captchaImageUrl={captchaImageUrl}
+                    isCaptchaLoading={isCaptchaLoading}
+                    onAnswerChange={(value) => updateForm("captchaAnswer", value)}
+                    onRefresh={() => void refreshCaptcha()}
+                    value={form.captchaAnswer}
+                  />
+                )}
 
-            {registrationCaptchaEnabled && (
-              <CaptchaField
-                captchaError={captchaError}
-                captchaImageUrl={captchaImageUrl}
-                isCaptchaLoading={isCaptchaLoading}
-                onAnswerChange={(value) => updateForm("captchaAnswer", value)}
-                onRefresh={() => void refreshCaptcha()}
-                value={form.captchaAnswer}
-              />
-            )}
+                <button disabled={isSubmitting || isCaptchaLoading} type="submit">
+                  {isSubmitting ? t("registering") : t("register")}
+                </button>
 
-            <button disabled={isSubmitting || isCaptchaLoading} type="submit">
-              {isSubmitting ? t("registering") : t("register")}
-            </button>
-
-            <Link className="secondary-link auth-inline-link" to="/login">
-              {t("backToLogin")}
-            </Link>
+                <Link className="secondary-link auth-inline-link" to="/login">
+                  {t("backToLogin")}
+                </Link>
               </>
             )}
           </>

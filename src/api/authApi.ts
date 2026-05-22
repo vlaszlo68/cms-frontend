@@ -25,9 +25,18 @@ export type CaptchaChallenge = {
   svgText: string;
 };
 
+export type PasswordPolicyConfig = {
+  minLength: number;
+  requireUppercase: boolean;
+  requireLowercase: boolean;
+  requireDigit: boolean;
+  requireSpecial: boolean;
+};
+
 export type AuthConfig = {
   loginCaptchaEnabled: boolean;
   registrationCaptchaEnabled: boolean;
+  passwordPolicy: PasswordPolicyConfig;
 };
 
 /**
