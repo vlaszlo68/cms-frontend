@@ -9,6 +9,7 @@ export type LoginRequest = {
   password: string;
   captchaId?: string;
   captchaAnswer?: string;
+  captchaHoneypot?: string;
 };
 
 export type RegisterRequest = {
@@ -18,12 +19,25 @@ export type RegisterRequest = {
   password: string;
   captchaId?: string;
   captchaAnswer?: string;
+  captchaHoneypot?: string;
 };
 
 export type CaptchaChallenge = {
   captchaId: string;
   svgText: string;
 };
+
+export type CaptchaPurpose = "login" | "registration";
+
+export class CaptchaLoadError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "CaptchaLoadError";
+    this.status = status;
+  }
+}
 
 export type PasswordPolicyConfig = {
   minLength: number;
@@ -85,17 +99,17 @@ export function register(input: RegisterRequest) {
 }
 
 /**
- * Loads a fresh SVG CAPTCHA challenge for the public registration form.
+ * Loads a fresh SVG CAPTCHA challenge for the requested public auth purpose.
  */
-export async function getCaptcha(): Promise<CaptchaChallenge> {
-  const response = await fetch("/api/auth/captcha", {
+export async function getCaptcha(purpose: CaptchaPurpose): Promise<CaptchaChallenge> {
+  const response = await fetch(`/api/auth/captcha?purpose=${encodeURIComponent(purpose)}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
   });
 
   if (!response.ok) {
-    throw new Error("Failed to load captcha.");
+    throw new CaptchaLoadError(response.status, "Failed to load captcha.");
   }
 
   const captchaId = response.headers.get("X-Captcha-Id");

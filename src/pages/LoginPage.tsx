@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [captchaHoneypot, setCaptchaHoneypot] = useState("");
   const [authConfig, setAuthConfig] = useState<authApi.AuthConfig | null>(null);
   const [error, setError] = useState("");
   const [configError, setConfigError] = useState("");
@@ -28,7 +29,7 @@ export default function LoginPage() {
     captchaImageUrl,
     isCaptchaLoading,
     loadCaptcha,
-  } = useCaptchaChallenge(t("captchaCouldNotBeLoaded"));
+  } = useCaptchaChallenge("login", t("captchaCouldNotBeLoaded"), t("rateLimitMessage"));
 
   const loginCaptchaEnabled = authConfig?.loginCaptchaEnabled === true;
 
@@ -88,7 +89,7 @@ export default function LoginPage() {
         loginName,
         password,
         ...(loginCaptchaEnabled
-          ? { captchaId, captchaAnswer: captchaAnswer.trim() }
+          ? { captchaId, captchaAnswer: captchaAnswer.trim(), captchaHoneypot }
           : {}),
       });
       navigate("/", { replace: true });
@@ -147,6 +148,17 @@ export default function LoginPage() {
               />
             </label>
 
+            <input
+              aria-hidden="true"
+              autoComplete="off"
+              name="captchaHoneypot"
+              onChange={(event) => setCaptchaHoneypot(event.target.value)}
+              style={{ display: "none" }}
+              tabIndex={-1}
+              type="text"
+              value={captchaHoneypot}
+            />
+
             {loginCaptchaEnabled && (
               <CaptchaField
                 captchaError={captchaError}
@@ -158,7 +170,10 @@ export default function LoginPage() {
               />
             )}
 
-            <button disabled={isSubmitting || isCaptchaLoading} type="submit">
+            <button
+              disabled={isSubmitting || isCaptchaLoading || (loginCaptchaEnabled && !captchaId)}
+              type="submit"
+            >
               {isSubmitting ? t("signingIn") : t("signIn")}
             </button>
 

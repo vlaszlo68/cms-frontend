@@ -21,6 +21,7 @@ type RegisterFormState = {
   password: string;
   passwordConfirmation: string;
   captchaAnswer: string;
+  captchaHoneypot: string;
 };
 
 const emptyForm: RegisterFormState = {
@@ -30,6 +31,7 @@ const emptyForm: RegisterFormState = {
   password: "",
   passwordConfirmation: "",
   captchaAnswer: "",
+  captchaHoneypot: "",
 };
 
 export default function RegisterPage() {
@@ -48,7 +50,7 @@ export default function RegisterPage() {
     clearCaptcha,
     isCaptchaLoading,
     loadCaptcha,
-  } = useCaptchaChallenge(t("captchaCouldNotBeLoaded"));
+  } = useCaptchaChallenge("registration", t("captchaCouldNotBeLoaded"), t("rateLimitMessage"));
 
   const registrationCaptchaEnabled = authConfig?.registrationCaptchaEnabled === true;
   const passwordPolicy = useMemo(() => normalizePasswordPolicy(authConfig), [authConfig]);
@@ -145,7 +147,11 @@ export default function RegisterPage() {
         emailAddress: form.emailAddress.trim(),
         password: form.password,
         ...(registrationCaptchaEnabled
-          ? { captchaId, captchaAnswer: form.captchaAnswer.trim() }
+          ? {
+              captchaId,
+              captchaAnswer: form.captchaAnswer.trim(),
+              captchaHoneypot: form.captchaHoneypot,
+            }
           : {}),
       });
       setIsRegistered(true);
@@ -259,6 +265,17 @@ export default function RegisterPage() {
                   />
                 </label>
 
+                <input
+                  aria-hidden="true"
+                  autoComplete="off"
+                  name="captchaHoneypot"
+                  onChange={(event) => updateForm("captchaHoneypot", event.target.value)}
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  type="text"
+                  value={form.captchaHoneypot}
+                />
+
                 {registrationCaptchaEnabled && (
                   <CaptchaField
                     captchaError={captchaError}
@@ -270,7 +287,14 @@ export default function RegisterPage() {
                   />
                 )}
 
-                <button disabled={isSubmitting || isCaptchaLoading} type="submit">
+                <button
+                  disabled={
+                    isSubmitting ||
+                    isCaptchaLoading ||
+                    (registrationCaptchaEnabled && !captchaId)
+                  }
+                  type="submit"
+                >
                   {isSubmitting ? t("registering") : t("register")}
                 </button>
 

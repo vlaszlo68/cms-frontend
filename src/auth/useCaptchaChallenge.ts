@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as authApi from "../api/authApi";
 
-export function useCaptchaChallenge(errorMessage: string) {
+export function useCaptchaChallenge(
+  purpose: authApi.CaptchaPurpose,
+  errorMessage: string,
+  rateLimitedMessage: string,
+) {
   const [captchaId, setCaptchaId] = useState("");
   const [captchaImageUrl, setCaptchaImageUrl] = useState("");
   const [captchaError, setCaptchaError] = useState("");
@@ -26,21 +30,27 @@ export function useCaptchaChallenge(errorMessage: string) {
   const loadCaptcha = useCallback(async () => {
     setIsCaptchaLoading(true);
     setCaptchaError("");
+    setCaptchaId("");
 
     try {
-      const captcha = await authApi.getCaptcha();
+      const captcha = await authApi.getCaptcha(purpose);
       const blob = new Blob([captcha.svgText], { type: "image/svg+xml" });
       const nextImageUrl = URL.createObjectURL(blob);
 
       setCaptchaId(captcha.captchaId);
       replaceCaptchaImageUrl(nextImageUrl);
-    } catch {
+    } catch (error) {
       setCaptchaId("");
-      setCaptchaError(errorMessage);
+      replaceCaptchaImageUrl("");
+      setCaptchaError(
+        error instanceof authApi.CaptchaLoadError && error.status === 429
+          ? rateLimitedMessage
+          : errorMessage,
+      );
     } finally {
       setIsCaptchaLoading(false);
     }
-  }, [errorMessage, replaceCaptchaImageUrl]);
+  }, [errorMessage, purpose, rateLimitedMessage, replaceCaptchaImageUrl]);
 
   useEffect(() => {
     return () => {
