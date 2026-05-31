@@ -1,5 +1,5 @@
 import type { ApiError as ApiErrorBody, ApiResponse } from "./types";
-import { getCsrfToken } from "./authSession";
+import { getCsrfToken, notifyAuthRequired } from "./authSession";
 
 /**
  * Error thrown when the backend response cannot be treated as a successful API result.
@@ -127,12 +127,18 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
   }
 
   if (!responseBody.success) {
-    throw new ApiError(
+    const apiError = new ApiError(
       response.status,
       responseBody.error,
       `Request failed with ${response.status}.`,
       responseBody.error.code,
     );
+
+    if (response.status === 401 && responseBody.error.code === "AUTH_REQUIRED") {
+      notifyAuthRequired();
+    }
+
+    throw apiError;
   }
 
   if (!response.ok) {

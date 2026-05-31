@@ -108,6 +108,8 @@ The frontend `httpClient` unwraps successful `data` values. For `success: false`
 
 The frontend `httpClient` always uses `credentials: 'include'`. It also reads the current CSRF token from `src/api/authSession.ts` and sends `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` requests only. `GET`, `HEAD`, and `OPTIONS` requests do not receive a CSRF header.
 
+If a protected API call returns `401 AUTH_REQUIRED`, the shared client notifies `AuthContext`, which clears only the frontend's in-memory user and CSRF state. The frontend does not read, write, delete, or name the session cookie. `403 CSRF_INVALID` remains a backend/API error path; the frontend must not try to repair it by manipulating cookies.
+
 `POST /api/auth/login` is a public exception and does not require an existing CSRF token. Logout is state-changing and must send the current token after login/session restore.
 
 ### `POST /api/auth/login`
@@ -234,11 +236,12 @@ Invalid or missing CSRF token on state-changing requests:
 
 1. On app startup, call `GET /api/auth/me` with `credentials: 'include'`.
 2. If the response is `200` and `success: true`, hydrate auth state from `data` and store `data.csrfToken`.
-3. If the response is `401` or `success: false`, treat the visitor as logged out when appropriate.
+3. If the response is `401 AUTH_REQUIRED`, treat the visitor as logged out and clear the in-memory user and CSRF token.
 4. On login, call `POST /api/auth/login` with JSON body and `credentials: 'include'`.
 5. On login success, replace any previous CSRF token with the token from the latest backend response.
 6. On logout, call `POST /api/auth/logout` with `credentials: 'include'` and the current CSRF token, then clear local auth state and the CSRF token.
-7. If any protected API call returns `401`, clear auth state and the CSRF token, then redirect to login.
+7. If any protected API call returns `401 AUTH_REQUIRED`, the central API/auth bridge clears auth state and the CSRF token, causing protected routes to fall back to login.
+8. If a protected state-changing call returns `403 CSRF_INVALID`, show the API error path without cookie manipulation.
 
 Suggested frontend auth types:
 

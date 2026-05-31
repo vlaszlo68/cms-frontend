@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ApiError } from "../api/httpClient";
-import { setCsrfToken as setStoredCsrfToken } from "../api/authSession";
+import {
+  setAuthRequiredHandler,
+  setCsrfToken as setStoredCsrfToken,
+} from "../api/authSession";
 import * as authApi from "../api/authApi";
 import type { AuthSession, AuthUser, LoginRequest } from "../api/authApi";
 
@@ -36,6 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCsrfToken(nextCsrfToken);
     setStoredCsrfToken(nextCsrfToken);
   }, []);
+
+  useEffect(() => {
+    setAuthRequiredHandler(() => {
+      setSession(null, null);
+    });
+
+    return () => {
+      setAuthRequiredHandler(null);
+    };
+  }, [setSession]);
 
   /**
    * Splits a backend session payload into user state and CSRF token storage.
