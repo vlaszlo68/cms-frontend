@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      setSession(null, null);
       throw error;
     } finally {
       setIsLoading(false);

@@ -81,7 +81,7 @@ export type LogoutResponse = {
  * Authenticates a user and returns the newly established session.
  */
 export function login(input: LoginRequest) {
-  return apiPost<AuthSession>("/api/auth/login", input);
+  return apiPublicPost<AuthSession>("/api/auth/login", input);
 }
 
 /**

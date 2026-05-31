@@ -28,5 +28,10 @@ Thumbs.db
 logs/
 *.log
 
+# Local/generated project notes
+project_description_frontend.md
+FRONTEND_BOOTSTRAP_PLAN.md
+FRONTEND_HANDOFF.md
+
 # TypeScript
 *.tsbuildinfo
