@@ -33,14 +33,15 @@ Implemented:
 - login page at `/login`
 - protected dashboard route at `/`
 - ADMIN-only User CRUD routes at `/users`, `/users/new`, and `/users/:userId/edit`
-- protected placeholder route at `/pages`
+- ADMIN-only Page CRUD routes at `/pages`, `/pages/new`, and `/pages/:id/edit`
 - protected settings route at `/settings`
 - logout flow
 - Vite dev proxy for the backend
 - User CRUD API wrapper and TypeScript models
+- Page CRUD API wrapper and TypeScript models
 - local appearance/preferences context
 - English/Hungarian UI labels
-- theme, menu, date/time, density, table, content-width, reduced-motion, and button-icon settings
+- theme, menu, date/time, density, table, content-width, font-size, button-size, reduced-motion, and button-icon settings
 
 The frontend intentionally uses relative API paths only, for example:
 
@@ -283,7 +284,9 @@ Current routes:
 - `/users`: ADMIN-only user list
 - `/users/new`: ADMIN-only user create form
 - `/users/:userId/edit`: ADMIN-only user edit form
-- `/pages`: protected app shell with pages placeholder
+- `/pages`: ADMIN-only page list
+- `/pages/new`: ADMIN-only page create form
+- `/pages/:id/edit`: ADMIN-only page edit form
 - `/settings`: protected settings page
 
 Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
@@ -292,7 +295,7 @@ Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which 
 - `Navigation.tsx`: Dashboard, Users, Pages, and Settings links
 - main content area for route children
 
-The Users navigation entry and user routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
+The Users and Pages navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
 
 ## Local Development Notes
 
@@ -351,7 +354,7 @@ The first useful frontend milestone now includes:
 - authenticated app shell
 - dashboard page
 - ADMIN-only User CRUD UI and API integration
-- placeholder route for Pages
+- ADMIN-only Page CRUD UI and API integration
 - Settings page with persisted appearance preferences
 - logout button
 - README with setup, proxy, and backend dependency notes
@@ -380,6 +383,28 @@ deleteUser(id: number): Promise<User>
 
 The delete action is a soft deactivate flow. The UI calls `DELETE /api/users/{id}` and updates the list with the returned inactive user.
 
+## Page CRUD Frontend Slice
+
+Implemented files:
+
+- `src/models/page.ts`
+- `src/api/pageApi.ts`
+- `src/pages/PagesPage.tsx`
+- `src/pages/PageFormPage.tsx`
+
+API methods:
+
+```ts
+getPages(): Promise<Page[]>
+getPage(id: number): Promise<Page>
+getPageBySlug(slug: string): Promise<Page>
+createPage(input: CreatePageRequest): Promise<Page>
+updatePage(id: number, input: UpdatePageRequest): Promise<Page>
+deletePage(id: number): Promise<void>
+```
+
+The list is sorted by title. The editor supports create and edit modes with `Title`, `Slug`, `Status`, metadata fields, homepage/menu visibility flags, and a plain `textarea` content field. Rich text and media-library integration are intentionally deferred.
+
 ## Preferences And Appearance
 
 Implemented files:
@@ -389,7 +414,7 @@ Implemented files:
 - `src/pages/SettingsPage.tsx`
 - `src/components/ui/ButtonLabel.tsx`
 
-Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, content width, reduced motion, and button icons.
+Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, content width, font size, button size, reduced motion, and button icons.
 
 ## Local Test User
 

@@ -9,7 +9,7 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 ## Working Principles
 
 - Keep the current frontend architecture explicit and lightweight.
-- Auth and the User CRUD frontend slice are already implemented; preserve those patterns.
+- Auth, User CRUD, Page CRUD, and the preferences UI are already implemented; preserve those patterns.
 - Prefer small, verifiable changes over broad framework setup.
 - Follow the existing project structure once the React app is initialized.
 - Do not introduce Redux or heavier state libraries for the initial auth flow; use React context first.
@@ -63,13 +63,14 @@ Implemented:
 - Auth context and startup session restore through `/api/auth/me`
 - Login, logout, protected route shell, dashboard, and authenticated layout
 - ADMIN-only User CRUD frontend routes and API wrapper
+- ADMIN-only Page CRUD frontend routes and API wrapper
 - Settings page with persisted appearance preferences
 - English/Hungarian labels
-- configurable themes, menu layout/behavior, date/time display, date format, density, table striping, content width, reduced motion, and button icons
+- configurable themes, menu layout/behavior, date/time display, date format, density, table striping, content width, font size, button size, reduced motion, and button icons
 
 Avoid introducing heavy state libraries or UI frameworks unless the project explicitly adopts them.
 
-Current milestone status: auth flow, authenticated app layout, User CRUD frontend, and settings/preferences UI are implemented. The project is repeatedly verified with `npm run build`.
+Current milestone status: auth flow, authenticated app layout, User CRUD frontend, Page CRUD frontend, and settings/preferences UI are implemented. The project is repeatedly verified with `npm run build`.
 
 ## Suggested Structure
 
@@ -81,7 +82,9 @@ src/
     authSession.ts
     authApi.ts
     httpClient.ts
+    pageApi.ts
     types.ts
+    userApi.ts
   auth/
     AuthContext.tsx
   components/
@@ -94,10 +97,14 @@ src/
   i18n/
     translations.ts
   models/
+    page.ts
     user.ts
   pages/
     DashboardPage.tsx
     LoginPage.tsx
+    PageFormPage.tsx
+    PagesPage.tsx
+    RegisterPage.tsx
     SettingsPage.tsx
     UserFormPage.tsx
     UsersPage.tsx
@@ -158,5 +165,5 @@ Before calling the first auth milestone done, verify:
 - authenticated routes render through `AppLayout`
 - header shows the current user's `loginName`
 - navigation includes Dashboard, Users, Pages, and Settings links
-- Users navigation/routes are available only for ADMIN users
+- Users and Pages navigation/routes are available only for ADMIN users
 - settings changes persist in localStorage and apply immediately

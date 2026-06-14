@@ -57,7 +57,9 @@ The TypeScript source files include JSDoc comments for the current public API he
 - `/users` - ADMIN-only user list
 - `/users/new` - ADMIN-only user create form
 - `/users/:userId/edit` - ADMIN-only user edit form
-- `/pages` - protected pages placeholder
+- `/pages` - ADMIN-only page list
+- `/pages/new` - ADMIN-only page create form
+- `/pages/:id/edit` - ADMIN-only page edit form
 - `/settings` - protected appearance and preference settings
 
 Authenticated pages render inside the shared app layout:
@@ -66,7 +68,7 @@ Authenticated pages render inside the shared app layout:
 - navigation links for Dashboard, Users, Pages, and Settings
 - main content area for the active route
 
-The Users navigation item and user-management routes are available only to authenticated users with the `ADMIN` role.
+The Users and Pages navigation items and management routes are available only to authenticated users with the `ADMIN` role.
 
 ## Implemented Features
 
@@ -74,12 +76,13 @@ The Users navigation item and user-management routes are available only to authe
 - Common API response envelope handling through `src/api/httpClient.ts`
 - CSRF header injection for mutating requests
 - User CRUD frontend slice with list, create, edit, and soft deactivate flow
-- Role-based frontend authorization for user management
+- Page CRUD frontend slice with list, create, edit, delete, and simple textarea content editing
+- Role-based frontend authorization for user and page management
 - Settings page backed by localStorage preferences
 - English/Hungarian UI labels
 - Configurable themes, including light, vivid, semidark, and dark options
 - Configurable navigation layout and behavior
-- Optional header date/time, date format, density, striped tables, content width, reduced motion, and button icons
+- Optional header date/time, date format, density, striped tables, content width, font size, button size, reduced motion, and button icons
 
 ## Backend Dependency
 
@@ -93,5 +96,11 @@ The backend must expose:
 - `POST /api/users`
 - `PUT /api/users/{id}`
 - `DELETE /api/users/{id}`
+- `GET /api/pages`
+- `GET /api/pages/{id}`
+- `GET /api/pages/slug/{slug}`
+- `POST /api/pages`
+- `PUT /api/pages/{id}`
+- `DELETE /api/pages/{id}`
 
 Session authentication is cookie based, so requests must be made through the same dev origin via the Vite proxy. State-changing requests also require the latest CSRF token from the authenticated session.
