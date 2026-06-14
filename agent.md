@@ -66,7 +66,7 @@ Implemented:
 - ADMIN-only Page CRUD frontend routes and API wrapper
 - Settings page with persisted appearance preferences
 - English/Hungarian labels
-- configurable themes, menu layout/behavior, date/time display, date format, density, table striping, content width, font size, button size, reduced motion, and button icons
+- configurable themes, menu layout/behavior, date/time display, date format, density, table striping, table page size, content width, font size, button size, reduced motion, and button icons
 
 Avoid introducing heavy state libraries or UI frameworks unless the project explicitly adopts them.
 
@@ -94,6 +94,7 @@ src/
       Navigation.tsx
     ui/
       ButtonLabel.tsx
+      ConfirmDialog.tsx
   i18n/
     translations.ts
   models/
@@ -166,4 +167,7 @@ Before calling the first auth milestone done, verify:
 - header shows the current user's `loginName`
 - navigation includes Dashboard, Users, Pages, and Settings links
 - Users and Pages navigation/routes are available only for ADMIN users
+- Users and Pages lists support frontend pagination and three-state column sorting
+- destructive list actions use the shared confirmation dialog
+- Page editing supports textarea HTML editing with simple insert buttons and sanitized preview modes
 - settings changes persist in localStorage and apply immediately

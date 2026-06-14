@@ -75,14 +75,14 @@ The Users and Pages navigation items and management routes are available only to
 - Session login, logout, and startup session restore
 - Common API response envelope handling through `src/api/httpClient.ts`
 - CSRF header injection for mutating requests
-- User CRUD frontend slice with list, create, edit, and soft deactivate flow
-- Page CRUD frontend slice with list, create, edit, delete, and simple textarea content editing
+- User CRUD frontend slice with list, create, edit, soft deactivate flow, frontend sorting, pagination, and confirmation dialog
+- Page CRUD frontend slice with list, create, edit, delete, frontend sorting, pagination, confirmation dialog, textarea HTML editing, sanitized preview, and simple insert toolbar
 - Role-based frontend authorization for user and page management
 - Settings page backed by localStorage preferences
 - English/Hungarian UI labels
 - Configurable themes, including light, vivid, semidark, and dark options
 - Configurable navigation layout and behavior
-- Optional header date/time, date format, density, striped tables, content width, font size, button size, reduced motion, and button icons
+- Optional header date/time, date format, density, striped tables, table page size, content width, font size, button size, reduced motion, and button icons
 
 ## Backend Dependency
 

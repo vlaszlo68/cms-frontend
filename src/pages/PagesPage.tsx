@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as pageApi from "../api/pageApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { PageListItem } from "../models/page";
 import type { DateFormat } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -44,6 +45,7 @@ export default function PagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [pendingDeletePageId, setPendingDeletePageId] = useState<number | null>(null);
+  const [pageToDelete, setPageToDelete] = useState<PageListItem | null>(null);
   const [sort, setSort] = useState<PageSortState | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -127,12 +129,6 @@ export default function PagesPage() {
   }
 
   async function handleDelete(page: PageListItem) {
-    const confirmed = window.confirm(`${t("deletePageConfirm")} ${page.title}?`);
-
-    if (!confirmed) {
-      return;
-    }
-
     setError("");
     setPendingDeletePageId(page.id);
 
@@ -143,6 +139,7 @@ export default function PagesPage() {
       setError(getErrorMessage(caughtError, t("pageCouldNotBeDeleted")));
     } finally {
       setPendingDeletePageId(null);
+      setPageToDelete(null);
     }
   }
 
@@ -213,7 +210,7 @@ export default function PagesPage() {
                         <button
                           className="danger-button"
                           disabled={pendingDeletePageId === page.id}
-                          onClick={() => void handleDelete(page)}
+                          onClick={() => setPageToDelete(page)}
                           type="button"
                         >
                           <ButtonLabel icon="deactivate">{t("delete")}</ButtonLabel>
@@ -248,6 +245,17 @@ export default function PagesPage() {
           </>
         )}
       </div>
+      {pageToDelete && (
+        <ConfirmDialog
+          cancelLabel={t("cancel")}
+          confirmLabel={t("delete")}
+          isDanger
+          message={`${t("deletePageConfirm")} ${pageToDelete.title}?`}
+          onCancel={() => setPageToDelete(null)}
+          onConfirm={() => void handleDelete(pageToDelete)}
+          title={t("confirmDelete")}
+        />
+      )}
     </section>
   );
 }

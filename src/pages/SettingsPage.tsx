@@ -22,6 +22,7 @@ const themeOptions: Array<{ labelKey: TranslationKey; value: ThemeName }> = [
   { labelKey: "duskTheme", value: "dusk" },
   { labelKey: "harborTheme", value: "harbor" },
   { labelKey: "emberTheme", value: "ember" },
+  { labelKey: "cinderTheme", value: "cinder" },
   { labelKey: "midnightTheme", value: "midnight" },
   { labelKey: "auroraTheme", value: "aurora" },
 ];

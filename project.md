@@ -41,7 +41,7 @@ Implemented:
 - Page CRUD API wrapper and TypeScript models
 - local appearance/preferences context
 - English/Hungarian UI labels
-- theme, menu, date/time, density, table, content-width, font-size, button-size, reduced-motion, and button-icon settings
+- theme, menu, date/time, density, table, table-page-size, content-width, font-size, button-size, reduced-motion, and button-icon settings
 
 The frontend intentionally uses relative API paths only, for example:
 
@@ -395,7 +395,7 @@ Implemented files:
 API methods:
 
 ```ts
-getPages(): Promise<Page[]>
+getPages(): Promise<PageListItem[]>
 getPage(id: number): Promise<Page>
 getPageBySlug(slug: string): Promise<Page>
 createPage(input: CreatePageRequest): Promise<Page>
@@ -403,7 +403,9 @@ updatePage(id: number, input: UpdatePageRequest): Promise<Page>
 deletePage(id: number): Promise<void>
 ```
 
-The list is sorted by title. The editor supports create and edit modes with `Title`, `Slug`, `Status`, metadata fields, homepage/menu visibility flags, and a plain `textarea` content field. Rich text and media-library integration are intentionally deferred.
+The list fetches lightweight page rows without `content`, supports client-side three-state sorting on every displayed data column, and uses client-side pagination based on the persisted table page size preference. Full page content is loaded only through `getPage(id)` when editing.
+
+The editor supports create and edit modes with `Title`, `Slug`, `Status`, metadata fields, homepage/menu visibility flags, and a `textarea` content field. The first editing helper layer includes simple HTML insert buttons, sanitized frontend preview, and off/horizontal/vertical preview modes. Rich text editor and media-library integration are intentionally deferred.
 
 ## Preferences And Appearance
 
@@ -413,8 +415,9 @@ Implemented files:
 - `src/i18n/translations.ts`
 - `src/pages/SettingsPage.tsx`
 - `src/components/ui/ButtonLabel.tsx`
+- `src/components/ui/ConfirmDialog.tsx`
 
-Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, content width, font size, button size, reduced motion, and button icons.
+Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, table page size, content width, font size, button size, reduced motion, and button icons.
 
 ## Local Test User
 

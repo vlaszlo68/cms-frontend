@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as userApi from "../api/userApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { User } from "../models/user";
 import type { DateFormat } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -51,6 +52,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [pendingActionUserId, setPendingActionUserId] = useState<number | null>(null);
+  const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null);
   const [sort, setSort] = useState<UserSortState | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -134,12 +136,6 @@ export default function UsersPage() {
   }
 
   async function handleDeactivate(user: User) {
-    const confirmed = window.confirm(`${t("deactivateConfirm")} ${user.loginName}?`);
-
-    if (!confirmed) {
-      return;
-    }
-
     setError("");
 
     try {
@@ -149,6 +145,8 @@ export default function UsersPage() {
       );
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("userCouldNotBeDeactivated")));
+    } finally {
+      setUserToDeactivate(null);
     }
   }
 
@@ -247,7 +245,7 @@ export default function UsersPage() {
                         <button
                           className="danger-button"
                           disabled={!user.active}
-                          onClick={() => void handleDeactivate(user)}
+                          onClick={() => setUserToDeactivate(user)}
                           type="button"
                         >
                           <ButtonLabel icon="deactivate">{t("deactivate")}</ButtonLabel>
@@ -301,6 +299,17 @@ export default function UsersPage() {
           </>
         )}
       </div>
+      {userToDeactivate && (
+        <ConfirmDialog
+          cancelLabel={t("cancel")}
+          confirmLabel={t("deactivate")}
+          isDanger
+          message={`${t("deactivateConfirm")} ${userToDeactivate.loginName}?`}
+          onCancel={() => setUserToDeactivate(null)}
+          onConfirm={() => void handleDeactivate(userToDeactivate)}
+          title={t("confirmDeactivate")}
+        />
+      )}
     </section>
   );
 }

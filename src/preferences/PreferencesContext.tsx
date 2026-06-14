@@ -13,6 +13,7 @@ export type ThemeName =
   | "dusk"
   | "harbor"
   | "ember"
+  | "cinder"
   | "midnight"
   | "aurora";
 export type NavigationLayout = "sidebar" | "horizontal";
@@ -85,6 +86,7 @@ const themes: ThemeName[] = [
   "dusk",
   "harbor",
   "ember",
+  "cinder",
   "midnight",
   "aurora",
 ];
