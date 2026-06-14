@@ -7,6 +7,7 @@ import type {
   FontSize,
   NavigationBehavior,
   NavigationLayout,
+  TablePageSize,
   ThemeName,
 } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -62,6 +63,8 @@ const fontSizeOptions: Array<{ labelKey: TranslationKey; value: FontSize }> = [
   { labelKey: "compactFontSize", value: "compact" },
 ];
 
+const tablePageSizeOptions: TablePageSize[] = [10, 20, 50, 100];
+
 const languageOptions: Array<{ label: string; value: Language }> = [
   { label: "English", value: "en" },
   { label: "Magyar", value: "hu" },
@@ -96,6 +99,8 @@ export default function SettingsPage() {
     showTime,
     showButtonIcons,
     tableStripes,
+    tablePageSize,
+    setTablePageSize,
     t,
     theme,
   } = usePreferences();
@@ -261,6 +266,19 @@ export default function SettingsPage() {
                 type="checkbox"
               />
               {t("tableStripes")}
+            </label>
+            <label>
+              {t("tablePageSize")}
+              <select
+                onChange={(event) => setTablePageSize(Number(event.target.value) as TablePageSize)}
+                value={tablePageSize}
+              >
+                {tablePageSizeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="checkbox-field">
               <input

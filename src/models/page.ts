@@ -16,6 +16,8 @@ export type Page = {
   updatedBy: string | null;
 };
 
+export type PageListItem = Omit<Page, "content">;
+
 export type CreatePageRequest = {
   title: string;
   slug: string;

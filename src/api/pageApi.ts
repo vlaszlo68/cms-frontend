@@ -1,10 +1,10 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "./httpClient";
-import type { CreatePageRequest, Page, UpdatePageRequest } from "../models/page";
+import type { CreatePageRequest, Page, PageListItem, UpdatePageRequest } from "../models/page";
 
 const PAGES_PATH = "/api/pages";
 
 export function getPages() {
-  return apiGet<Page[]>(PAGES_PATH);
+  return apiGet<PageListItem[]>(PAGES_PATH);
 }
 
 export function getPage(id: number) {

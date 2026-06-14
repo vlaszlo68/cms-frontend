@@ -22,6 +22,7 @@ export type DateFormat = "short" | "long";
 export type ContentWidth = "full" | "centered";
 export type ButtonSize = "normal" | "compact";
 export type FontSize = "normal" | "compact";
+export type TablePageSize = 10 | 20 | 50 | 100;
 
 type PreferencesContextValue = {
   theme: ThemeName;
@@ -32,6 +33,7 @@ type PreferencesContextValue = {
   contentWidth: ContentWidth;
   buttonSize: ButtonSize;
   fontSize: FontSize;
+  tablePageSize: TablePageSize;
   language: Language;
   showDate: boolean;
   showTime: boolean;
@@ -46,6 +48,7 @@ type PreferencesContextValue = {
   setContentWidth: (contentWidth: ContentWidth) => void;
   setButtonSize: (buttonSize: ButtonSize) => void;
   setFontSize: (fontSize: FontSize) => void;
+  setTablePageSize: (tablePageSize: TablePageSize) => void;
   setLanguage: (language: Language) => void;
   setShowDate: (showDate: boolean) => void;
   setShowTime: (showTime: boolean) => void;
@@ -65,6 +68,7 @@ const dateFormatStorageKey = "cms.dateFormat";
 const contentWidthStorageKey = "cms.contentWidth";
 const buttonSizeStorageKey = "cms.buttonSize";
 const fontSizeStorageKey = "cms.fontSize";
+const tablePageSizeStorageKey = "cms.tablePageSize";
 const languageStorageKey = "cms.language";
 const showDateStorageKey = "cms.showDate";
 const showTimeStorageKey = "cms.showTime";
@@ -91,6 +95,7 @@ const dateFormats: DateFormat[] = ["short", "long"];
 const contentWidths: ContentWidth[] = ["full", "centered"];
 const buttonSizes: ButtonSize[] = ["normal", "compact"];
 const fontSizes: FontSize[] = ["normal", "compact"];
+const tablePageSizes: TablePageSize[] = [10, 20, 50, 100];
 const languages: Language[] = ["en", "hu"];
 
 function readStoredValue<T extends string>(key: string, allowedValues: readonly T[], fallback: T) {
@@ -110,6 +115,11 @@ function readStoredBoolean(key: string, fallback: boolean) {
   }
 
   return fallback;
+}
+
+function readStoredNumber<T extends number>(key: string, allowedValues: readonly T[], fallback: T) {
+  const storedValue = Number(window.localStorage.getItem(key));
+  return allowedValues.includes(storedValue as T) ? (storedValue as T) : fallback;
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
@@ -136,6 +146,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   );
   const [fontSize, setFontSize] = useState<FontSize>(() =>
     readStoredValue(fontSizeStorageKey, fontSizes, "normal"),
+  );
+  const [tablePageSize, setTablePageSize] = useState<TablePageSize>(() =>
+    readStoredNumber(tablePageSizeStorageKey, tablePageSizes, 20),
   );
   const [language, setLanguage] = useState<Language>(() =>
     readStoredValue(languageStorageKey, languages, "en"),
@@ -186,6 +199,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [fontSize]);
 
   useEffect(() => {
+    window.localStorage.setItem(tablePageSizeStorageKey, String(tablePageSize));
+  }, [tablePageSize]);
+
+  useEffect(() => {
     window.localStorage.setItem(languageStorageKey, language);
     document.documentElement.lang = language;
   }, [language]);
@@ -220,6 +237,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       contentWidth,
       buttonSize,
       fontSize,
+      tablePageSize,
       language,
       showDate,
       showTime,
@@ -234,6 +252,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setContentWidth,
       setButtonSize,
       setFontSize,
+      setTablePageSize,
       setLanguage,
       setShowDate,
       setShowTime,
@@ -256,6 +275,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       showDate,
       showTime,
       tableStripes,
+      tablePageSize,
       theme,
     ],
   );
