@@ -19,7 +19,9 @@ const navigationItems = [
 export default function Navigation() {
   const { user } = useAuth();
   const { t } = usePreferences();
-  const visibleItems = navigationItems.filter((item) => item.to !== "/users" || user?.role === "ADMIN");
+  const visibleItems = navigationItems.filter(
+    (item) => !["/users", "/pages"].includes(item.to) || user?.role === "ADMIN",
+  );
 
   return (
     <nav aria-label="Main navigation" className="app-navigation">

@@ -20,6 +20,8 @@ export type NavigationBehavior = "fixed" | "floating" | "peek";
 export type DisplayDensity = "compact" | "normal" | "comfortable";
 export type DateFormat = "short" | "long";
 export type ContentWidth = "full" | "centered";
+export type ButtonSize = "normal" | "compact";
+export type FontSize = "normal" | "compact";
 
 type PreferencesContextValue = {
   theme: ThemeName;
@@ -28,6 +30,8 @@ type PreferencesContextValue = {
   density: DisplayDensity;
   dateFormat: DateFormat;
   contentWidth: ContentWidth;
+  buttonSize: ButtonSize;
+  fontSize: FontSize;
   language: Language;
   showDate: boolean;
   showTime: boolean;
@@ -40,6 +44,8 @@ type PreferencesContextValue = {
   setDensity: (density: DisplayDensity) => void;
   setDateFormat: (dateFormat: DateFormat) => void;
   setContentWidth: (contentWidth: ContentWidth) => void;
+  setButtonSize: (buttonSize: ButtonSize) => void;
+  setFontSize: (fontSize: FontSize) => void;
   setLanguage: (language: Language) => void;
   setShowDate: (showDate: boolean) => void;
   setShowTime: (showTime: boolean) => void;
@@ -57,6 +63,8 @@ const navigationBehaviorStorageKey = "cms.navigationBehavior";
 const densityStorageKey = "cms.density";
 const dateFormatStorageKey = "cms.dateFormat";
 const contentWidthStorageKey = "cms.contentWidth";
+const buttonSizeStorageKey = "cms.buttonSize";
+const fontSizeStorageKey = "cms.fontSize";
 const languageStorageKey = "cms.language";
 const showDateStorageKey = "cms.showDate";
 const showTimeStorageKey = "cms.showTime";
@@ -81,6 +89,8 @@ const navigationBehaviors: NavigationBehavior[] = ["fixed", "floating", "peek"];
 const densities: DisplayDensity[] = ["compact", "normal", "comfortable"];
 const dateFormats: DateFormat[] = ["short", "long"];
 const contentWidths: ContentWidth[] = ["full", "centered"];
+const buttonSizes: ButtonSize[] = ["normal", "compact"];
+const fontSizes: FontSize[] = ["normal", "compact"];
 const languages: Language[] = ["en", "hu"];
 
 function readStoredValue<T extends string>(key: string, allowedValues: readonly T[], fallback: T) {
@@ -120,6 +130,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   );
   const [contentWidth, setContentWidth] = useState<ContentWidth>(() =>
     readStoredValue(contentWidthStorageKey, contentWidths, "full"),
+  );
+  const [buttonSize, setButtonSize] = useState<ButtonSize>(() =>
+    readStoredValue(buttonSizeStorageKey, buttonSizes, "normal"),
+  );
+  const [fontSize, setFontSize] = useState<FontSize>(() =>
+    readStoredValue(fontSizeStorageKey, fontSizes, "normal"),
   );
   const [language, setLanguage] = useState<Language>(() =>
     readStoredValue(languageStorageKey, languages, "en"),
@@ -162,6 +178,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [contentWidth]);
 
   useEffect(() => {
+    window.localStorage.setItem(buttonSizeStorageKey, buttonSize);
+  }, [buttonSize]);
+
+  useEffect(() => {
+    window.localStorage.setItem(fontSizeStorageKey, fontSize);
+  }, [fontSize]);
+
+  useEffect(() => {
     window.localStorage.setItem(languageStorageKey, language);
     document.documentElement.lang = language;
   }, [language]);
@@ -194,6 +218,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       density,
       dateFormat,
       contentWidth,
+      buttonSize,
+      fontSize,
       language,
       showDate,
       showTime,
@@ -206,6 +232,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setDensity,
       setDateFormat,
       setContentWidth,
+      setButtonSize,
+      setFontSize,
       setLanguage,
       setShowDate,
       setShowTime,
@@ -216,8 +244,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       contentWidth,
+      buttonSize,
       dateFormat,
       density,
+      fontSize,
       language,
       navigationBehavior,
       navigationLayout,

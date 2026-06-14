@@ -1,8 +1,10 @@
 import type { Language, TranslationKey } from "../i18n/translations";
 import type {
+  ButtonSize,
   ContentWidth,
   DateFormat,
   DisplayDensity,
+  FontSize,
   NavigationBehavior,
   NavigationLayout,
   ThemeName,
@@ -50,6 +52,16 @@ const contentWidthOptions: Array<{ labelKey: TranslationKey; value: ContentWidth
   { labelKey: "centeredContentWidth", value: "centered" },
 ];
 
+const buttonSizeOptions: Array<{ labelKey: TranslationKey; value: ButtonSize }> = [
+  { labelKey: "normalButtonSize", value: "normal" },
+  { labelKey: "compactButtonSize", value: "compact" },
+];
+
+const fontSizeOptions: Array<{ labelKey: TranslationKey; value: FontSize }> = [
+  { labelKey: "normalFontSize", value: "normal" },
+  { labelKey: "compactFontSize", value: "compact" },
+];
+
 const languageOptions: Array<{ label: string; value: Language }> = [
   { label: "English", value: "en" },
   { label: "Magyar", value: "hu" },
@@ -57,16 +69,20 @@ const languageOptions: Array<{ label: string; value: Language }> = [
 
 export default function SettingsPage() {
   const {
+    buttonSize,
     contentWidth,
     dateFormat,
     density,
+    fontSize,
     language,
     navigationBehavior,
     navigationLayout,
     reduceMotion,
+    setButtonSize,
     setContentWidth,
     setDateFormat,
     setDensity,
+    setFontSize,
     setLanguage,
     setNavigationBehavior,
     setNavigationLayout,
@@ -206,6 +222,32 @@ export default function SettingsPage() {
                 value={contentWidth}
               >
                 {contentWidthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t("buttonSize")}
+              <select
+                onChange={(event) => setButtonSize(event.target.value as ButtonSize)}
+                value={buttonSize}
+              >
+                {buttonSizeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t("fontSize")}
+              <select
+                onChange={(event) => setFontSize(event.target.value as FontSize)}
+                value={fontSize}
+              >
+                {fontSizeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {t(option.labelKey)}
                   </option>

@@ -227,7 +227,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -237,8 +238,9 @@ button {
   background: var(--color-primary);
   color: #ffffff;
   cursor: pointer;
+  font-size: var(--button-font-size, 1em);
   font-weight: 700;
-  padding: 0.75rem 1rem;
+  padding: var(--button-padding-block, 0.75rem) var(--button-padding-inline, 1rem);
 }
 
 .button-label {
@@ -332,17 +334,20 @@ button:disabled {
 
 .login-card input,
 .user-form input,
+.user-form textarea,
 .user-form select,
 .settings-form select,
 .header-select select {
   width: 100%;
   border: 1px solid var(--color-field-border);
   border-radius: 6px;
-  padding: 0.7rem 0.8rem;
+  font-weight: 400;
+  padding: 0.42rem 0.5rem;
 }
 
 .login-card input:focus,
 .user-form input:focus,
+.user-form textarea:focus,
 .user-form select:focus,
 .settings-form select:focus,
 .header-select select:focus {
@@ -454,6 +459,7 @@ button:disabled {
 }
 
 .app-layout {
+  font-size: var(--app-font-size, 1rem);
   min-height: 100vh;
 }
 
@@ -524,7 +530,7 @@ button:disabled {
   min-width: 130px;
   background: var(--color-surface);
   color: var(--color-text);
-  padding: 0.45rem 0.55rem;
+  padding: 0.27rem 0.34rem;
   text-transform: none;
 }
 
@@ -720,8 +726,9 @@ button:disabled {
 .button-link,
 .secondary-link {
   border-radius: 6px;
+  font-size: var(--button-font-size, 1em);
   font-weight: 700;
-  padding: 0.75rem 1rem;
+  padding: var(--button-padding-block, 0.75rem) var(--button-padding-inline, 1rem);
   text-decoration: none;
 }
 
@@ -752,6 +759,11 @@ button:disabled {
   display: grid;
   gap: 0.9rem;
   padding: 1rem;
+}
+
+.user-form textarea {
+  min-height: 12rem;
+  resize: vertical;
 }
 
 .app-layout--density-compact .user-form,
@@ -808,6 +820,32 @@ button:disabled {
   width: min(100%, 560px);
 }
 
+.page-form {
+  width: 100%;
+}
+
+.page-form__row {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.page-form__row--main {
+  grid-template-columns: minmax(220px, 2fr) minmax(180px, 1.25fr) minmax(150px, 0.75fr);
+}
+
+.page-form__row--meta {
+  align-items: end;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.35fr) minmax(130px, auto) minmax(160px, auto);
+}
+
+.page-form__checkbox {
+  min-height: 2.95rem;
+}
+
+.page-form textarea {
+  min-height: 24rem;
+}
+
 .checkbox-field {
   align-items: center;
   grid-template-columns: auto 1fr;
@@ -862,7 +900,23 @@ button:disabled {
 }
 
 .table-actions button {
-  padding: 0.55rem 0.7rem;
+  padding: var(--table-button-padding-block, 0.55rem) var(--table-button-padding-inline, 0.7rem);
+}
+
+.table-actions .secondary-link {
+  padding: var(--table-button-padding-block, 0.55rem) var(--table-button-padding-inline, 0.7rem);
+}
+
+.app-layout--button-compact {
+  --button-font-size: 0.86em;
+  --button-padding-block: 0.52rem;
+  --button-padding-inline: 0.7rem;
+  --table-button-padding-block: 0.38rem;
+  --table-button-padding-inline: 0.5rem;
+}
+
+.app-layout--font-compact {
+  --app-font-size: 0.85rem;
 }
 
 .danger-button {
@@ -945,6 +999,16 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
+  .page-form__row,
+  .page-form__row--main,
+  .page-form__row--meta {
+    grid-template-columns: 1fr;
+  }
+
+  .page-form__checkbox {
+    min-height: auto;
+  }
+
   .settings-form {
     grid-template-columns: 1fr;
   }

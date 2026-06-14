@@ -8,8 +8,10 @@ import Navigation from "./Navigation";
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   const {
+    buttonSize,
     contentWidth,
     density,
+    fontSize,
     navigationBehavior,
     navigationLayout,
     reduceMotion,
@@ -21,6 +23,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     `app-layout--menu-${navigationBehavior}`,
     `app-layout--density-${density}`,
     `app-layout--content-${contentWidth}`,
+    `app-layout--button-${buttonSize}`,
+    `app-layout--font-${fontSize}`,
     tableStripes ? "app-layout--striped-tables" : "",
     reduceMotion ? "app-layout--reduce-motion" : "",
   ]

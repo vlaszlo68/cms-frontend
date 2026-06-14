@@ -5,6 +5,8 @@ import AppLayout from "./components/layout/AppLayout";
 import { usePreferences } from "./preferences/PreferencesContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import PageFormPage from "./pages/PageFormPage";
+import PagesPage from "./pages/PagesPage";
 import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
 import UserFormPage from "./pages/UserFormPage";
@@ -134,11 +136,35 @@ export default function App() {
         path="/pages"
         element={
           <ProtectedRoute>
-            <AppLayout>
-              <div className="placeholder-page">
-                <PagePlaceholder />
-              </div>
-            </AppLayout>
+            <AdminRoute>
+              <AppLayout>
+                <PagesPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages/new"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <PageFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <PageFormPage />
+              </AppLayout>
+            </AdminRoute>
           </ProtectedRoute>
         }
       />
@@ -154,16 +180,5 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  );
-}
-
-function PagePlaceholder() {
-  const { t } = usePreferences();
-
-  return (
-    <>
-      <h2>{t("pages")}</h2>
-      <p>{t("pagesPlaceholder")}</p>
-    </>
   );
 }
