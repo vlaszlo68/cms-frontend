@@ -58,19 +58,19 @@ Do not put full `localhost` backend URLs in frontend `fetch` calls.
 Docker/root-context deployment:
 
 ```text
-http://localhost:8081
+http://localhost:8080
 ```
 
 Standalone Tomcat deployment with `cms-app.war`:
 
 ```text
-http://localhost:8081/cms-app
+http://localhost:8080/cms-app
 ```
 
 Current verified backend URL:
 
 ```text
-http://localhost:8081/cms-app
+http://localhost:8080/cms-app
 ```
 
 Current frontend dev URL:
@@ -83,7 +83,7 @@ http://127.0.0.1:5173
 Historical/alternative frontend env variable if the project later switches away from proxy-only relative calls:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8081/cms-app
+VITE_API_BASE_URL=http://localhost:8080/cms-app
 ```
 
 ## Auth API Contract
@@ -303,7 +303,7 @@ The backend has dedicated CORS support for local dev origins, but the Vite dev p
 
 - frontend dev server: `http://127.0.0.1:5173`
 - frontend calls relative `/api/...` paths
-- proxy target: `http://localhost:8081`
+- proxy target: `http://localhost:8080`
 - proxy rewrite: `/api/...` -> `/cms-app/api/...`
 - proxy cookie path rewrite: backend `Path=/cms-app` cookies are rewritten to `Path=/`
 - direct browser calls from `http://localhost:5173` and `http://127.0.0.1:5173` are also supported by backend CORS
@@ -315,7 +315,7 @@ Current `vite.config.ts` proxy behavior:
 server: {
   proxy: {
     "/api": {
-      target: "http://localhost:8081",
+      target: "http://localhost:8080",
       changeOrigin: true,
       cookiePathRewrite: "/",
       rewrite: (path) => path.replace(/^\/api/, "/cms-app/api"),
@@ -331,10 +331,10 @@ The backend `AuthFilter` compares `request.getServletPath()` against exact publi
 
 This path matching is context-path safe, so public auth endpoints work both at root context and under `/cms-app`.
 
-During local verification, the backend did work under `/cms-app` on port `8081`:
+During local verification, the backend did work under `/cms-app` on port `8080`:
 
-- `POST http://localhost:8081/cms-app/api/auth/login`
-- `GET http://localhost:8081/cms-app/api/auth/me`
+- `POST http://localhost:8080/cms-app/api/auth/login`
+- `GET http://localhost:8080/cms-app/api/auth/me`
 
 The current frontend proxy rewrite targets the local `/cms-app` deployment. Root-context backend deployment can use root `/api/...` paths.
 

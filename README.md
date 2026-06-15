@@ -22,7 +22,7 @@ npm install
 npm run dev
 ```
 
-The Vite dev server proxies `/api` requests to `http://localhost:8081`.
+The Vite dev server proxies `/api` requests to `http://localhost:8080` and rewrites them to the backend `/cms-app/api` context.
 All auth requests use relative paths and include cookies with `credentials: "include"`.
 Login and session restore responses include a CSRF token. The frontend keeps this token in auth/session state and the shared API client automatically sends it as `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` requests.
 API responses use the common backend envelope:

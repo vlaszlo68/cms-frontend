@@ -24,6 +24,7 @@ type RequestOptions = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
   body?: unknown;
   skipCsrf?: boolean;
+  isFormData?: boolean;
 };
 
 const CSRF_PROTECTED_METHODS = new Set<RequestOptions["method"]>([
@@ -105,7 +106,7 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
   const headers = new Headers();
   const csrfToken = getCsrfToken();
 
-  if (options.body !== undefined) {
+  if (options.body !== undefined && !options.isFormData) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -117,7 +118,12 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
     method: options.method,
     credentials: "include",
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body:
+      options.body === undefined
+        ? undefined
+        : options.isFormData
+        ? options.body
+        : JSON.stringify(options.body),
   });
 
   const responseBody = await parseJson(response);
@@ -160,6 +166,10 @@ export function apiGet<T>(path: string) {
  */
 export function apiPost<T>(path: string, body?: unknown) {
   return apiRequest<T>(path, { method: "POST", body });
+}
+
+export function apiPostForm<T>(path: string, formData: FormData) {
+  return apiRequest<T>(path, { method: "POST", body: formData, isFormData: true });
 }
 
 /**

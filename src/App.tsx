@@ -5,6 +5,7 @@ import AppLayout from "./components/layout/AppLayout";
 import { usePreferences } from "./preferences/PreferencesContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import MediaPage from "./pages/MediaPage";
 import PageFormPage from "./pages/PageFormPage";
 import PagesPage from "./pages/PagesPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -139,6 +140,18 @@ export default function App() {
             <AdminRoute>
               <AppLayout>
                 <PagesPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/media"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <MediaPage />
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>

@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8081",
+        target: "http://localhost:8080",
         changeOrigin: true,
         cookiePathRewrite: "/",
         rewrite: (path) => path.replace(/^\/api/, "/cms-app/api"),

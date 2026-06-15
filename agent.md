@@ -49,7 +49,7 @@ Reasonable later additions:
 - Logout and logged-out state must clear the stored CSRF token.
 - Frontend code should call relative `/api/...` paths, not full `localhost` URLs.
 - During local frontend development, the Vite proxy for `/api` remains the simplest mode; the backend also has CORS configured for `http://localhost:5173` and `http://127.0.0.1:5173`.
-- Current verified local backend is `http://localhost:8081/cms-app`, so Vite rewrites `/api/...` to `/cms-app/api/...`.
+- Current verified local backend is `http://localhost:8080/cms-app`, so Vite rewrites `/api/...` to `/cms-app/api/...`.
 - Vite also uses `cookiePathRewrite: "/"` so backend session cookies work with frontend-origin `/api/...` requests.
 - Backend `AuthFilter` public-path matching uses servlet paths and works both at root context and under `/cms-app`.
 - Treat any protected API `401` response as logged-out state.
