@@ -34,11 +34,13 @@ Implemented:
 - protected dashboard route at `/`
 - ADMIN-only User CRUD routes at `/users`, `/users/new`, and `/users/:userId/edit`
 - ADMIN-only Page CRUD routes at `/pages`, `/pages/new`, and `/pages/:id/edit`
+- ADMIN-only Media Library route at `/media`
 - protected settings route at `/settings`
 - logout flow
 - Vite dev proxy for the backend
 - User CRUD API wrapper and TypeScript models
 - Page CRUD API wrapper and TypeScript models
+- Media API wrapper and TypeScript model
 - local appearance/preferences context
 - English/Hungarian UI labels
 - theme, menu, date/time, density, table, table-page-size, content-width, font-size, button-size, reduced-motion, and button-icon settings
@@ -49,6 +51,8 @@ The frontend intentionally uses relative API paths only, for example:
 /api/auth/login
 /api/auth/logout
 /api/auth/me
+/api/media
+/api/media/{id}/content
 ```
 
 Do not put full `localhost` backend URLs in frontend `fetch` calls.
@@ -287,15 +291,16 @@ Current routes:
 - `/pages`: ADMIN-only page list
 - `/pages/new`: ADMIN-only page create form
 - `/pages/:id/edit`: ADMIN-only page edit form
+- `/media`: ADMIN-only media library
 - `/settings`: protected settings page
 
 Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
 
 - `Header.tsx`: app name, current `loginName`, logout button
-- `Navigation.tsx`: Dashboard, Users, Pages, and Settings links
+- `Navigation.tsx`: Dashboard, Users, Pages, Media, and Settings links
 - main content area for route children
 
-The Users and Pages navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
+The Users, Pages, and Media navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
 
 ## Local Development Notes
 
@@ -355,6 +360,7 @@ The first useful frontend milestone now includes:
 - dashboard page
 - ADMIN-only User CRUD UI and API integration
 - ADMIN-only Page CRUD UI and API integration
+- ADMIN-only Media Library UI and API integration
 - Settings page with persisted appearance preferences
 - logout button
 - README with setup, proxy, and backend dependency notes
@@ -407,6 +413,28 @@ The list fetches lightweight page rows without `content`, supports client-side t
 
 The editor supports create and edit modes with `Title`, `Slug`, `Status`, metadata fields, homepage/menu visibility flags, and a `textarea` content field. The first editing helper layer includes simple HTML insert buttons, sanitized frontend preview, and off/horizontal/vertical preview modes. Rich text editor and media-library integration are intentionally deferred.
 
+## Media Library Frontend Slice
+
+Implemented files:
+
+- `src/models/media.ts`
+- `src/api/mediaApi.ts`
+- `src/pages/MediaPage.tsx`
+- `src/components/media/MediaUploadDialog.tsx`
+
+API methods:
+
+```ts
+getMediaList(): Promise<Media[]>
+getMedia(id: number): Promise<Media>
+uploadMedia(file: File, description?: string): Promise<Media>
+deleteMedia(id: number): Promise<boolean>
+```
+
+The media list supports client-side three-state sorting, pagination based on the persisted table page size preference, manual refresh, upload through multipart `POST /api/media`, and confirmed hard delete through `DELETE /api/media/{id}`.
+
+Media details open in a draggable modal. The details modal can open a separate draggable preview modal that reads binary content from `GET /api/media/{id}/content`. Images render inline, PDFs render in an iframe, and unsupported file types provide an open-content link.
+
 ## Preferences And Appearance
 
 Implemented files:
@@ -416,6 +444,7 @@ Implemented files:
 - `src/pages/SettingsPage.tsx`
 - `src/components/ui/ButtonLabel.tsx`
 - `src/components/ui/ConfirmDialog.tsx`
+- `src/components/ui/DraggableDialog.tsx`
 
 Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, table page size, content width, font size, button size, reduced motion, and button icons.
 
