@@ -1,4 +1,5 @@
 import ButtonLabel from "./ButtonLabel";
+import DraggableDialog from "./DraggableDialog";
 
 type ConfirmDialogProps = {
   cancelLabel: string;
@@ -20,8 +21,7 @@ export default function ConfirmDialog({
   title,
 }: ConfirmDialogProps) {
   return (
-    <div aria-labelledby="confirm-dialog-title" aria-modal="true" className="modal-backdrop" role="dialog">
-      <div className="confirm-dialog">
+    <DraggableDialog labelledBy="confirm-dialog-title">
         <div>
           <h3 id="confirm-dialog-title">{title}</h3>
           <p>{message}</p>
@@ -34,7 +34,6 @@ export default function ConfirmDialog({
             <ButtonLabel icon="deactivate">{confirmLabel}</ButtonLabel>
           </button>
         </div>
-      </div>
-    </div>
+    </DraggableDialog>
   );
 }

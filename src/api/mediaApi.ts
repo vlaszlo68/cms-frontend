@@ -19,9 +19,9 @@ export function uploadMedia(file: File, description?: string) {
     formData.append("description", description);
   }
 
-  return apiPostForm<Media>(`${MEDIA_PATH}/upload`, formData);
+  return apiPostForm<Media>(MEDIA_PATH, formData);
 }
 
 export function deleteMedia(id: number) {
-  return apiDelete<Media>(`${MEDIA_PATH}/${id}`);
+  return apiDelete<boolean>(`${MEDIA_PATH}/${id}`);
 }

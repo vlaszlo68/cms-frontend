@@ -1,7 +1,9 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "../api/httpClient";
 import * as mediaApi from "../api/mediaApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
+import DraggableDialog from "../components/ui/DraggableDialog";
 import MediaUploadDialog from "../components/media/MediaUploadDialog";
 import type { Media } from "../models/media";
 import type { DateFormat } from "../preferences/PreferencesContext";
@@ -54,8 +56,10 @@ export default function MediaPage() {
   const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pendingDeactivateMediaId, setPendingDeactivateMediaId] = useState<number | null>(null);
-  const [detailsMediaId, setDetailsMediaId] = useState<number | null>(null);
+  const [pendingDeleteMediaId, setPendingDeleteMediaId] = useState<number | null>(null);
+  const [mediaToDelete, setMediaToDelete] = useState<Media | null>(null);
+  const [mediaToShowDetails, setMediaToShowDetails] = useState<Media | null>(null);
+  const [mediaToPreview, setMediaToPreview] = useState<Media | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [sort, setSort] = useState<MediaSortState | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,19 +140,20 @@ export default function MediaPage() {
     return sort.direction === "asc" ? "ascending" : "descending";
   }
 
-  async function handleDeactivate(mediaItem: Media) {
+  async function handleDelete(mediaItem: Media) {
     setError("");
-    setPendingDeactivateMediaId(mediaItem.id);
+    setPendingDeleteMediaId(mediaItem.id);
 
     try {
-      const deactivatedMedia = await mediaApi.deleteMedia(mediaItem.id);
-      setMedia((current) =>
-        current.map((item) => (item.id === deactivatedMedia.id ? deactivatedMedia : item)),
-      );
+      await mediaApi.deleteMedia(mediaItem.id);
+      setMedia((current) => current.filter((item) => item.id !== mediaItem.id));
+      setMediaToShowDetails((current) => (current?.id === mediaItem.id ? null : current));
+      setMediaToPreview((current) => (current?.id === mediaItem.id ? null : current));
+      setMediaToDelete(null);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("mediaCouldNotBeDeleted")));
     } finally {
-      setPendingDeactivateMediaId(null);
+      setPendingDeleteMediaId(null);
     }
   }
 
@@ -162,6 +167,43 @@ export default function MediaPage() {
     }
 
     return t("other");
+  }
+
+  function getContentUrl(mediaItem: Media) {
+    return `/api/media/${mediaItem.id}/content`;
+  }
+
+  function renderPreviewContent(mediaItem: Media) {
+    const contentUrl = getContentUrl(mediaItem);
+
+    if (mediaItem.mimeType.startsWith("image/")) {
+      return (
+        <img
+          alt={mediaItem.originalFileName}
+          className="media-preview-dialog__image"
+          src={contentUrl}
+        />
+      );
+    }
+
+    if (mediaItem.mimeType === "application/pdf") {
+      return (
+        <iframe
+          className="media-preview-dialog__frame"
+          src={contentUrl}
+          title={mediaItem.originalFileName}
+        />
+      );
+    }
+
+    return (
+      <div className="media-preview-dialog__fallback">
+        <p>{t("mediaPreviewNotAvailable")}</p>
+        <a className="secondary-link" href={contentUrl} rel="noopener noreferrer" target="_blank">
+          {t("openMediaContent")}
+        </a>
+      </div>
+    );
   }
 
   return (
@@ -186,9 +228,10 @@ export default function MediaPage() {
       <div className="users-table-wrap">
         {isLoading ? (
           <div className="inline-status">{t("loadingMedia")}</div>
-        ) : paginatedMedia.length === 0 ? (
+        ) : sortedMedia.length === 0 ? (
           <div className="inline-status">{t("noMedia")}</div>
         ) : (
+          <>
           <table className="users-table">
             <thead>
               <tr>
@@ -204,8 +247,7 @@ export default function MediaPage() {
             </thead>
             <tbody>
               {paginatedMedia.map((mediaItem) => (
-                <Fragment key={mediaItem.id}>
-                  <tr>
+                <tr key={mediaItem.id}>
                     <td>{mediaItem.originalFileName}</td>
                     <td>
                       {getPreviewLabel(mediaItem.mimeType)} · {mediaItem.mimeType}
@@ -217,40 +259,47 @@ export default function MediaPage() {
                       <div className="table-actions">
                         <button
                           className="secondary-button"
-                          onClick={() => setDetailsMediaId((current) => (current === mediaItem.id ? null : mediaItem.id))}
+                          onClick={() => setMediaToShowDetails(mediaItem)}
                           type="button"
                         >
                           <ButtonLabel icon="edit">{t("details")}</ButtonLabel>
                         </button>
                         <button
                           className="danger-button"
-                          disabled={pendingDeactivateMediaId === mediaItem.id || !mediaItem.active}
-                          onClick={() => void handleDeactivate(mediaItem)}
+                          disabled={pendingDeleteMediaId === mediaItem.id}
+                          onClick={() => setMediaToDelete(mediaItem)}
                           type="button"
                         >
-                          <ButtonLabel icon="deactivate">{t("deactivate")}</ButtonLabel>
+                          <ButtonLabel icon="delete">{t("delete")}</ButtonLabel>
                         </button>
                       </div>
                     </td>
-                  </tr>
-                  {detailsMediaId === mediaItem.id && (
-                    <tr className="media-details-row" key={`${mediaItem.id}-details`}>
-                      <td colSpan={6}>
-                        <div className="user-form">
-                          <strong>{t("description")}</strong>
-                          <p>{mediaItem.description ?? t("no")}</p>
-                          <strong>{t("active")}</strong>
-                          <p>{mediaItem.active ? t("yes") : t("no")}</p>
-                          <strong>{t("updatedAt")}</strong>
-                          <p>{formatDate(mediaItem.updatedAt, language, dateFormat)}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
+                </tr>
               ))}
             </tbody>
           </table>
+          <div className="table-pagination">
+            <button
+              className="secondary-button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              type="button"
+            >
+              {t("previousPage")}
+            </button>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              className="secondary-button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              type="button"
+            >
+              {t("nextPage")}
+            </button>
+          </div>
+          </>
         )}
       </div>
 
@@ -259,6 +308,100 @@ export default function MediaPage() {
           onClose={() => setIsUploadOpen(false)}
           onUploadSuccess={() => void loadMedia()}
         />
+      )}
+
+      {mediaToDelete && (
+        <ConfirmDialog
+          cancelLabel={t("cancel")}
+          confirmLabel={t("delete")}
+          isDanger
+          message={`${t("deleteMediaConfirm")} ${mediaToDelete.originalFileName}?`}
+          onCancel={() => setMediaToDelete(null)}
+          onConfirm={() => void handleDelete(mediaToDelete)}
+          title={t("confirmDelete")}
+        />
+      )}
+
+      {mediaToShowDetails && (
+        <DraggableDialog className="media-details-dialog" labelledBy="media-details-dialog-title">
+            <div>
+              <h3 id="media-details-dialog-title">{mediaToShowDetails.originalFileName}</h3>
+              <p>{getPreviewLabel(mediaToShowDetails.mimeType)} - {mediaToShowDetails.mimeType}</p>
+            </div>
+            <dl className="media-details-list">
+              <div>
+                <dt>{t("description")}</dt>
+                <dd>{mediaToShowDetails.description ?? t("no")}</dd>
+              </div>
+              <div>
+                <dt>{t("size")}</dt>
+                <dd>{formatFileSize(mediaToShowDetails.fileSize)}</dd>
+              </div>
+              <div>
+                <dt>{t("storage")}</dt>
+                <dd>{mediaToShowDetails.storageType}</dd>
+              </div>
+              <div>
+                <dt>{t("active")}</dt>
+                <dd>{mediaToShowDetails.active ? t("yes") : t("no")}</dd>
+              </div>
+              <div>
+                <dt>{t("createdAt")}</dt>
+                <dd>{formatDate(mediaToShowDetails.createdAt, language, dateFormat)}</dd>
+              </div>
+              <div>
+                <dt>{t("updatedAt")}</dt>
+                <dd>{formatDate(mediaToShowDetails.updatedAt, language, dateFormat)}</dd>
+              </div>
+            </dl>
+            <div className="confirm-dialog__actions">
+              <button
+                className="secondary-button"
+                onClick={() => setMediaToPreview(mediaToShowDetails)}
+                type="button"
+              >
+                <ButtonLabel icon="preview">{t("preview")}</ButtonLabel>
+              </button>
+              <button
+                className="secondary-button"
+                onClick={() => setMediaToShowDetails(null)}
+                type="button"
+              >
+                <ButtonLabel icon="cancel">{t("cancel")}</ButtonLabel>
+              </button>
+            </div>
+        </DraggableDialog>
+      )}
+
+      {mediaToPreview && (
+        <DraggableDialog className="media-preview-dialog" labelledBy="media-preview-dialog-title">
+            <div>
+              <h3 id="media-preview-dialog-title">{mediaToPreview.originalFileName}</h3>
+              <p>
+                {getPreviewLabel(mediaToPreview.mimeType)} - {formatFileSize(mediaToPreview.fileSize)}
+              </p>
+            </div>
+            <div className="media-preview-dialog__body">
+              {renderPreviewContent(mediaToPreview)}
+            </div>
+            <div className="confirm-dialog__actions">
+              <a
+                className="secondary-link"
+                href={getContentUrl(mediaToPreview)}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {t("openMediaContent")}
+              </a>
+              <button
+                className="secondary-button"
+                onClick={() => setMediaToPreview(null)}
+                type="button"
+              >
+                <ButtonLabel icon="cancel">{t("cancel")}</ButtonLabel>
+              </button>
+            </div>
+        </DraggableDialog>
       )}
     </section>
   );

@@ -6,8 +6,10 @@ type ButtonIcon =
   | "cancel"
   | "create"
   | "deactivate"
+  | "delete"
   | "edit"
   | "logout"
+  | "preview"
   | "refresh"
   | "save";
 
@@ -16,8 +18,10 @@ const icons: Record<ButtonIcon, string> = {
   cancel: "\u00d7",
   create: "+",
   deactivate: "!",
+  delete: "\u00d7",
   edit: "\u270e",
   logout: "\u25b6",
+  preview: "\u25c9",
   refresh: "\u27f3",
   save: "\u2713",
 };

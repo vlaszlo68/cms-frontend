@@ -22,7 +22,7 @@ export class ApiError extends Error {
 
 type RequestOptions = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
-  body?: unknown;
+  body?: unknown | FormData;
   skipCsrf?: boolean;
   isFormData?: boolean;
 };
@@ -114,16 +114,20 @@ async function apiRequest<T>(path: string, options: RequestOptions): Promise<T> 
     headers.set("X-CSRF-Token", csrfToken);
   }
 
+  const requestBody =
+    options.body === undefined
+      ? undefined
+      : options.isFormData
+      ? options.body instanceof FormData
+        ? options.body
+        : undefined
+      : JSON.stringify(options.body);
+
   const response = await fetch(path, {
     method: options.method,
     credentials: "include",
     headers,
-    body:
-      options.body === undefined
-        ? undefined
-        : options.isFormData
-        ? options.body
-        : JSON.stringify(options.body),
+    body: requestBody,
   });
 
   const responseBody = await parseJson(response);

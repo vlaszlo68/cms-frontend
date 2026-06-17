@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiError } from "../../api/httpClient";
 import * as mediaApi from "../../api/mediaApi";
 import ButtonLabel from "../ui/ButtonLabel";
+import DraggableDialog from "../ui/DraggableDialog";
 import type { Media } from "../../models/media";
 import { usePreferences } from "../../preferences/PreferencesContext";
 
@@ -29,6 +30,7 @@ export default function MediaUploadDialog({ onClose, onUploadSuccess }: MediaUpl
     try {
       const uploadedMedia = await mediaApi.uploadMedia(file, description);
       onUploadSuccess(uploadedMedia);
+      onClose();
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError
@@ -41,8 +43,7 @@ export default function MediaUploadDialog({ onClose, onUploadSuccess }: MediaUpl
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="confirm-dialog">
+    <DraggableDialog>
         <div>
           <h3>{t("uploadMedia")}</h3>
           <p>{t("uploadMediaDescription")}</p>
@@ -81,7 +82,6 @@ export default function MediaUploadDialog({ onClose, onUploadSuccess }: MediaUpl
             </ButtonLabel>
           </button>
         </div>
-      </div>
-    </div>
+    </DraggableDialog>
   );
 }
