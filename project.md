@@ -478,6 +478,62 @@ The editor defaults to PAGE, loads page options through the Pages API, supports 
 
 Backend follow-up remains necessary: the current backend service layer still requires `pageId` and does not yet persist `targetType`/`targetUrl`, although the DTO and model fields exist.
 
+## Template And Site Settings Frontend Slices
+
+Implemented files:
+
+- `src/models/template.ts`
+- `src/api/templateApi.ts`
+- `src/pages/TemplatesPage.tsx`
+- `src/pages/TemplateFormPage.tsx`
+- `src/models/siteSettings.ts`
+- `src/api/siteSettingsApi.ts`
+- `src/pages/SiteSettingsPage.tsx`
+
+Templates support CRUD and an optional Media-based preview image. Site Settings manages site name, Media-based logo, footer text, contact email, phone, Facebook URL, and LinkedIn URL.
+
+The Page editor loads templates from `GET /api/templates`, sends `templateCode`, and defaults new pages to `STANDARD`.
+
+Routes:
+
+- `/templates`
+- `/templates/new`
+- `/templates/:id/edit`
+- `/site-settings`
+
+## PageType And PageBlock Frontend Slice
+
+Implemented files:
+
+- `src/models/pageBlock.ts`
+- `src/api/pageBlockApi.ts`
+- `src/pages/PageBlocksPage.tsx`
+- `src/pages/PageBlockFormPage.tsx`
+
+Pages use:
+
+```ts
+type PageType = "CONTENT" | "BLOCK";
+```
+
+CONTENT pages show the existing HTML editor and preview. BLOCK pages hide that editor and expose a Blocks action from the Pages list. Blocks support title, block type, sort order, visibility, and raw `configJson`.
+
+Routes:
+
+- `/pages/:id/blocks`
+- `/pages/:id/blocks/new`
+- `/pages/:id/blocks/:blockId/edit`
+
+Assumed API contract while the backend is being implemented:
+
+- `GET /api/pages/{pageId}/blocks`
+- `GET /api/page-blocks/{id}`
+- `POST /api/page-blocks`
+- `PUT /api/page-blocks/{id}`
+- `DELETE /api/page-blocks/{id}`
+
+No drag-and-drop, visual builder, block preview, or Media picker is implemented.
+
 ## Preferences And Appearance
 
 Implemented files:
