@@ -9,7 +9,7 @@ When working here, treat the backend contract in `FRONTEND_HANDOFF.md` and the b
 ## Working Principles
 
 - Keep the current frontend architecture explicit and lightweight.
-- Auth, User CRUD, Page CRUD, Media Library, and the preferences UI are already implemented; preserve those patterns.
+- Auth, User CRUD, Page CRUD, Media Library, Menu management, and the preferences UI are already implemented; preserve those patterns.
 - Prefer small, verifiable changes over broad framework setup.
 - Follow the existing project structure once the React app is initialized.
 - Do not introduce Redux or heavier state libraries for the initial auth flow; use React context first.
@@ -65,13 +65,14 @@ Implemented:
 - ADMIN-only User CRUD frontend routes and API wrapper
 - ADMIN-only Page CRUD frontend routes and API wrapper
 - ADMIN-only Media Library frontend route and API wrapper
+- ADMIN-only Menu and Menu Item routes and API wrapper
 - Settings page with persisted appearance preferences
 - English/Hungarian labels
 - configurable themes, menu layout/behavior, date/time display, date format, density, table striping, table page size, content width, font size, button size, reduced motion, and button icons
 
 Avoid introducing heavy state libraries or UI frameworks unless the project explicitly adopts them.
 
-Current milestone status: auth flow, authenticated app layout, User CRUD frontend, Page CRUD frontend, Media Library frontend, and settings/preferences UI are implemented. The project is repeatedly verified with `npm run build`.
+Current milestone status: auth flow, authenticated app layout, User CRUD frontend, Page CRUD frontend, Media Library frontend, Menu frontend, and settings/preferences UI are implemented. The project is repeatedly verified with `npm run build`.
 
 ## Suggested Structure
 
@@ -84,6 +85,7 @@ src/
     authApi.ts
     httpClient.ts
     pageApi.ts
+    menuApi.ts
     types.ts
     userApi.ts
   auth/
@@ -103,6 +105,7 @@ src/
     translations.ts
   models/
     page.ts
+    menu.ts
     media.ts
     user.ts
   pages/
@@ -111,6 +114,9 @@ src/
     PageFormPage.tsx
     PagesPage.tsx
     MediaPage.tsx
+    MenuFormPage.tsx
+    MenuItemsPage.tsx
+    MenusPage.tsx
     RegisterPage.tsx
     SettingsPage.tsx
     UserFormPage.tsx
@@ -174,9 +180,16 @@ Before calling the first auth milestone done, verify:
 - navigation includes Dashboard, Users, Pages, and Settings links
 - Users and Pages navigation/routes are available only for ADMIN users
 - Users, Pages, and Media navigation/routes are available only for ADMIN users
+- Menus navigation/routes are available only for ADMIN users
 - Users, Pages, and Media lists support frontend pagination and three-state column sorting
 - destructive list actions use the shared confirmation dialog
 - modal dialogs use the shared draggable dialog wrapper where appropriate
 - Page editing supports textarea HTML editing with simple insert buttons and sanitized preview modes
 - Media Library supports multipart upload, details modal, content preview through `/api/media/{id}/content`, and confirmed hard delete
+- Menu management supports menu CRUD, menu item CRUD, parent selection, Page targets, and URL target form state
+- Menu item requests use `targetType` with `"PAGE"` or `"URL"` and clear the inactive target field
 - settings changes persist in localStorage and apply immediately
+
+## Menu Backend Compatibility Note
+
+The frontend model and UI support both PAGE and URL menu item targets. The currently inspected backend DTO/model also exposes `targetType` and `targetUrl`, but the backend `MenuItemService` still requires `pageId` and does not persist the URL fields. Do not remove the frontend URL support; complete or verify the backend service implementation when end-to-end URL target behavior is required.

@@ -35,12 +35,14 @@ Implemented:
 - ADMIN-only User CRUD routes at `/users`, `/users/new`, and `/users/:userId/edit`
 - ADMIN-only Page CRUD routes at `/pages`, `/pages/new`, and `/pages/:id/edit`
 - ADMIN-only Media Library route at `/media`
+- ADMIN-only Menu routes at `/menus`, `/menus/new`, `/menus/:id/edit`, and `/menus/:id/items`
 - protected settings route at `/settings`
 - logout flow
 - Vite dev proxy for the backend
 - User CRUD API wrapper and TypeScript models
 - Page CRUD API wrapper and TypeScript models
 - Media API wrapper and TypeScript model
+- Menu API wrapper and TypeScript models, including PAGE/URL target types
 - local appearance/preferences context
 - English/Hungarian UI labels
 - theme, menu, date/time, density, table, table-page-size, content-width, font-size, button-size, reduced-motion, and button-icon settings
@@ -53,6 +55,8 @@ The frontend intentionally uses relative API paths only, for example:
 /api/auth/me
 /api/media
 /api/media/{id}/content
+/api/menus
+/api/menu-items
 ```
 
 Do not put full `localhost` backend URLs in frontend `fetch` calls.
@@ -292,15 +296,19 @@ Current routes:
 - `/pages/new`: ADMIN-only page create form
 - `/pages/:id/edit`: ADMIN-only page edit form
 - `/media`: ADMIN-only media library
+- `/menus`: ADMIN-only menu list
+- `/menus/new`: ADMIN-only menu create form
+- `/menus/:id/edit`: ADMIN-only menu edit form
+- `/menus/:id/items`: ADMIN-only menu item management
 - `/settings`: protected settings page
 
 Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
 
 - `Header.tsx`: app name, current `loginName`, logout button
-- `Navigation.tsx`: Dashboard, Users, Pages, Media, and Settings links
+- `Navigation.tsx`: Dashboard, Users, Pages, Menus, Media, and Settings links
 - main content area for route children
 
-The Users, Pages, and Media navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
+The Users, Pages, Menus, and Media navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
 
 ## Local Development Notes
 
@@ -361,6 +369,7 @@ The first useful frontend milestone now includes:
 - ADMIN-only User CRUD UI and API integration
 - ADMIN-only Page CRUD UI and API integration
 - ADMIN-only Media Library UI and API integration
+- ADMIN-only Menu and Menu Item UI and API integration
 - Settings page with persisted appearance preferences
 - logout button
 - README with setup, proxy, and backend dependency notes
@@ -434,6 +443,40 @@ deleteMedia(id: number): Promise<boolean>
 The media list supports client-side three-state sorting, pagination based on the persisted table page size preference, manual refresh, upload through multipart `POST /api/media`, and confirmed hard delete through `DELETE /api/media/{id}`.
 
 Media details open in a draggable modal. The details modal can open a separate draggable preview modal that reads binary content from `GET /api/media/{id}/content`. Images render inline, PDFs render in an iframe, and unsupported file types provide an open-content link.
+
+## Menu Frontend Slice
+
+Implemented files:
+
+- `src/models/menu.ts`
+- `src/api/menuApi.ts`
+- `src/pages/MenusPage.tsx`
+- `src/pages/MenuFormPage.tsx`
+- `src/pages/MenuItemsPage.tsx`
+
+API methods:
+
+```ts
+getMenus(): Promise<Menu[]>
+getMenu(id: number): Promise<Menu>
+createMenu(input: CreateMenuRequest): Promise<Menu>
+updateMenu(id: number, input: UpdateMenuRequest): Promise<Menu>
+deleteMenu(id: number): Promise<Menu>
+getMenuItems(menuId: number): Promise<MenuItem[]>
+createMenuItem(input: CreateMenuItemRequest): Promise<MenuItem>
+updateMenuItem(id: number, input: UpdateMenuItemRequest): Promise<MenuItem>
+deleteMenuItem(id: number): Promise<MenuItem>
+```
+
+Menu item targets use:
+
+```ts
+type MenuItemTargetType = "PAGE" | "URL";
+```
+
+The editor defaults to PAGE, loads page options through the Pages API, supports a parent-item dropdown, and dynamically switches to a required Target URL input for URL targets. The list shows Target Type and the resolved Page title or external URL.
+
+Backend follow-up remains necessary: the current backend service layer still requires `pageId` and does not yet persist `targetType`/`targetUrl`, although the DTO and model fields exist.
 
 ## Preferences And Appearance
 
