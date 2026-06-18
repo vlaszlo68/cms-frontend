@@ -976,6 +976,27 @@ button:disabled {
   width: 100%;
 }
 
+.menu-item-form {
+  width: 100%;
+}
+
+.menu-item-form__fields {
+  align-items: end;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns:
+    minmax(170px, 1.2fr)
+    minmax(130px, 0.75fr)
+    minmax(190px, 1.4fr)
+    minmax(160px, 1fr)
+    minmax(110px, 0.55fr)
+    minmax(100px, auto);
+}
+
+.menu-item-form__checkbox {
+  min-height: 2.95rem;
+}
+
 .page-form__row {
   display: grid;
   gap: 0.9rem;
@@ -1302,11 +1323,13 @@ button:disabled {
 @media (max-width: 760px) {
   .page-form__row,
   .page-form__row--main,
-  .page-form__row--meta {
+  .page-form__row--meta,
+  .menu-item-form__fields {
     grid-template-columns: 1fr;
   }
 
-  .page-form__checkbox {
+  .page-form__checkbox,
+  .menu-item-form__checkbox {
     min-height: auto;
   }
 

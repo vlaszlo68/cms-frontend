@@ -10,6 +10,7 @@ const navigationItems = [
   { labelKey: "dashboard", to: "/" },
   { labelKey: "users", to: "/users" },
   { labelKey: "pages", to: "/pages" },
+  { labelKey: "menus", to: "/menus" },
   { labelKey: "media", to: "/media" },
   { labelKey: "settings", to: "/settings" },
 ] as const;
@@ -21,7 +22,8 @@ export default function Navigation() {
   const { user } = useAuth();
   const { t } = usePreferences();
   const visibleItems = navigationItems.filter(
-    (item) => !["/users", "/pages", "/media"].includes(item.to) || user?.role === "ADMIN",
+    (item) =>
+      !["/users", "/pages", "/menus", "/media"].includes(item.to) || user?.role === "ADMIN",
   );
 
   return (

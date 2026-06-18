@@ -6,6 +6,9 @@ import { usePreferences } from "./preferences/PreferencesContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import MediaPage from "./pages/MediaPage";
+import MenuFormPage from "./pages/MenuFormPage";
+import MenuItemsPage from "./pages/MenuItemsPage";
+import MenusPage from "./pages/MenusPage";
 import PageFormPage from "./pages/PageFormPage";
 import PagesPage from "./pages/PagesPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -152,6 +155,54 @@ export default function App() {
             <AdminRoute>
               <AppLayout>
                 <MediaPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menus"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <MenusPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menus/new"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <MenuFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menus/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <MenuFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menus/:id/items"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <MenuItemsPage />
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
