@@ -11,7 +11,9 @@ const navigationItems = [
   { labelKey: "users", to: "/users" },
   { labelKey: "pages", to: "/pages" },
   { labelKey: "menus", to: "/menus" },
+  { labelKey: "templates", to: "/templates" },
   { labelKey: "media", to: "/media" },
+  { labelKey: "siteSettings", to: "/site-settings" },
   { labelKey: "settings", to: "/settings" },
 ] as const;
 
@@ -23,7 +25,9 @@ export default function Navigation() {
   const { t } = usePreferences();
   const visibleItems = navigationItems.filter(
     (item) =>
-      !["/users", "/pages", "/menus", "/media"].includes(item.to) || user?.role === "ADMIN",
+      !["/users", "/pages", "/menus", "/templates", "/media", "/site-settings"].includes(
+        item.to,
+      ) || user?.role === "ADMIN",
   );
 
   return (

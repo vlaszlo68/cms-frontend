@@ -9,10 +9,15 @@ import MediaPage from "./pages/MediaPage";
 import MenuFormPage from "./pages/MenuFormPage";
 import MenuItemsPage from "./pages/MenuItemsPage";
 import MenusPage from "./pages/MenusPage";
+import PageBlockFormPage from "./pages/PageBlockFormPage";
+import PageBlocksPage from "./pages/PageBlocksPage";
 import PageFormPage from "./pages/PageFormPage";
 import PagesPage from "./pages/PagesPage";
 import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
+import SiteSettingsPage from "./pages/SiteSettingsPage";
+import TemplateFormPage from "./pages/TemplateFormPage";
+import TemplatesPage from "./pages/TemplatesPage";
 import UserFormPage from "./pages/UserFormPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -221,12 +226,96 @@ export default function App() {
         }
       />
       <Route
+        path="/templates"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <TemplatesPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/templates/new"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <TemplateFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/templates/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <TemplateFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/site-settings"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <SiteSettingsPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/pages/:id/edit"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
                 <PageFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages/:id/blocks"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <PageBlocksPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages/:id/blocks/new"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <PageBlockFormPage />
+              </AppLayout>
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pages/:id/blocks/:blockId/edit"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AppLayout>
+                <PageBlockFormPage />
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>

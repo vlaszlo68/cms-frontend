@@ -3,11 +3,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as pageApi from "../api/pageApi";
+import * as templateApi from "../api/templateApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
-import type { CreatePageRequest, Page, PageStatus, UpdatePageRequest } from "../models/page";
+import type {
+  CreatePageRequest,
+  Page,
+  PageStatus,
+  PageType,
+  UpdatePageRequest,
+} from "../models/page";
+import type { Template } from "../models/template";
 import { usePreferences } from "../preferences/PreferencesContext";
 
 const pageStatuses: PageStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const pageTypes: PageType[] = ["CONTENT", "BLOCK"];
 const removableTags = new Set(["script", "style", "iframe", "object", "embed", "form"]);
 const allowedTags = new Set([
   "a",
@@ -58,6 +67,8 @@ type PageFormState = {
   metaDescription: string;
   homepage: boolean;
   menuVisible: boolean;
+  templateCode: string;
+  pageType: PageType;
 };
 
 type PreviewMode = "off" | "horizontal" | "vertical";
@@ -71,6 +82,8 @@ const emptyForm: PageFormState = {
   metaDescription: "",
   homepage: false,
   menuVisible: true,
+  templateCode: "STANDARD",
+  pageType: "CONTENT",
 };
 
 function toFormState(page: Page): PageFormState {
@@ -83,6 +96,8 @@ function toFormState(page: Page): PageFormState {
     metaDescription: page.metaDescription,
     homepage: page.homepage,
     menuVisible: page.menuVisible,
+    templateCode: page.templateCode || "STANDARD",
+    pageType: page.pageType || "CONTENT",
   };
 }
 
@@ -198,7 +213,8 @@ export default function PageFormPage() {
   const editedPageId = id === undefined ? null : Number(id);
   const isEditMode = editedPageId !== null;
   const [form, setForm] = useState<PageFormState>(emptyForm);
-  const [isPageLoading, setIsPageLoading] = useState(isEditMode);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("off");
@@ -209,17 +225,24 @@ export default function PageFormPage() {
     (editedPageId === null || !Number.isInteger(editedPageId) || editedPageId <= 0);
 
   useEffect(() => {
-    if (!editedPageId) {
+    if (hasInvalidPageId) {
       return;
     }
 
-    async function loadPage(pageId: number) {
+    async function loadData() {
       setIsPageLoading(true);
       setError("");
 
       try {
-        const page = await pageApi.getPage(pageId);
-        setForm(toFormState(page));
+        const [loadedTemplates, page] = await Promise.all([
+          templateApi.getTemplates(),
+          editedPageId ? pageApi.getPage(editedPageId) : Promise.resolve(null),
+        ]);
+        setTemplates(loadedTemplates);
+
+        if (page) {
+          setForm(toFormState(page));
+        }
       } catch (caughtError) {
         setError(getErrorMessage(caughtError, t("pageCouldNotBeLoaded")));
       } finally {
@@ -227,8 +250,8 @@ export default function PageFormPage() {
       }
     }
 
-    void loadPage(editedPageId);
-  }, [editedPageId, t]);
+    void loadData();
+  }, [editedPageId, hasInvalidPageId, t]);
 
   if (hasInvalidPageId) {
     return <Navigate to="/pages" replace />;
@@ -342,12 +365,14 @@ export default function PageFormPage() {
       const input: CreatePageRequest | UpdatePageRequest = {
         title,
         slug,
-        content: form.content,
+        content: form.pageType === "CONTENT" ? form.content : "",
         status: form.status,
         metaTitle: form.metaTitle.trim(),
         metaDescription: form.metaDescription.trim(),
         homepage: form.homepage,
         menuVisible: form.menuVisible,
+        templateCode: form.templateCode,
+        pageType: form.pageType,
       };
 
       if (editedPageId) {
@@ -421,6 +446,43 @@ export default function PageFormPage() {
                   ))}
                 </select>
               </label>
+
+              <label>
+                {t("template")}
+                <select
+                  name="templateCode"
+                  onChange={(event) => updateForm("templateCode", event.target.value)}
+                  required
+                  value={form.templateCode}
+                >
+                  {!templates.some((template) => template.code === form.templateCode) && (
+                    <option value={form.templateCode}>{form.templateCode}</option>
+                  )}
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.code}>
+                      {template.name} ({template.code})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                {t("pageType")}
+                <select
+                  name="pageType"
+                  onChange={(event) =>
+                    updateForm("pageType", event.target.value as PageType)
+                  }
+                  required
+                  value={form.pageType}
+                >
+                  {pageTypes.map((pageType) => (
+                    <option key={pageType} value={pageType}>
+                      {pageType}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             <div className="page-form__row page-form__row--meta">
@@ -465,10 +527,11 @@ export default function PageFormPage() {
               </label>
             </div>
 
-            <div className={`page-content-editor page-content-editor--${previewMode}`}>
-              <div className="page-content-field">
-                <label htmlFor="page-content">{t("content")}</label>
-                <div className="editor-toolbar" aria-label={t("editorToolbar")}>
+            {form.pageType === "CONTENT" ? (
+              <div className={`page-content-editor page-content-editor--${previewMode}`}>
+                <div className="page-content-field">
+                  <label htmlFor="page-content">{t("content")}</label>
+                  <div className="editor-toolbar" aria-label={t("editorToolbar")}>
                   <button onClick={() => insertContentBlock("p", t("paragraphText"))} type="button">
                     P
                   </button>
@@ -514,33 +577,38 @@ export default function PageFormPage() {
                   <button onClick={insertImage} type="button">
                     {t("image")}
                   </button>
-                </div>
-                <textarea
-                  id="page-content"
-                  ref={contentTextareaRef}
-                  name="content"
-                  onChange={(event) => updateForm("content", event.target.value)}
-                  rows={16}
-                  value={form.content}
-                />
-              </div>
-
-              {previewMode !== "off" && (
-                <section className="page-content-preview-field">
-                  <h3>{t("preview")}</h3>
-                  <div className="page-content-preview" aria-label={t("preview")}>
-                    {sanitizedPreview ? (
-                      <div
-                        className="page-content-preview__body"
-                        dangerouslySetInnerHTML={{ __html: sanitizedPreview }}
-                      />
-                    ) : (
-                      <div className="inline-status">{t("noPreviewContent")}</div>
-                    )}
                   </div>
-                </section>
-              )}
-            </div>
+                  <textarea
+                    id="page-content"
+                    ref={contentTextareaRef}
+                    name="content"
+                    onChange={(event) => updateForm("content", event.target.value)}
+                    rows={16}
+                    value={form.content}
+                  />
+                </div>
+
+                {previewMode !== "off" && (
+                  <section className="page-content-preview-field">
+                    <h3>{t("preview")}</h3>
+                    <div className="page-content-preview" aria-label={t("preview")}>
+                      {sanitizedPreview ? (
+                        <div
+                          className="page-content-preview__body"
+                          dangerouslySetInnerHTML={{ __html: sanitizedPreview }}
+                        />
+                      ) : (
+                        <div className="inline-status">{t("noPreviewContent")}</div>
+                      )}
+                    </div>
+                  </section>
+                )}
+              </div>
+            ) : (
+              <div className="inline-status page-block-mode-info">
+                {t("blockPageContentInfo")}
+              </div>
+            )}
 
             <div className="form-actions">
               <button disabled={isSubmitting} type="submit">
@@ -551,17 +619,19 @@ export default function PageFormPage() {
               <Link className="secondary-link" to="/pages">
                 <ButtonLabel icon="cancel">{t("cancel")}</ButtonLabel>
               </Link>
-              <label className="page-preview-mode">
-                {t("previewMode")}
-                <select
-                  onChange={(event) => setPreviewMode(event.target.value as PreviewMode)}
-                  value={previewMode}
-                >
-                  <option value="off">{t("previewOff")}</option>
-                  <option value="horizontal">{t("previewHorizontal")}</option>
-                  <option value="vertical">{t("previewVertical")}</option>
-                </select>
-              </label>
+              {form.pageType === "CONTENT" && (
+                <label className="page-preview-mode">
+                  {t("previewMode")}
+                  <select
+                    onChange={(event) => setPreviewMode(event.target.value as PreviewMode)}
+                    value={previewMode}
+                  >
+                    <option value="off">{t("previewOff")}</option>
+                    <option value="horizontal">{t("previewHorizontal")}</option>
+                    <option value="vertical">{t("previewVertical")}</option>
+                  </select>
+                </label>
+              )}
             </div>
           </>
         )}

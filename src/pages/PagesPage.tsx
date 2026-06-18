@@ -9,7 +9,14 @@ import type { DateFormat } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
 
 type SortDirection = "asc" | "desc";
-type PageSortKey = "title" | "slug" | "status" | "homepage" | "menuVisible" | "updatedAt";
+type PageSortKey =
+  | "title"
+  | "slug"
+  | "status"
+  | "pageType"
+  | "homepage"
+  | "menuVisible"
+  | "updatedAt";
 
 type PageSortState = {
   key: PageSortKey;
@@ -181,6 +188,9 @@ export default function PagesPage() {
                   <th aria-sort={getAriaSort("status")}>
                     {renderSortableHeader("status", t("status"))}
                   </th>
+                  <th aria-sort={getAriaSort("pageType")}>
+                    {renderSortableHeader("pageType", t("pageType"))}
+                  </th>
                   <th aria-sort={getAriaSort("homepage")}>
                     {renderSortableHeader("homepage", t("homepage"))}
                   </th>
@@ -199,6 +209,7 @@ export default function PagesPage() {
                     <td>{page.title}</td>
                     <td>{page.slug}</td>
                     <td>{page.status}</td>
+                    <td>{page.pageType || "CONTENT"}</td>
                     <td>{page.homepage ? t("yes") : t("no")}</td>
                     <td>{page.menuVisible ? t("yes") : t("no")}</td>
                     <td>{formatDate(page.updatedAt, language, dateFormat)}</td>
@@ -207,6 +218,14 @@ export default function PagesPage() {
                         <Link className="secondary-link" to={`/pages/${page.id}/edit`}>
                           <ButtonLabel icon="edit">{t("edit")}</ButtonLabel>
                         </Link>
+                        {(page.pageType || "CONTENT") === "BLOCK" && (
+                          <Link
+                            className="secondary-link"
+                            to={`/pages/${page.id}/blocks`}
+                          >
+                            <ButtonLabel icon="edit">{t("blocks")}</ButtonLabel>
+                          </Link>
+                        )}
                         <button
                           className="danger-button"
                           disabled={pendingDeletePageId === page.id}

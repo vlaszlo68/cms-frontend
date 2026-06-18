@@ -1,5 +1,9 @@
 export type PageStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
+export type PageType =
+  | "CONTENT"
+  | "BLOCK";
+
 export type Page = {
   id: number;
   title: string;
@@ -10,6 +14,8 @@ export type Page = {
   metaDescription: string;
   homepage: boolean;
   menuVisible: boolean;
+  templateCode: string;
+  pageType: PageType;
   createdAt: string | null;
   updatedAt: string | null;
   createdBy: string | null;
@@ -27,6 +33,8 @@ export type CreatePageRequest = {
   metaDescription: string;
   homepage: boolean;
   menuVisible: boolean;
+  templateCode: string;
+  pageType: PageType;
 };
 
 export type UpdatePageRequest = CreatePageRequest;
