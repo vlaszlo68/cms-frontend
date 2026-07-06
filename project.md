@@ -2,325 +2,43 @@
 
 ## Purpose
 
-This repository contains an independent React frontend for the CMS backend. The backend is developed separately and exposes servlet based JSON endpoints under `/api`.
+This repository contains the independent React frontend for the CMS backend. The backend is developed separately and exposes servlet based JSON endpoints under `/api`.
 
-The frontend should have its own Git history, Node toolchain, build pipeline, and deployment flow.
+The frontend owns its Node toolchain, Vite build, routing, auth state, preferences, API wrappers, and deployment artifacts.
 
-## Backend Summary
+## Stack
 
-- Stack: Java 21, Servlet API, JDBC, PostgreSQL, Tomcat 9
-- Packaging: Maven WAR
-- JSON library: Gson
-- Auth model: HTTP session based authentication
-- Backend session key for authenticated user: `user`
-- CSRF session key: `csrfToken`
-- CSRF model: login and `/api/auth/me` return `csrfToken`; mutating API requests send it as `X-CSRF-Token`
+- React 19
+- TypeScript
+- Vite 7
+- React Router v7 from the `react-router` package
+- Plain `fetch` through a shared API client
+- Browser cookie based session authentication
 
-On successful login, the backend rotates the session id, stores a password-hash-free `AuthenticatedUser` object in the HTTP session, creates a session CSRF token, and returns that token in the auth response.
+Package scripts:
 
-## Current Frontend State
-
-Implemented:
-
-- Vite React TypeScript scaffold
-- React Router v7 imported from `react-router`
-- shared API response types in `src/api/types.ts`
-- in-memory auth session/CSRF token helper in `src/api/authSession.ts`
-- `fetch` based API client in `src/api/httpClient.ts`
-- auth API wrapper in `src/api/authApi.ts`
-- React auth context in `src/auth/AuthContext.tsx`
-- authenticated layout components in `src/components/layout/`
-- login page at `/login`
-- protected dashboard route at `/`
-- ADMIN-only User CRUD routes at `/users`, `/users/new`, and `/users/:userId/edit`
-- ADMIN-only Page CRUD routes at `/pages`, `/pages/new`, and `/pages/:id/edit`
-- ADMIN-only Media Library route at `/media`
-- ADMIN-only Menu routes at `/menus`, `/menus/new`, `/menus/:id/edit`, and `/menus/:id/items`
-- protected settings route at `/settings`
-- logout flow
-- Vite dev proxy for the backend
-- User CRUD API wrapper and TypeScript models
-- Page CRUD API wrapper and TypeScript models
-- Media API wrapper and TypeScript model
-- Menu API wrapper and TypeScript models, including PAGE/URL target types
-- local appearance/preferences context
-- English/Hungarian UI labels
-- theme, menu, date/time, density, table, table-page-size, content-width, font-size, button-size, reduced-motion, and button-icon settings
-
-The frontend intentionally uses relative API paths only, for example:
-
-```text
-/api/auth/login
-/api/auth/logout
-/api/auth/me
-/api/media
-/api/media/{id}/content
-/api/menus
-/api/menu-items
+```bash
+npm run dev
+npm run build
+npm run preview
 ```
 
-Do not put full `localhost` backend URLs in frontend `fetch` calls.
+`npm run build` runs `tsc -b && vite build`. No test runner, linter, or formatter is configured yet.
 
-## Runtime URLs
+## Runtime And Proxy
 
-Docker/root-context deployment:
-
-```text
-http://localhost:8080
-```
-
-Standalone Tomcat deployment with `cms-app.war`:
-
-```text
-http://localhost:8080/cms-app
-```
-
-Current verified backend URL:
-
-```text
-http://localhost:8080/cms-app
-```
-
-Current frontend dev URL:
+Current frontend dev URLs:
 
 ```text
 http://localhost:5173
 http://127.0.0.1:5173
 ```
 
-Historical/alternative frontend env variable if the project later switches away from proxy-only relative calls:
+Current verified backend deployment:
 
-```env
-VITE_API_BASE_URL=http://localhost:8080/cms-app
+```text
+http://localhost:8080/cms-app
 ```
-
-## Auth API Contract
-
-All backend API responses use the common envelope:
-
-```ts
-type ApiResponse<T> =
-  | {
-      success: true;
-      data: T;
-    }
-  | {
-      success: false;
-      error: {
-        code: string;
-        message: string;
-      };
-    };
-```
-
-The frontend `httpClient` unwraps successful `data` values. For `success: false`, it throws the shared frontend `ApiError` class from `src/api/httpClient.ts`, with the backend error `message` exposed as `error.message` and the backend error `code` exposed as `error.code`.
-
-The frontend `httpClient` always uses `credentials: 'include'`. It also reads the current CSRF token from `src/api/authSession.ts` and sends `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE` requests only. `GET`, `HEAD`, and `OPTIONS` requests do not receive a CSRF header.
-
-If a protected API call returns `401 AUTH_REQUIRED`, the shared client notifies `AuthContext`, which clears only the frontend's in-memory user and CSRF state. The frontend does not read, write, delete, or name the session cookie. `403 CSRF_INVALID` remains a backend/API error path; the frontend must not try to repair it by manipulating cookies.
-
-`POST /api/auth/login` is a public exception and does not require an existing CSRF token. Logout is state-changing and must send the current token after login/session restore.
-
-### `POST /api/auth/login`
-
-Request:
-
-```json
-{
-  "loginName": "string",
-  "password": "string"
-}
-```
-
-Success response:
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test",
-    "csrfToken": "base64url-token"
-  }
-}
-```
-
-Invalid credentials:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_CREDENTIALS",
-    "message": "Invalid credentials"
-  }
-}
-```
-
-Invalid request examples:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_REQUEST",
-    "message": "loginName and password are required."
-  }
-}
-```
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_REQUEST",
-    "message": "Invalid JSON request body."
-  }
-}
-```
-
-### `POST /api/auth/logout`
-
-No request body is required.
-
-Required header after login/session restore:
-
-```http
-X-CSRF-Token: <csrfToken>
-```
-
-Success response:
-
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Logged out"
-  }
-}
-```
-
-### `GET /api/auth/me`
-
-Authenticated response:
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "loginName": "demo-user",
-    "email": "user@example.test",
-    "csrfToken": "base64url-token"
-  }
-}
-```
-
-Expected unauthenticated response:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "AUTH_REQUIRED",
-    "message": "Authentication required"
-  }
-}
-```
-
-Invalid or missing CSRF token on state-changing requests:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "CSRF_INVALID",
-    "message": "Invalid CSRF token"
-  }
-}
-```
-
-## Frontend Auth Flow
-
-1. On app startup, call `GET /api/auth/me` with `credentials: 'include'`.
-2. If the response is `200` and `success: true`, hydrate auth state from `data` and store `data.csrfToken`.
-3. If the response is `401 AUTH_REQUIRED`, treat the visitor as logged out and clear the in-memory user and CSRF token.
-4. On login, call `POST /api/auth/login` with JSON body and `credentials: 'include'`.
-5. On login success, replace any previous CSRF token with the token from the latest backend response.
-6. On logout, call `POST /api/auth/logout` with `credentials: 'include'` and the current CSRF token, then clear local auth state and the CSRF token.
-7. If any protected API call returns `401 AUTH_REQUIRED`, the central API/auth bridge clears auth state and the CSRF token, causing protected routes to fall back to login.
-8. If a protected state-changing call returns `403 CSRF_INVALID`, show the API error path without cookie manipulation.
-
-Suggested frontend auth types:
-
-```ts
-export type LoginRequest = {
-  loginName: string;
-  password: string;
-};
-
-export type AuthUser = {
-  id: number;
-  loginName: string;
-  email: string;
-  role: "ADMIN" | "USER";
-};
-
-export type AuthSession = AuthUser & {
-  csrfToken: string;
-};
-```
-
-Suggested auth state:
-
-```ts
-type AuthState = {
-  user: AuthUser | null;
-  csrfToken: string | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-};
-```
-
-## Routing
-
-Current routes:
-
-- `/login`: login page; redirect to `/` if already authenticated
-- `/`: protected app shell with dashboard
-- `/users`: ADMIN-only user list
-- `/users/new`: ADMIN-only user create form
-- `/users/:userId/edit`: ADMIN-only user edit form
-- `/pages`: ADMIN-only page list
-- `/pages/new`: ADMIN-only page create form
-- `/pages/:id/edit`: ADMIN-only page edit form
-- `/media`: ADMIN-only media library
-- `/menus`: ADMIN-only menu list
-- `/menus/new`: ADMIN-only menu create form
-- `/menus/:id/edit`: ADMIN-only menu edit form
-- `/menus/:id/items`: ADMIN-only menu item management
-- `/settings`: protected settings page
-
-Authenticated routes render inside `src/components/layout/AppLayout.tsx`, which composes:
-
-- `Header.tsx`: app name, current `loginName`, logout button
-- `Navigation.tsx`: Dashboard, Users, Pages, Menus, Media, and Settings links
-- main content area for route children
-
-The Users, Pages, Menus, and Media navigation entries and management routes are hidden or blocked unless the authenticated user has the `ADMIN` role.
-
-## Local Development Notes
-
-The backend has dedicated CORS support for local dev origins, but the Vite dev proxy remains the simplest local development mode:
-
-- frontend dev server: `http://127.0.0.1:5173`
-- frontend calls relative `/api/...` paths
-- proxy target: `http://localhost:8080`
-- proxy rewrite: `/api/...` -> `/cms-app/api/...`
-- proxy cookie path rewrite: backend `Path=/cms-app` cookies are rewritten to `Path=/`
-- direct browser calls from `http://localhost:5173` and `http://127.0.0.1:5173` are also supported by backend CORS
-- the backend CORS preflight allows the `X-CSRF-Token` header
 
 Current `vite.config.ts` proxy behavior:
 
@@ -337,56 +55,128 @@ server: {
 }
 ```
 
-The backend `AuthFilter` compares `request.getServletPath()` against exact public paths:
+Frontend code intentionally calls relative `/api/...` paths only. Do not put full backend hostnames in `fetch` calls.
 
-- `/api/auth/login`
-- `/api/auth/logout`
+## API Conventions
 
-This path matching is context-path safe, so public auth endpoints work both at root context and under `/cms-app`.
+All normal backend API responses use the common envelope:
 
-During local verification, the backend did work under `/cms-app` on port `8080`:
+```ts
+type ApiResponse<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+        validationErrors?: string[];
+      };
+    };
+```
 
-- `POST http://localhost:8080/cms-app/api/auth/login`
-- `GET http://localhost:8080/cms-app/api/auth/me`
+`src/api/httpClient.ts` is responsible for:
 
-The current frontend proxy rewrite targets the local `/cms-app` deployment. Root-context backend deployment can use root `/api/...` paths.
+- sending `credentials: "include"`
+- JSON request serialization
+- multipart form uploads through `apiPostForm`
+- response envelope validation and unwrapping
+- throwing `ApiError` with backend `message`, `code`, and optional `validationErrors`
+- attaching `X-CSRF-Token` for `POST`, `PUT`, `PATCH`, and `DELETE`
+- skipping CSRF for `GET`, `HEAD`, `OPTIONS`, and explicit public POSTs
+- notifying auth state when a protected API returns `401 AUTH_REQUIRED`
 
-## First Deliverable Status
+`403 CSRF_INVALID` remains an API error path. The frontend must not manipulate backend session cookies.
 
-The first useful frontend milestone now includes:
+## Auth And Registration
 
-- Vite React TypeScript scaffold
-- API client
-- in-memory CSRF token helper
-- shared API response types
-- central response envelope parsing, CSRF header injection, and backend error message handling
-- auth API module
-- auth context and session restore
-- login page
-- protected route wrapper
-- authenticated app shell
-- dashboard page
-- ADMIN-only User CRUD UI and API integration
-- ADMIN-only Page CRUD UI and API integration
-- ADMIN-only Media Library UI and API integration
-- ADMIN-only Menu and Menu Item UI and API integration
-- Settings page with persisted appearance preferences
-- logout button
-- README with setup, proxy, and backend dependency notes
-- JSDoc comments for implemented API, auth, routing, page, and layout files
-- verified `npm run build`
-- verified proxied login and session restore
+Implemented auth files:
 
-## User CRUD Frontend Slice
+- `src/api/authApi.ts`
+- `src/api/authSession.ts`
+- `src/auth/AuthContext.tsx`
+- `src/auth/passwordPolicy.ts`
+- `src/auth/useCaptchaChallenge.ts`
+- `src/components/auth/CaptchaField.tsx`
+- `src/components/auth/PasswordRequirements.tsx`
+- `src/pages/LoginPage.tsx`
+- `src/pages/RegisterPage.tsx`
 
-Implemented files:
+Auth flow:
+
+1. Startup calls `GET /api/auth/me`.
+2. A successful response hydrates `AuthContext` and stores the returned CSRF token in memory.
+3. `401 AUTH_REQUIRED` clears frontend user and CSRF state.
+4. Login submits `loginName`, `password`, and optional CAPTCHA fields to `POST /api/auth/login`.
+5. Registration submits public account data and optional CAPTCHA fields to `POST /api/auth/register`; it does not establish a session.
+6. Logout calls `POST /api/auth/logout` with the current CSRF token and then clears local auth state.
+
+Public auth support:
+
+- `GET /api/auth/config` returns login CAPTCHA, registration CAPTCHA, and password policy settings.
+- `GET /api/auth/captcha?purpose=login|registration` returns SVG text and the CAPTCHA id in the `X-Captcha-Id` header.
+- Login and registration forms include a hidden CAPTCHA honeypot field when submitting CAPTCHA data.
+- Registration validates password requirements locally from the backend-provided policy and also surfaces backend `validationErrors`.
+
+Auth payload types:
+
+```ts
+type AuthUser = {
+  id: number;
+  loginName: string;
+  email: string;
+  role: "ADMIN" | "USER";
+};
+
+type AuthSession = AuthUser & {
+  csrfToken: string;
+};
+```
+
+## Routing
+
+Current routes:
+
+- `/login`: public-only login page
+- `/register`: public-only registration page
+- `/`: protected dashboard
+- `/users`: ADMIN-only user list
+- `/users/new`: ADMIN-only user create form
+- `/users/:userId/edit`: ADMIN-only user edit form
+- `/pages`: ADMIN-only page list
+- `/pages/new`: ADMIN-only page create form
+- `/pages/:id/edit`: ADMIN-only page edit form
+- `/pages/:id/blocks`: ADMIN-only PageBlock list
+- `/pages/:id/blocks/new`: ADMIN-only PageBlock create form
+- `/pages/:id/blocks/:blockId/edit`: ADMIN-only PageBlock edit form
+- `/media`: ADMIN-only media library
+- `/menus`: ADMIN-only menu list
+- `/menus/new`: ADMIN-only menu create form
+- `/menus/:id/edit`: ADMIN-only menu edit form
+- `/menus/:id/items`: ADMIN-only menu item management
+- `/templates`: ADMIN-only template list
+- `/templates/new`: ADMIN-only template create form
+- `/templates/:id/edit`: ADMIN-only template edit form
+- `/site-settings`: ADMIN-only public site settings
+- `/settings`: protected appearance and preference settings
+- `*`: redirect to `/`
+
+Authenticated pages render inside `src/components/layout/AppLayout.tsx`. Navigation shows Dashboard and Settings for authenticated users, and Users, Pages, Menus, Templates, Media, and Site Settings only for ADMIN users.
+
+## Implemented Feature Slices
+
+### Users
+
+Files:
 
 - `src/models/user.ts`
 - `src/api/userApi.ts`
 - `src/pages/UsersPage.tsx`
 - `src/pages/UserFormPage.tsx`
 
-API methods:
+Implemented API helpers:
 
 ```ts
 getUsers(): Promise<User[]>
@@ -394,59 +184,50 @@ getUser(id: number): Promise<User>
 createUser(input: CreateUserRequest): Promise<User>
 updateUser(id: number, input: UpdateUserRequest): Promise<User>
 deleteUser(id: number): Promise<User>
+approveUser(id: number): Promise<User>
+rejectUser(id: number): Promise<User>
 ```
 
-The delete action is a soft deactivate flow. The UI calls `DELETE /api/users/{id}` and updates the list with the returned inactive user.
+User model fields include `loginName`, `userName`, `emailAddress`, `role`, `active`, `registrationStatus`, `createdAt`, and `updatedAt`. Registration statuses are `PENDING`, `EMAIL_VERIFICATION_REQUIRED`, `COMPLETED`, and `REJECTED`.
 
-## Page CRUD Frontend Slice
+### Pages And Blocks
 
-Implemented files:
+Files:
 
 - `src/models/page.ts`
+- `src/models/pageBlock.ts`
 - `src/api/pageApi.ts`
+- `src/api/pageBlockApi.ts`
 - `src/pages/PagesPage.tsx`
 - `src/pages/PageFormPage.tsx`
+- `src/pages/PageBlocksPage.tsx`
+- `src/pages/PageBlockFormPage.tsx`
 
-API methods:
+Pages use:
 
 ```ts
-getPages(): Promise<PageListItem[]>
-getPage(id: number): Promise<Page>
-getPageBySlug(slug: string): Promise<Page>
-createPage(input: CreatePageRequest): Promise<Page>
-updatePage(id: number, input: UpdatePageRequest): Promise<Page>
-deletePage(id: number): Promise<void>
+type PageType = "CONTENT" | "BLOCK";
+type PageStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 ```
 
-The list fetches lightweight page rows without `content`, supports client-side three-state sorting on every displayed data column, and uses client-side pagination based on the persisted table page size preference. Full page content is loaded only through `getPage(id)` when editing.
+Page fields include `templateCode` and `pageType`. `CONTENT` pages show the HTML textarea, insert toolbar, and sanitized preview. `BLOCK` pages hide the content editor and expose block management from the page list.
 
-The editor supports create and edit modes with `Title`, `Slug`, `Status`, metadata fields, homepage/menu visibility flags, and a `textarea` content field. The first editing helper layer includes simple HTML insert buttons, sanitized frontend preview, and off/horizontal/vertical preview modes. Rich text editor and media-library integration are intentionally deferred.
+PageBlock `configJson` is raw editable text. There is no drag-and-drop ordering, visual builder, schema validation, or block preview.
 
-## Media Library Frontend Slice
+### Media
 
-Implemented files:
+Files:
 
 - `src/models/media.ts`
 - `src/api/mediaApi.ts`
 - `src/pages/MediaPage.tsx`
 - `src/components/media/MediaUploadDialog.tsx`
 
-API methods:
+Media supports list, details, multipart upload, confirmed hard delete, and content preview through `/api/media/{id}/content`. Images render inline, PDFs render in an iframe, and unsupported file types provide an open-content link.
 
-```ts
-getMediaList(): Promise<Media[]>
-getMedia(id: number): Promise<Media>
-uploadMedia(file: File, description?: string): Promise<Media>
-deleteMedia(id: number): Promise<boolean>
-```
+### Menus
 
-The media list supports client-side three-state sorting, pagination based on the persisted table page size preference, manual refresh, upload through multipart `POST /api/media`, and confirmed hard delete through `DELETE /api/media/{id}`.
-
-Media details open in a draggable modal. The details modal can open a separate draggable preview modal that reads binary content from `GET /api/media/{id}/content`. Images render inline, PDFs render in an iframe, and unsupported file types provide an open-content link.
-
-## Menu Frontend Slice
-
-Implemented files:
+Files:
 
 - `src/models/menu.ts`
 - `src/api/menuApi.ts`
@@ -454,33 +235,19 @@ Implemented files:
 - `src/pages/MenuFormPage.tsx`
 - `src/pages/MenuItemsPage.tsx`
 
-API methods:
-
-```ts
-getMenus(): Promise<Menu[]>
-getMenu(id: number): Promise<Menu>
-createMenu(input: CreateMenuRequest): Promise<Menu>
-updateMenu(id: number, input: UpdateMenuRequest): Promise<Menu>
-deleteMenu(id: number): Promise<Menu>
-getMenuItems(menuId: number): Promise<MenuItem[]>
-createMenuItem(input: CreateMenuItemRequest): Promise<MenuItem>
-updateMenuItem(id: number, input: UpdateMenuItemRequest): Promise<MenuItem>
-deleteMenuItem(id: number): Promise<MenuItem>
-```
-
-Menu item targets use:
+Menu items use:
 
 ```ts
 type MenuItemTargetType = "PAGE" | "URL";
 ```
 
-The editor defaults to PAGE, loads page options through the Pages API, supports a parent-item dropdown, and dynamically switches to a required Target URL input for URL targets. The list shows Target Type and the resolved Page title or external URL.
+The editor supports parent items, ordering, visibility, Page targets, and URL target form state. Requests include `targetType` and clear the inactive target field with `null`.
 
-Backend follow-up remains necessary: the current backend service layer still requires `pageId` and does not yet persist `targetType`/`targetUrl`, although the DTO and model fields exist.
+Known backend compatibility note: frontend models and UI support URL targets, but backend service support must be verified before URL menu items are considered complete end to end.
 
-## Template And Site Settings Frontend Slices
+### Templates And Site Settings
 
-Implemented files:
+Files:
 
 - `src/models/template.ts`
 - `src/api/templateApi.ts`
@@ -490,53 +257,13 @@ Implemented files:
 - `src/api/siteSettingsApi.ts`
 - `src/pages/SiteSettingsPage.tsx`
 
-Templates support CRUD and an optional Media-based preview image. Site Settings manages site name, Media-based logo, footer text, contact email, phone, Facebook URL, and LinkedIn URL.
+Templates support CRUD, `code`, `name`, optional `description`, optional Media preview image id, and `active`.
 
-The Page editor loads templates from `GET /api/templates`, sends `templateCode`, and defaults new pages to `STANDARD`.
+Site Settings manages site name, optional Media logo id, footer text, contact email, phone, Facebook URL, and LinkedIn URL.
 
-Routes:
+### Preferences And I18n
 
-- `/templates`
-- `/templates/new`
-- `/templates/:id/edit`
-- `/site-settings`
-
-## PageType And PageBlock Frontend Slice
-
-Implemented files:
-
-- `src/models/pageBlock.ts`
-- `src/api/pageBlockApi.ts`
-- `src/pages/PageBlocksPage.tsx`
-- `src/pages/PageBlockFormPage.tsx`
-
-Pages use:
-
-```ts
-type PageType = "CONTENT" | "BLOCK";
-```
-
-CONTENT pages show the existing HTML editor and preview. BLOCK pages hide that editor and expose a Blocks action from the Pages list. Blocks support title, block type, sort order, visibility, and raw `configJson`.
-
-Routes:
-
-- `/pages/:id/blocks`
-- `/pages/:id/blocks/new`
-- `/pages/:id/blocks/:blockId/edit`
-
-Assumed API contract while the backend is being implemented:
-
-- `GET /api/pages/{pageId}/blocks`
-- `GET /api/page-blocks/{id}`
-- `POST /api/page-blocks`
-- `PUT /api/page-blocks/{id}`
-- `DELETE /api/page-blocks/{id}`
-
-No drag-and-drop, visual builder, block preview, or Media picker is implemented.
-
-## Preferences And Appearance
-
-Implemented files:
+Files:
 
 - `src/preferences/PreferencesContext.tsx`
 - `src/i18n/translations.ts`
@@ -545,16 +272,95 @@ Implemented files:
 - `src/components/ui/ConfirmDialog.tsx`
 - `src/components/ui/DraggableDialog.tsx`
 
-Preferences are stored in `localStorage` and applied immediately. Current options include language, theme, navigation layout, menu behavior, header date/time visibility, date format, display density, striped tables, table page size, content width, font size, button size, reduced motion, and button icons.
+Preferences persist in `localStorage` and apply immediately. Current options include:
 
-## Local Test User
+- language: `en`, `hu`
+- theme: `classic`, `forest`, `wine`, `graphite`, `lagoon`, `sunrise`, `dusk`, `harbor`, `ember`, `cinder`, `midnight`, `aurora`
+- navigation layout: `sidebar`, `horizontal`
+- navigation behavior: `fixed`, `floating`, `peek`
+- density: `compact`, `normal`, `comfortable`
+- date format: `short`, `long`
+- content width: `full`, `centered`
+- button size: `normal`, `compact`
+- font size: `normal`, `compact`
+- table page size: `10`, `20`, `50`, `100`
+- booleans for header date, header time, striped tables, reduced motion, and button icons
 
-Backend verification currently uses a development-only user configured locally:
+## Backend Endpoint Dependency
+
+The frontend currently depends on these backend endpoints:
 
 ```text
-loginName: tester
-password: pw
-email: tester@example.com
+GET  /api/auth/config
+GET  /api/auth/captcha?purpose=login|registration
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/me
+POST /api/auth/register
+
+GET    /api/users
+GET    /api/users/{id}
+POST   /api/users
+PUT    /api/users/{id}
+DELETE /api/users/{id}
+POST   /api/users/{id}/approve
+POST   /api/users/{id}/reject
+
+GET    /api/pages
+GET    /api/pages/{id}
+GET    /api/pages/slug/{slug}
+POST   /api/pages
+PUT    /api/pages/{id}
+DELETE /api/pages/{id}
+
+GET    /api/pages/{pageId}/blocks
+GET    /api/page-blocks/{id}
+POST   /api/page-blocks
+PUT    /api/page-blocks/{id}
+DELETE /api/page-blocks/{id}
+
+GET    /api/media
+GET    /api/media/{id}
+GET    /api/media/{id}/content
+POST   /api/media
+DELETE /api/media/{id}
+
+GET    /api/menus
+GET    /api/menus/{id}
+POST   /api/menus
+PUT    /api/menus/{id}
+DELETE /api/menus/{id}
+GET    /api/menus/{id}/items
+POST   /api/menu-items
+PUT    /api/menu-items/{id}
+DELETE /api/menu-items/{id}
+
+GET    /api/templates
+GET    /api/templates/{id}
+POST   /api/templates
+PUT    /api/templates/{id}
+DELETE /api/templates/{id}
+
+GET /api/site-settings
+PUT /api/site-settings
 ```
 
-This is a local test detail only, not a product requirement.
+## Backend Contracts Under Development
+
+The Template, Site Settings, Page template, PageType, PageBlock, registration approval, CAPTCHA, and password-policy contracts should be reconciled against the backend as they settle.
+
+Current frontend assumptions:
+
+- auth config endpoint: `/api/auth/config`
+- CAPTCHA endpoint: `/api/auth/captcha?purpose=login|registration`
+- registration endpoint: `/api/auth/register`
+- user approval endpoints: `/api/users/{id}/approve` and `/api/users/{id}/reject`
+- page template field: `templateCode`
+- page type field: `pageType`
+- template API: `/api/templates`
+- site settings API: `/api/site-settings`
+- PageBlock list: `/api/pages/{pageId}/blocks`
+- PageBlock item CRUD: `/api/page-blocks`
+- Menu item target fields: `targetType`, `pageId`, `targetUrl`
+
+Update the API wrappers and model files first when the backend contract changes, then adjust pages and this document.
