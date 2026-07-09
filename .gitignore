@@ -28,6 +28,11 @@ Thumbs.db
 logs/
 *.log
 
+# Playwright
+playwright-report/
+test-results/
+.playwright-mcp/
+
 # Local/generated project notes
 project_description_frontend.md
 FRONTEND_BOOTSTRAP_PLAN.md

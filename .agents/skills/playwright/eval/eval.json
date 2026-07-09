@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "skill": "playwright",
+  "purpose": "Evaluate whether the Playwright skill should be selected for browser automation, E2E tests, traces, headed/debug runs, and CMS UI validation.",
+  "testCases": [
+    {
+      "id": "playwright-run-all-e2e",
+      "prompt": "Run the full Playwright E2E suite with tester/pw and tell me if all tests pass.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Use the Playwright E2E workflow.",
+        "Set PLAYWRIGHT_LOGIN_NAME and PLAYWRIGHT_PASSWORD before running tests.",
+        "Run npm run test:e2e.",
+        "Report passed, failed, or skipped tests."
+      ]
+    },
+    {
+      "id": "playwright-headed-run",
+      "prompt": "Start a headed Playwright run so I can watch the browser click through the app.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Use the headed E2E command.",
+        "Run npm run test:e2e:headed with the configured credentials.",
+        "Mention that a visible Chromium window may open."
+      ]
+    },
+    {
+      "id": "playwright-trace-debug",
+      "prompt": "The Page CRUD test failed. Open or explain the trace and help diagnose the failure.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Inspect test-results trace or error context files when available.",
+        "Use npx playwright show-trace when the user wants the trace viewer.",
+        "Diagnose selector, timing, network, or UI state issues."
+      ]
+    },
+    {
+      "id": "playwright-write-crud-test",
+      "prompt": "Add an E2E test for creating, editing, and deleting templates in the admin UI.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Inspect the existing UI and API contract before writing the test.",
+        "Use user-visible selectors where possible.",
+        "Create isolated e2e records with unique names.",
+        "Run the targeted test and npm run build after changes."
+      ]
+    },
+    {
+      "id": "playwright-browser-mcp-check",
+      "prompt": "Use the browser to open /login and check console and network errors.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Use Playwright browser automation or MCP validation.",
+        "Open the requested route.",
+        "Inspect console messages and network requests.",
+        "Report expected auth 401 responses separately from real errors."
+      ]
+    },
+    {
+      "id": "playwright-auth-captcha-disabled",
+      "prompt": "Verify that login and registration do not show CAPTCHA when the backend config disables CAPTCHA.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Check /api/auth/config.",
+        "Validate login and registration UI behavior.",
+        "Ensure /api/auth/captcha is not requested when CAPTCHA is disabled."
+      ]
+    },
+    {
+      "id": "playwright-negative-basic-dev-start",
+      "prompt": "Start the frontend dev server and tell me which URL to open.",
+      "shouldLoadSkill": false,
+      "preferredSkill": "cms-frontend-dev-runtime",
+      "expectedBehaviors": [
+        "Use the CMS frontend dev runtime skill instead of the Playwright skill."
+      ]
+    },
+    {
+      "id": "playwright-negative-api-type-change",
+      "prompt": "Update the User API TypeScript types for a backend field rename.",
+      "shouldLoadSkill": false,
+      "expectedBehaviors": [
+        "Do not select Playwright unless browser validation or E2E testing is requested."
+      ]
+    }
+  ]
+}

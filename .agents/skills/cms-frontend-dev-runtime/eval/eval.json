@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "skill": "cms-frontend-dev-runtime",
+  "purpose": "Evaluate whether the CMS frontend dev runtime skill should be selected for local startup, Vite runtime, backend proxy, build, preview, and non-Playwright troubleshooting.",
+  "testCases": [
+    {
+      "id": "runtime-start-dev-server",
+      "prompt": "Start the CMS frontend locally and tell me where I can open it.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Use npm run dev:bg for normal local startup when the prompt should return.",
+        "Mention http://localhost:5173 and http://127.0.0.1:5173 as typical URLs.",
+        "After successful startup, respond immediately with the URL and stop command instead of running optional checks."
+      ]
+    },
+    {
+      "id": "runtime-start-loopback",
+      "prompt": "Run the frontend bound to 127.0.0.1 so browser checks can use that address.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Use npm run dev:bg -- --host 127.0.0.1 when the prompt should return.",
+        "Avoid assuming the backend starts with the frontend.",
+        "Mention the frontend URL after startup."
+      ]
+    },
+    {
+      "id": "runtime-backend-proxy",
+      "prompt": "The frontend loads but /api/auth/config fails. What backend or proxy settings should I check?",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Explain the Vite /api proxy to http://localhost:8080/cms-app/api.",
+        "Verify the backend is running separately.",
+        "Do not suggest changing frontend fetch calls to absolute backend URLs."
+      ]
+    },
+    {
+      "id": "runtime-build-check",
+      "prompt": "Check whether the frontend still builds after these changes.",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Run npm run build.",
+        "Report TypeScript or Vite build failures clearly.",
+        "Do not run Playwright unless browser/E2E validation is requested."
+      ]
+    },
+    {
+      "id": "runtime-preview-build",
+      "prompt": "How do I preview the production build locally?",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Run npm run build first if needed.",
+        "Use npm run preview for Vite preview.",
+        "Keep backend/proxy assumptions explicit."
+      ]
+    },
+    {
+      "id": "runtime-auth-logged-out-401",
+      "prompt": "I see a 401 from /api/auth/me on startup. Is that a frontend startup problem?",
+      "shouldLoadSkill": true,
+      "expectedBehaviors": [
+        "Explain that logged-out /api/auth/me returning 401 AUTH_REQUIRED can be expected.",
+        "Differentiate expected auth state from real API/proxy failures.",
+        "Suggest checking /api/auth/config for backend reachability."
+      ]
+    },
+    {
+      "id": "runtime-negative-headed-e2e",
+      "prompt": "Run the headed Playwright suite and capture trace information if it fails.",
+      "shouldLoadSkill": false,
+      "preferredSkill": "playwright",
+      "expectedBehaviors": [
+        "Use the Playwright skill instead of the CMS frontend dev runtime skill."
+      ]
+    },
+    {
+      "id": "runtime-negative-selector-debug",
+      "prompt": "Fix this flaky Playwright selector in the admin menu CRUD test.",
+      "shouldLoadSkill": false,
+      "preferredSkill": "playwright",
+      "expectedBehaviors": [
+        "Use the Playwright skill because the task is about E2E selector debugging."
+      ]
+    }
+  ]
+}
