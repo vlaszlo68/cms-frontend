@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page, type Request, type Response } from "@playwright/test";
 
 export const credentials = {
   loginName: process.env.PLAYWRIGHT_LOGIN_NAME ?? "",
@@ -39,6 +39,95 @@ export async function openAdminNavigationPage(page: Page, name: string, path: st
   await expect(page.locator(".error-message")).toHaveCount(0);
 
   return true;
+}
+
+export async function clickAndWaitForSettledResponses(
+  page: Page,
+  click: () => Promise<void>,
+  matchesRequest: (request: Request) => boolean,
+) {
+  const pendingRequests = new Set<Request>();
+  const responses: Response[] = [];
+  let quietTimer: ReturnType<typeof setTimeout> | undefined;
+  let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
+  let settle: (value: Response[]) => void;
+
+  const cleanup = () => {
+    if (quietTimer) {
+      clearTimeout(quietTimer);
+    }
+
+    if (timeoutTimer) {
+      clearTimeout(timeoutTimer);
+    }
+
+    page.off("request", handleRequest);
+    page.off("response", handleResponse);
+    page.off("requestfailed", handleRequestDone);
+    page.off("requestfinished", handleRequestDone);
+  };
+
+  const maybeSettle = () => {
+    if (responses.length === 0 || pendingRequests.size > 0) {
+      return;
+    }
+
+    if (quietTimer) {
+      clearTimeout(quietTimer);
+    }
+
+    quietTimer = setTimeout(() => {
+      if (pendingRequests.size === 0) {
+        cleanup();
+        settle(responses);
+      }
+    }, 100);
+  };
+
+  function handleRequest(request: Request) {
+    if (!matchesRequest(request)) {
+      return;
+    }
+
+    if (quietTimer) {
+      clearTimeout(quietTimer);
+    }
+
+    pendingRequests.add(request);
+  }
+
+  function handleResponse(response: Response) {
+    if (matchesRequest(response.request())) {
+      responses.push(response);
+    }
+  }
+
+  function handleRequestDone(request: Request) {
+    if (pendingRequests.delete(request)) {
+      maybeSettle();
+    }
+  }
+
+  const settledResponses = new Promise<Response[]>((resolve, reject) => {
+    settle = resolve;
+    timeoutTimer = setTimeout(() => {
+      cleanup();
+      reject(new Error("Timed out waiting for matching responses to settle."));
+    }, 10_000);
+  });
+
+  page.on("request", handleRequest);
+  page.on("response", handleResponse);
+  page.on("requestfailed", handleRequestDone);
+  page.on("requestfinished", handleRequestDone);
+
+  try {
+    await click();
+    return await settledResponses;
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 }
 
 export async function findTableRowByText(page: Page, text: string): Promise<Locator> {

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  clickAndWaitForSettledResponses,
   credentialsAreMissing,
   expectNoFormErrors,
   findTableRowByText,
@@ -56,9 +57,21 @@ test.describe("admin page CRUD", () => {
     await expect(createdRow).toContainText("No");
     await expect(createdRow).toContainText("Yes");
 
-    await createdRow.getByRole("link", { name: "Edit" }).click();
+    const pageLoadResponses = await clickAndWaitForSettledResponses(
+      page,
+      () => createdRow.getByRole("link", { name: "Edit" }).click(),
+      (request) => request.method() === "GET" && request.url().includes("/api/pages/"),
+    );
+    pageLoadResponses.forEach((response) => expect(response.status()).toBeLessThan(400));
+
     await expect(page.getByRole("heading", { name: "Edit page" })).toBeVisible();
+    await expect(page.getByLabel("Title", { exact: true })).toHaveValue(title);
     await expect(page.getByLabel("Slug")).toHaveValue(slug);
+    await expect(page.getByLabel("Status")).toHaveValue("DRAFT");
+    await expect(page.getByLabel("Meta title")).toHaveValue(`${title} meta`);
+    await expect(page.getByRole("textbox", { name: "Content" })).toHaveValue(
+      `<p>${title} content</p>`,
+    );
 
     await page.getByLabel("Title", { exact: true }).fill(updatedTitle);
     await page.getByLabel("Status").selectOption("PUBLISHED");

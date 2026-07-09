@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  clickAndWaitForSettledResponses,
   credentialsAreMissing,
   expectNoFormErrors,
   findTableRowByText,
@@ -57,9 +58,19 @@ test.describe("admin user CRUD", () => {
     await expect(createdRow).toContainText("Yes");
     await expect(createdRow).toContainText("COMPLETED");
 
-    await createdRow.getByRole("link", { name: "Edit" }).click();
+    const userLoadResponses = await clickAndWaitForSettledResponses(
+      page,
+      () => createdRow.getByRole("link", { name: "Edit" }).click(),
+      (request) => request.method() === "GET" && request.url().includes("/api/users/"),
+    );
+    userLoadResponses.forEach((response) => expect(response.status()).toBeLessThan(400));
+
     await expect(page.getByRole("heading", { name: "Edit user" })).toBeVisible();
     await expect(page.getByLabel("Login name")).toHaveValue(loginName);
+    await expect(page.getByLabel("User name")).toHaveValue(initialUserName);
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue(initialEmail);
+    await expect(page.getByLabel("Role")).toHaveValue("USER");
+    await expect(page.getByLabel("Registration status")).toHaveValue("COMPLETED");
 
     await page.getByLabel("User name").fill(updatedUserName);
     await page.getByLabel("Email", { exact: true }).fill(updatedEmail);

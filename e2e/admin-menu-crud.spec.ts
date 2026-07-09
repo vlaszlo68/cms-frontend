@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  clickAndWaitForSettledResponses,
   credentialsAreMissing,
   expectNoFormErrors,
   findTableRowByText,
@@ -49,9 +50,17 @@ test.describe("admin menu CRUD", () => {
     await expect(createdRow).toContainText(name);
     await expect(createdRow).toContainText("Yes");
 
-    await createdRow.getByRole("link", { name: "Edit" }).click();
+    const menuLoadResponses = await clickAndWaitForSettledResponses(
+      page,
+      () => createdRow.getByRole("link", { name: "Edit" }).click(),
+      (request) => request.method() === "GET" && request.url().includes("/api/menus/"),
+    );
+    menuLoadResponses.forEach((response) => expect(response.status()).toBeLessThan(400));
+
     await expect(page.getByRole("heading", { name: "Edit menu" })).toBeVisible();
+    await expect(page.getByLabel("Name")).toHaveValue(name);
     await expect(page.getByLabel("Code")).toHaveValue(code);
+    await expect(page.getByLabel("Active")).toBeChecked();
 
     await page.getByLabel("Name").fill(updatedName);
     await page.getByLabel("Code").fill(updatedCode);
