@@ -45,9 +45,11 @@ Start-Process -FilePath "powershell.exe" -WorkingDirectory (Get-Location).Path -
 
 After `Start-Process` returns, immediately send the final response with the expected URL (`http://127.0.0.1:5173`) and tell the user to stop the dev server with `Ctrl+C` in the opened PowerShell window. Do not run foreground-process, browser, API, or log checks after starting the independent terminal unless the user explicitly requested those checks.
 
+Use the separate PowerShell-window command exactly for the first startup attempt. Do not start the app with a hidden direct npm process such as `Start-Process -FilePath npm -ArgumentList 'run','dev',... -WindowStyle Hidden`, because that can fail silently and hide Vite/esbuild startup errors.
+
 Do not run plain `npm run dev` inside the OpenCode shell unless the user explicitly wants the current OpenCode command to be occupied by live Vite logs.
 
-If an independent terminal window is not available or not desired, use the headless background launcher:
+If an independent terminal window is not available, not desired, or startup needs diagnosis after the separate terminal attempt, use the headless background launcher:
 
 ```powershell
 npm run dev:bg
@@ -56,6 +58,8 @@ npm run dev:bg
 The script starts Vite detached with `node_modules/vite/bin/vite.js --host 127.0.0.1`, redirects logs to `%TEMP%\opencode`, prints the process ID, detected local URL, log paths, and a `Stop-Process` command. After printing those details, the launcher flushes output and explicitly exits so the shell command should be complete while the detached Vite process keeps running.
 
 OpenCode interaction rule: the user's input prompt returns only after the assistant finishes the turn with a final response. When `npm run dev:bg` prints `CMS frontend dev server started.`, immediately send the final response with the URL and stop command. Do not run foreground-process, browser, API, or log checks after a successful startup unless the user explicitly requested those checks.
+
+If `npm run dev:bg` fails with `spawn EPERM`, a sandbox or process-spawn restriction probably blocked Vite/esbuild startup. Rerun the same `npm run dev:bg` command with escalation so the launcher can still provide log paths and startup status.
 
 Only diagnose processes or logs if `npm run dev:bg` fails, times out, does not print the startup message, or the user explicitly asks for verification. In that diagnostic case, check that no foreground `npm`, `start-dev-bg`, or launcher process remains; the detached Vite process and its build helper children, such as `esbuild.exe`, should be the only CMS frontend runtime processes left running.
 
