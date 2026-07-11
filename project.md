@@ -21,9 +21,17 @@ Package scripts:
 npm run dev
 npm run build
 npm run preview
+npm run test:e2e
+npm run test:e2e:trace
+npm run test:e2e:headed
+npm run test:e2e:debug
 ```
 
-`npm run build` runs `tsc -b && vite build`. No test runner, linter, or formatter is configured yet.
+`npm run build` runs `tsc -b && vite build`.
+
+Playwright is configured as the browser E2E test runner. `playwright.config.ts` uses `e2e/` as the test directory and starts or reuses a Vite dev server for the configured test port. Authenticated E2E runs require `PLAYWRIGHT_LOGIN_NAME` and `PLAYWRIGHT_PASSWORD`; the local default account is `tester` / `pw`.
+
+The current E2E coverage matrix and known gaps are documented in `.agents/skills/e2e-coverage.md`. No unit test runner, linter, or formatter is configured yet.
 
 ## Runtime And Proxy
 

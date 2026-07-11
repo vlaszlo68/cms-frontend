@@ -22,6 +22,15 @@ export async function loginAsConfiguredUser(page: Page) {
   await expect(page).toHaveURL((url) => url.pathname === "/");
 }
 
+export async function logout(page: Page) {
+  const logoutButton = page.getByRole("button", { name: "Logout" });
+
+  if ((await logoutButton.count()) > 0) {
+    await logoutButton.click();
+    await expect(page).toHaveURL((url) => url.pathname === "/login");
+  }
+}
+
 export async function openAdminNavigationPage(page: Page, name: string, path: string) {
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
 
@@ -156,4 +165,86 @@ export async function findTableRowByText(page: Page, text: string): Promise<Loca
 
 export async function expectNoFormErrors(page: Page) {
   await expect(page.locator(".error-message")).toHaveCount(0);
+}
+
+export async function getRowLinkPath(row: Locator, name: string) {
+  const href = await row.getByRole("link", { name, exact: true }).getAttribute("href");
+
+  if (!href) {
+    throw new Error(`Row link is missing href: ${name}`);
+  }
+
+  return new URL(href, "http://127.0.0.1").pathname;
+}
+
+export function idFromPath(path: string, pattern: RegExp) {
+  const match = path.match(pattern);
+
+  if (!match?.[1]) {
+    throw new Error(`Could not parse id from path: ${path}`);
+  }
+
+  return Number(match[1]);
+}
+
+export async function apiFetch<T>(
+  page: Page,
+  path: string,
+  options: {
+    method?: "GET" | "POST" | "PUT" | "DELETE";
+    body?: unknown;
+    isFormData?: boolean;
+  } = {},
+) {
+  return page.evaluate(
+    async ({ body, isFormData, method, path: requestPath }) => {
+      let csrfToken: string | null = null;
+
+      if (method !== "GET") {
+        const meResponse = await fetch("/api/auth/me", { credentials: "include" });
+        const mePayload = await meResponse.json();
+        csrfToken = mePayload?.success ? mePayload.data?.csrfToken ?? null : null;
+      }
+
+      const headers = new Headers();
+
+      if (!isFormData) {
+        headers.set("Content-Type", "application/json");
+      }
+
+      if (csrfToken && method !== "GET") {
+        headers.set("X-CSRF-Token", csrfToken);
+      }
+
+      const response = await fetch(requestPath, {
+        body: body === undefined ? undefined : isFormData ? (body as BodyInit) : JSON.stringify(body),
+        credentials: "include",
+        headers,
+        method,
+      });
+      const text = await response.text();
+      const payload = text ? JSON.parse(text) : null;
+
+      if (!response.ok || payload?.success === false) {
+        const message = payload?.error?.message ?? `Request failed with ${response.status}`;
+        throw new Error(message);
+      }
+
+      return payload?.data ?? null;
+    },
+    {
+      body: options.body,
+      isFormData: options.isFormData ?? false,
+      method: options.method ?? "GET",
+      path,
+    },
+  ) as Promise<T>;
+}
+
+export async function deleteIfPresent(page: Page, path: string) {
+  try {
+    await apiFetch(page, path, { method: "DELETE" });
+  } catch {
+    // Best-effort cleanup. The record may already have been removed by the UI.
+  }
 }

@@ -54,9 +54,13 @@ npm install
 npm run dev
 npm run build
 npm run preview
+npm run test:e2e
+npm run test:e2e:trace
+npm run test:e2e:headed
+npm run test:e2e:debug
 ```
 
-There is no configured ESLint, Prettier, Vitest, or React Testing Library setup yet.
+Playwright is configured as the browser E2E test runner. There is no configured ESLint, Prettier, Vitest, or React Testing Library setup yet.
 
 ## Backend Integration Rules
 
@@ -158,6 +162,14 @@ For auth, API, or routing changes, also reason through the relevant browser flow
 - logout clears frontend auth state and CSRF token
 - protected routes redirect unauthenticated users to `/login`
 - ADMIN-only routes redirect non-admin users to `/`
+
+## E2E Coverage Maintenance
+
+The Playwright coverage matrix and known gaps live in `.agents/skills/e2e-coverage.md`.
+
+When code, routes, API contracts, or user-facing functionality are added or materially changed, update the coverage matrix in the same work if the E2E coverage changes or if a new gap is intentionally left uncovered.
+
+When adding or changing Playwright tests, keep `.agents/skills/e2e-coverage.md`, `.agents/skills/playwright/SKILL.md`, and `project.md` aligned with the actual `e2e/` suite.
 
 ## Compatibility Notes
 
