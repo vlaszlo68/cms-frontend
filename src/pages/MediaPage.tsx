@@ -232,7 +232,7 @@ export default function MediaPage() {
           <div className="inline-status">{t("noMedia")}</div>
         ) : (
           <>
-          <table className="users-table">
+          <table className="users-table users-table--media">
             <thead>
               <tr>
                 <th aria-sort={getAriaSort("originalFileName")}>

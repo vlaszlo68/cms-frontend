@@ -95,7 +95,7 @@ export default function MenusPage() {
           <div className="inline-status">{t("noMenus")}</div>
         ) : (
           <>
-            <table className="users-table">
+            <table className="users-table users-table--menus">
               <thead>
                 <tr>
                   <th>{t("name")}</th>

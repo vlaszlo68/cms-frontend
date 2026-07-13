@@ -176,7 +176,7 @@ export default function PagesPage() {
           <div className="inline-status">{t("noPages")}</div>
         ) : (
           <>
-            <table className="users-table">
+            <table className="users-table users-table--pages">
               <thead>
                 <tr>
                   <th aria-sort={getAriaSort("title")}>
@@ -232,7 +232,7 @@ export default function PagesPage() {
                           onClick={() => setPageToDelete(page)}
                           type="button"
                         >
-                          <ButtonLabel icon="deactivate">{t("delete")}</ButtonLabel>
+                          <ButtonLabel icon="delete">{t("delete")}</ButtonLabel>
                         </button>
                       </div>
                     </td>

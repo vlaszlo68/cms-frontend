@@ -3,6 +3,7 @@ import type {
   ButtonSize,
   ContentWidth,
   DateFormat,
+  DesignName,
   DisplayDensity,
   FontSize,
   NavigationBehavior,
@@ -25,6 +26,13 @@ const themeOptions: Array<{ labelKey: TranslationKey; value: ThemeName }> = [
   { labelKey: "cinderTheme", value: "cinder" },
   { labelKey: "midnightTheme", value: "midnight" },
   { labelKey: "auroraTheme", value: "aurora" },
+];
+
+const designOptions: Array<{ labelKey: TranslationKey; value: DesignName }> = [
+  { labelKey: "originalDesign", value: "original" },
+  { labelKey: "braveDesign", value: "brave" },
+  { labelKey: "dossierDesign", value: "dossier" },
+  { labelKey: "blueprintDesign", value: "blueprint" },
 ];
 
 const navigationLayoutOptions: Array<{ labelKey: TranslationKey; value: NavigationLayout }> = [
@@ -77,6 +85,7 @@ export default function SettingsPage() {
     contentWidth,
     dateFormat,
     density,
+    design,
     fontSize,
     language,
     navigationBehavior,
@@ -86,6 +95,7 @@ export default function SettingsPage() {
     setContentWidth,
     setDateFormat,
     setDensity,
+    setDesign,
     setFontSize,
     setLanguage,
     setNavigationBehavior,
@@ -118,7 +128,21 @@ export default function SettingsPage() {
       <form className="settings-form">
         <div className="settings-form__column">
           <label>
-            {t("theme")}
+            {t("design")}
+            <select
+              onChange={(event) => setDesign(event.target.value as DesignName)}
+              value={design}
+            >
+              {designOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.labelKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            {t("colorTheme")}
             <select
               onChange={(event) => setTheme(event.target.value as ThemeName)}
               value={theme}

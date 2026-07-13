@@ -638,6 +638,12 @@ button:disabled {
   margin: 0 auto;
 }
 
+.app-layout--horizontal.app-layout--content-centered .app-layout__content {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+}
+
 .app-header {
   display: flex;
   align-items: center;
@@ -1202,16 +1208,127 @@ button:disabled {
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 0;
+  table-layout: fixed;
 }
 
 .users-table th,
 .users-table td {
   border-bottom: 1px solid var(--color-table-border);
+  overflow-wrap: anywhere;
   padding: 0.75rem;
   text-align: left;
   vertical-align: middle;
 }
+
+.users-table--users :is(th, td):nth-child(1) { width: 13%; }
+.users-table--users :is(th, td):nth-child(2) { width: 13%; }
+.users-table--users :is(th, td):nth-child(3) { width: 24%; }
+.users-table--users :is(th, td):nth-child(4),
+.users-table--users :is(th, td):nth-child(5) { width: 8%; }
+.users-table--users :is(th, td):nth-child(6) { width: 13%; }
+.users-table--users :is(th, td):nth-child(7) { width: 13%; }
+.users-table--users :is(th, td):nth-child(8) { width: 8%; }
+
+.users-table--pages :is(th, td):nth-child(1) { width: 20%; }
+.users-table--pages :is(th, td):nth-child(2) { width: 18%; }
+.users-table--pages :is(th, td):nth-child(3),
+.users-table--pages :is(th, td):nth-child(4),
+.users-table--pages :is(th, td):nth-child(5) { width: 8%; }
+.users-table--pages :is(th, td):nth-child(6) { width: 10%; }
+.users-table--pages :is(th, td):nth-child(7),
+.users-table--pages :is(th, td):nth-child(8) { width: 14%; }
+
+.users-table--page-blocks :is(th, td):nth-child(1) { width: 30%; }
+.users-table--page-blocks :is(th, td):nth-child(2) { width: 18%; }
+.users-table--page-blocks :is(th, td):nth-child(3),
+.users-table--page-blocks :is(th, td):nth-child(4) { width: 14%; }
+.users-table--page-blocks :is(th, td):nth-child(5) { width: 24%; }
+
+.users-table--media :is(th, td):nth-child(1) { width: 24%; }
+.users-table--media :is(th, td):nth-child(2) { width: 28%; }
+.users-table--media :is(th, td):nth-child(3) { width: 10%; }
+.users-table--media :is(th, td):nth-child(4) { width: 12%; }
+.users-table--media :is(th, td):nth-child(5) { width: 14%; }
+.users-table--media :is(th, td):nth-child(6) { width: 12%; }
+
+.users-table--menus :is(th, td):nth-child(1) { width: 31%; }
+.users-table--menus :is(th, td):nth-child(2) { width: 31%; }
+.users-table--menus :is(th, td):nth-child(3) { width: 10%; white-space: nowrap; }
+.users-table--menus :is(th, td):nth-child(4) { width: 28%; }
+
+.users-table--menu-items :is(th, td):nth-child(1) { width: 18%; }
+.users-table--menu-items :is(th, td):nth-child(2) { width: 10%; }
+.users-table--menu-items :is(th, td):nth-child(3) { width: 24%; }
+.users-table--menu-items :is(th, td):nth-child(4) { width: 16%; }
+.users-table--menu-items :is(th, td):nth-child(5),
+.users-table--menu-items :is(th, td):nth-child(6) { width: 10%; }
+.users-table--menu-items :is(th, td):nth-child(7) { width: 12%; }
+
+.users-table--templates :is(th, td):nth-child(1) { width: 17%; }
+.users-table--templates :is(th, td):nth-child(2) { width: 20%; }
+.users-table--templates :is(th, td):nth-child(3) { width: 31%; }
+.users-table--templates :is(th, td):nth-child(4) { width: 10%; }
+.users-table--templates :is(th, td):nth-child(5) { width: 22%; }
+
+/* Preserve headings and form-controlled values as compact, single-line data. */
+.users-table--users :is(th, td):nth-child(1),
+.users-table--users :is(th, td):nth-child(2) { width: 12%; }
+.users-table--users :is(th, td):nth-child(3) { width: 22%; }
+.users-table--users :is(th, td):nth-child(4),
+.users-table--users :is(th, td):nth-child(5) { width: 9%; white-space: nowrap; }
+.users-table--users :is(th, td):nth-child(6) { width: 19%; white-space: nowrap; }
+.users-table--users :is(th, td):nth-child(7) { width: 12%; white-space: nowrap; }
+.users-table--users :is(th, td):nth-child(8) { width: 5%; }
+
+.users-table--pages :is(th, td):nth-child(1) { width: 16%; }
+.users-table--pages :is(th, td):nth-child(2) { width: 15%; }
+.users-table--pages :is(th, td):nth-child(3) { width: 9%; white-space: nowrap; }
+.users-table--pages :is(th, td):nth-child(4) { width: 10%; white-space: nowrap; }
+.users-table--pages :is(th, td):nth-child(5) { width: 8%; white-space: nowrap; }
+.users-table--pages :is(th, td):nth-child(6) { width: 9%; white-space: nowrap; }
+.users-table--pages :is(th, td):nth-child(7) { width: 11%; white-space: nowrap; }
+.users-table--pages :is(th, td):nth-child(8) { width: 22%; }
+
+.users-table--page-blocks :is(th, td):nth-child(2),
+.users-table--page-blocks :is(th, td):nth-child(3),
+.users-table--page-blocks :is(th, td):nth-child(4) { white-space: nowrap; }
+.users-table--media :is(th, td):nth-child(3),
+.users-table--media :is(th, td):nth-child(4),
+.users-table--media :is(th, td):nth-child(5) { white-space: nowrap; }
+
+.users-table--menu-items :is(th, td):nth-child(1) { width: 16%; }
+.users-table--menu-items :is(th, td):nth-child(2) { width: 13%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(3) { width: 23%; }
+.users-table--menu-items :is(th, td):nth-child(4) { width: 15%; }
+.users-table--menu-items :is(th, td):nth-child(5) { width: 12%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(6) { width: 11%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(7) { width: 10%; }
+.users-table--templates :is(th, td):nth-child(4) { white-space: nowrap; }
+
+/* Dates include time and can use the full localized format. */
+.users-table--users :is(th, td):nth-child(1) { width: 8%; }
+.users-table--users :is(th, td):nth-child(2) { width: 12.9%; }
+.users-table--users :is(th, td):nth-child(3) { width: 12.9%; }
+.users-table--users :is(th, td):nth-child(4),
+.users-table--users :is(th, td):nth-child(5) { width: 8%; }
+.users-table--users :is(th, td):nth-child(6) { width: 15%; }
+.users-table--users :is(th, td):nth-child(7) { width: 16%; }
+.users-table--users :is(th, td):nth-child(8) { width: 18%; }
+.users-table--users { width: calc(100% - 2px); }
+
+.users-table--pages :is(th, td):nth-child(1) { width: 14%; }
+.users-table--pages :is(th, td):nth-child(2) { width: 12%; }
+.users-table--pages :is(th, td):nth-child(3) { width: 8%; }
+.users-table--pages :is(th, td):nth-child(4) { width: 9%; }
+.users-table--pages :is(th, td):nth-child(6) { width: 10%; }
+.users-table--pages :is(th, td):nth-child(7) { width: 17%; }
+
+.users-table--media :is(th, td):nth-child(1) { width: 22%; }
+.users-table--media :is(th, td):nth-child(2) { width: 25%; }
+.users-table--media :is(th, td):nth-child(3) { width: 9%; }
+.users-table--media :is(th, td):nth-child(4) { width: 11%; }
+.users-table--media :is(th, td):nth-child(5) { width: 21%; }
 
 .app-layout--density-compact .users-table th,
 .app-layout--density-compact .users-table td {
@@ -1231,6 +1348,7 @@ button:disabled {
   color: var(--color-muted);
   font-size: 0.82rem;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .sortable-header {
@@ -1250,16 +1368,17 @@ button:disabled {
 
 .table-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  width: max-content;
 }
 
-.table-actions button {
-  padding: var(--table-button-padding-block, 0.55rem) var(--table-button-padding-inline, 0.7rem);
-}
-
+.table-actions button,
 .table-actions .secondary-link {
+  flex: 0 0 auto;
   padding: var(--table-button-padding-block, 0.55rem) var(--table-button-padding-inline, 0.7rem);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .app-layout--button-compact {

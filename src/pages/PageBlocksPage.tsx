@@ -115,7 +115,7 @@ export default function PageBlocksPage() {
         ) : sortedBlocks.length === 0 ? (
           <div className="inline-status">{t("noPageBlocks")}</div>
         ) : (
-          <table className="users-table">
+          <table className="users-table users-table--page-blocks">
             <thead>
               <tr>
                 <th>{t("title")}</th>

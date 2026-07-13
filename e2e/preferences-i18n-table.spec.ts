@@ -11,7 +11,7 @@ test.describe("preferences, i18n, and table behavior", () => {
     "Set PLAYWRIGHT_LOGIN_NAME and PLAYWRIGHT_PASSWORD to run preferences tests.",
   );
 
-  test("persists appearance preferences, switches language, and toggles table sorting", async ({ page }) => {
+  test("persists design and appearance preferences, switches language, and toggles table sorting", async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem("cms.language", "en");
     });
@@ -25,8 +25,9 @@ test.describe("preferences, i18n, and table behavior", () => {
     await expect(page).toHaveURL((url) => url.pathname === "/settings");
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 
-    await page.getByLabel("Theme").selectOption("aurora");
-    await page.locator("select").nth(1).selectOption("horizontal");
+    await page.getByLabel("Design").selectOption("blueprint");
+    await page.getByLabel("Colour theme").selectOption("aurora");
+    await page.getByLabel("MenuSidebarTop menu").selectOption("horizontal");
     await page.getByLabel("Menu behavior").selectOption("floating");
     await page.getByLabel("Display density").selectOption("compact");
     await page.getByLabel("Content width").selectOption("centered");
@@ -35,11 +36,13 @@ test.describe("preferences, i18n, and table behavior", () => {
     await page.getByLabel("Reduce motion").check();
 
     await expect(page.locator("html")).toHaveAttribute("data-theme", "aurora");
+    await expect(page.evaluate(() => window.localStorage.getItem("cms.design"))).resolves.toBe("blueprint");
     await expect(page.evaluate(() => window.localStorage.getItem("cms.tablePageSize"))).resolves.toBe("10");
     await expect(page.evaluate(() => window.localStorage.getItem("cms.navigationLayout"))).resolves.toBe("horizontal");
 
     await page.reload();
-    await expect(page.getByLabel("Theme")).toHaveValue("aurora");
+    await expect(page.getByLabel("Design")).toHaveValue("blueprint");
+    await expect(page.getByLabel("Colour theme")).toHaveValue("aurora");
     await expect(page.getByLabel("Rows per page")).toHaveValue("10");
     await expect(page.getByLabel("Striped table rows")).toBeChecked();
 
@@ -59,8 +62,9 @@ test.describe("preferences, i18n, and table behavior", () => {
     await expect(loginNameHeader).toHaveAttribute("aria-sort", "descending");
 
     await page.goto("/settings");
-    await page.getByLabel("Theme").selectOption("classic");
-    await page.locator("select").nth(1).selectOption("sidebar");
+    await page.getByLabel("Design").selectOption("original");
+    await page.getByLabel("Colour theme").selectOption("classic");
+    await page.getByLabel("MenuSidebarTop menu").selectOption("sidebar");
     await page.getByLabel("Menu behavior").selectOption("fixed");
     await page.getByLabel("Display density").selectOption("normal");
     await page.getByLabel("Content width").selectOption("full");

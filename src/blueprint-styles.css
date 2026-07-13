@@ -1,0 +1,232 @@
+/* Third visual pass: a blueprint dossier skin layered over the preserved brave design. */
+@import "./brave-styles.css";
+
+:root {
+  --signal: #f2bb38;
+  --signal-deep: #9d6510;
+  --control-ink: #092d45;
+  --control-paper: #f7f3e8;
+  --ink: #123d55;
+  --paper: #cfe0e2;
+  --panel: #f5f3e9;
+  --slate: #4d6d78;
+  --rule: #7fa5ad;
+  --shadow-hard: 6px 6px 0 rgb(9 45 69 / 0.16);
+  --shadow-lift: 10px 10px 0 rgb(9 45 69 / 0.2);
+  --list-row-hover: #d5ebe5;
+  --list-row-stripe: #e6efea;
+  --color-page: var(--paper);
+  --color-surface: var(--panel);
+  --color-text: var(--ink);
+  --color-muted: var(--slate);
+  --color-border: var(--rule);
+  --color-field-border: #8daab2;
+  --color-primary: var(--signal-deep);
+  --color-secondary-bg: #e2edeb;
+  --color-secondary-hover-bg: #cfdfdb;
+  --color-primary-hover-bg: #fff0c5;
+  --color-primary-hover-text: #6b4a05;
+  --color-table-border: #c9d9d8;
+  --focus-ring: rgb(225 173 53 / 0.34);
+}
+
+:root[data-theme="midnight"] {
+  --paper: #0c2130;
+  --panel: #163242;
+  --ink: #f0f6f2;
+  --slate: #b8cad0;
+  --rule: #3e6170;
+  --list-row-hover: #244c58;
+  --list-row-stripe: #1d404c;
+}
+
+:root[data-theme="aurora"] {
+  --paper: #102b2c;
+  --panel: #183d3c;
+  --ink: #f0faf5;
+  --slate: #b9d1c7;
+  --rule: #436e69;
+  --list-row-hover: #285851;
+  --list-row-stripe: #204942;
+}
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgb(9 45 69 / 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(9 45 69 / 0.09) 1px, transparent 1px),
+    linear-gradient(45deg, transparent 49.4%, rgb(242 187 56 / 0.1) 49.5% 50.5%, transparent 50.6%);
+  background-size: 32px 32px, 32px 32px, 128px 128px;
+}
+
+button,
+.button-link {
+  border-radius: 2px;
+  box-shadow: none;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+button:hover:not(:disabled),
+.button-link:hover {
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  transform: none;
+}
+
+.login-page {
+  background:
+    linear-gradient(135deg, rgb(16 47 69 / 0.97), rgb(20 78 94 / 0.9)),
+    repeating-linear-gradient(0deg, transparent 0 28px, rgb(255 255 255 / 0.08) 29px 30px);
+  justify-items: center;
+}
+
+.login-card {
+  border: 1px solid rgb(249 246 235 / 0.9);
+  border-top: 5px solid var(--signal);
+  box-shadow: 12px 12px 0 rgb(0 18 28 / 0.24);
+}
+
+.login-card h1,
+.app-header h1,
+.page-heading h2 {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  letter-spacing: -0.025em;
+}
+
+.app-header {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 23px, rgb(255 255 255 / 0.055) 24px 25px),
+    #092d45;
+  border-bottom: 4px solid var(--signal);
+}
+
+.app-kicker,
+.header-select,
+.users-table th,
+.settings-form__legend {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+.app-navigation {
+  background:
+    linear-gradient(90deg, rgb(9 45 69 / 0.06) 1px, transparent 1px),
+    color-mix(in srgb, var(--panel) 94%, #bdd5d7);
+  background-size: 16px 16px;
+  border-right-color: #527e89;
+}
+
+.app-navigation__link {
+  border-left-width: 5px;
+  border-bottom: 1px dashed rgb(18 61 85 / 0.24);
+  font-weight: 750;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.app-navigation__link--active,
+.app-navigation__link--active:hover {
+  background: #164a5e;
+  color: #fffdf4;
+}
+
+.page-heading {
+  border-bottom: 3px double #5b8994;
+  padding-bottom: 0.9rem;
+}
+
+.page-heading h2 {
+  color: #123b51;
+  font-variant: small-caps;
+  letter-spacing: 0.015em;
+}
+
+.users-table-wrap,
+.user-form,
+.settings-form {
+  border: 1px solid #719aa4;
+  box-shadow: var(--shadow-hard);
+}
+
+.users-table th {
+  background: #0f3d56;
+  border-bottom: 4px solid var(--signal);
+  color: #fffdf5;
+}
+
+.users-table td {
+  border-bottom-color: #c7d8d6;
+  border-right: 1px dotted #b6cdcb;
+}
+
+.users-table td:last-child,
+.users-table th:last-child { border-right: 0; }
+
+.users-table tbody tr:hover {
+  box-shadow: inset 4px 0 0 var(--signal);
+}
+
+.user-form input,
+.user-form textarea,
+.user-form select,
+.settings-form select,
+.login-card input {
+  background: #fbfaf3;
+  border-color: #7da2ab;
+  border-radius: 1px;
+}
+
+.user-form input:focus,
+.user-form textarea:focus,
+.user-form select:focus,
+.settings-form select:focus {
+  box-shadow: inset 3px 0 0 var(--signal);
+}
+
+.checkbox-field {
+  background: #dbece8;
+  border-left-color: #1b7777;
+  border-left-width: 6px;
+}
+
+.secondary-button,
+.secondary-link {
+  background: #dbe9e6;
+  border-color: #7098a1;
+  color: #163e4f;
+}
+
+.table-actions .secondary-button,
+.table-actions .secondary-link {
+  background: #edf4f1;
+  border-color: #84a6a9;
+  color: #123c4c;
+}
+
+.danger-button {
+  background: #a84239;
+}
+
+.table-pagination {
+  background: #d8e7e3;
+  border-top-color: #719aa4;
+}
+
+:root[data-theme="midnight"] .page-heading h2,
+:root[data-theme="aurora"] .page-heading h2 {
+  color: var(--ink);
+}
+
+:root[data-theme="midnight"] .checkbox-field,
+:root[data-theme="aurora"] .checkbox-field {
+  background: #244a4d;
+}
+
+:root[data-theme="midnight"] .secondary-button,
+:root[data-theme="midnight"] .secondary-link,
+:root[data-theme="aurora"] .secondary-button,
+:root[data-theme="aurora"] .secondary-link {
+  background: #284b57;
+  border-color: #527883;
+  color: var(--ink);
+}

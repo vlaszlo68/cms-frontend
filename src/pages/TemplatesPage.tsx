@@ -99,7 +99,7 @@ export default function TemplatesPage() {
           <div className="inline-status">{t("noTemplates")}</div>
         ) : (
           <>
-            <table className="users-table">
+            <table className="users-table users-table--templates">
               <thead>
                 <tr>
                   <th>{t("code")}</th>

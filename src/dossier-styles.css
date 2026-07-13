@@ -1,0 +1,207 @@
+/* Third visual pass: a blueprint dossier skin layered over the preserved brave design. */
+@import "./brave-styles.css";
+
+:root {
+  --signal: #e1ad35;
+  --signal-deep: #ac7710;
+  --control-ink: #102f45;
+  --control-paper: #f9f6eb;
+  --ink: #15374b;
+  --paper: #dce9eb;
+  --panel: #f8f7f0;
+  --slate: #5b7480;
+  --rule: #9fb7bd;
+  --shadow-hard: 0 12px 26px rgb(16 47 69 / 0.14);
+  --shadow-lift: 0 22px 44px rgb(16 47 69 / 0.18);
+  --list-row-hover: #e4f0ef;
+  --list-row-stripe: #eef4f1;
+  --color-page: var(--paper);
+  --color-surface: var(--panel);
+  --color-text: var(--ink);
+  --color-muted: var(--slate);
+  --color-border: var(--rule);
+  --color-field-border: #8daab2;
+  --color-primary: var(--signal-deep);
+  --color-secondary-bg: #e2edeb;
+  --color-secondary-hover-bg: #cfdfdb;
+  --color-primary-hover-bg: #fff0c5;
+  --color-primary-hover-text: #6b4a05;
+  --color-table-border: #c9d9d8;
+  --focus-ring: rgb(225 173 53 / 0.34);
+}
+
+:root[data-theme="midnight"] {
+  --paper: #0c2130;
+  --panel: #163242;
+  --ink: #f0f6f2;
+  --slate: #b8cad0;
+  --rule: #3e6170;
+  --list-row-hover: #244c58;
+  --list-row-stripe: #1d404c;
+}
+
+:root[data-theme="aurora"] {
+  --paper: #102b2c;
+  --panel: #183d3c;
+  --ink: #f0faf5;
+  --slate: #b9d1c7;
+  --rule: #436e69;
+  --list-row-hover: #285851;
+  --list-row-stripe: #204942;
+}
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgb(16 47 69 / 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 47 69 / 0.055) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+button,
+.button-link {
+  border-radius: 3px;
+  box-shadow: none;
+  letter-spacing: 0.025em;
+}
+
+button:hover:not(:disabled),
+.button-link:hover {
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  transform: none;
+}
+
+.login-page {
+  background:
+    linear-gradient(135deg, rgb(16 47 69 / 0.97), rgb(20 78 94 / 0.9)),
+    repeating-linear-gradient(0deg, transparent 0 28px, rgb(255 255 255 / 0.08) 29px 30px);
+  justify-items: center;
+}
+
+.login-card {
+  border: 1px solid rgb(249 246 235 / 0.9);
+  border-top: 5px solid var(--signal);
+  box-shadow: 0 22px 60px rgb(0 18 28 / 0.32);
+}
+
+.login-card h1,
+.app-header h1,
+.page-heading h2 {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  letter-spacing: -0.025em;
+}
+
+.app-header {
+  background: #102f45;
+  border-bottom: 2px solid var(--signal);
+}
+
+.app-kicker,
+.header-select,
+.users-table th,
+.settings-form__legend {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+.app-navigation {
+  background: color-mix(in srgb, var(--panel) 94%, #bdd5d7);
+  border-right-color: #62838d;
+}
+
+.app-navigation__link {
+  border-left-width: 4px;
+  font-weight: 750;
+}
+
+.app-navigation__link--active,
+.app-navigation__link--active:hover {
+  background: #164a5e;
+  color: #fffdf4;
+}
+
+.page-heading {
+  border-bottom: 1px solid #87a8ae;
+}
+
+.page-heading h2 {
+  color: #123b51;
+}
+
+.users-table-wrap,
+.user-form,
+.settings-form {
+  border: 1px solid #9ab5b8;
+  box-shadow: var(--shadow-hard);
+}
+
+.users-table th {
+  background: #164a5e;
+  border-bottom: 3px solid var(--signal);
+  color: #fffdf5;
+}
+
+.users-table td {
+  border-bottom-color: #c7d8d6;
+}
+
+.users-table tbody tr:hover {
+  box-shadow: inset 4px 0 0 var(--signal);
+}
+
+.user-form input,
+.user-form textarea,
+.user-form select,
+.settings-form select,
+.login-card input {
+  border-color: #92aeb3;
+}
+
+.user-form input:focus,
+.user-form textarea:focus,
+.user-form select:focus,
+.settings-form select:focus {
+  box-shadow: inset 3px 0 0 var(--signal);
+}
+
+.checkbox-field {
+  background: #e4efed;
+  border-left-color: #2b7a79;
+}
+
+.secondary-button,
+.secondary-link {
+  background: #e7f0ee;
+  border-color: #9eb8b8;
+  color: #163e4f;
+}
+
+.table-actions .secondary-button,
+.table-actions .secondary-link {
+  background: #edf4f1;
+  border-color: #84a6a9;
+  color: #123c4c;
+}
+
+.danger-button {
+  background: #a84239;
+}
+
+:root[data-theme="midnight"] .page-heading h2,
+:root[data-theme="aurora"] .page-heading h2 {
+  color: var(--ink);
+}
+
+:root[data-theme="midnight"] .checkbox-field,
+:root[data-theme="aurora"] .checkbox-field {
+  background: #244a4d;
+}
+
+:root[data-theme="midnight"] .secondary-button,
+:root[data-theme="midnight"] .secondary-link,
+:root[data-theme="aurora"] .secondary-button,
+:root[data-theme="aurora"] .secondary-link {
+  background: #284b57;
+  border-color: #527883;
+  color: var(--ink);
+}

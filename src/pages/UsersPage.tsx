@@ -200,7 +200,7 @@ export default function UsersPage() {
           <div className="inline-status">{t("noUsers")}</div>
         ) : (
           <>
-            <table className="users-table">
+            <table className="users-table users-table--users">
               <thead>
                 <tr>
                   <th aria-sort={getAriaSort("loginName")}>

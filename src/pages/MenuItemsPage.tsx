@@ -350,7 +350,7 @@ export default function MenuItemsPage() {
             {sortedItems.length === 0 ? (
               <div className="inline-status">{t("noMenuItems")}</div>
             ) : (
-              <table className="users-table">
+              <table className="users-table users-table--menu-items">
                 <thead>
                   <tr>
                     <th>{t("title")}</th>

@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Language, TranslationKey } from "../i18n/translations";
 import { translations } from "../i18n/translations";
+import braveStylesheetUrl from "../brave-styles.css?url";
+import blueprintStylesheetUrl from "../blueprint-styles.css?url";
+import dossierStylesheetUrl from "../dossier-styles.css?url";
 
 export type ThemeName =
   | "classic"
@@ -16,6 +19,7 @@ export type ThemeName =
   | "cinder"
   | "midnight"
   | "aurora";
+export type DesignName = "original" | "brave" | "dossier" | "blueprint";
 export type NavigationLayout = "sidebar" | "horizontal";
 export type NavigationBehavior = "fixed" | "floating" | "peek";
 export type DisplayDensity = "compact" | "normal" | "comfortable";
@@ -26,6 +30,7 @@ export type FontSize = "normal" | "compact";
 export type TablePageSize = 10 | 20 | 50 | 100;
 
 type PreferencesContextValue = {
+  design: DesignName;
   theme: ThemeName;
   navigationLayout: NavigationLayout;
   navigationBehavior: NavigationBehavior;
@@ -41,6 +46,7 @@ type PreferencesContextValue = {
   tableStripes: boolean;
   reduceMotion: boolean;
   showButtonIcons: boolean;
+  setDesign: (design: DesignName) => void;
   setTheme: (theme: ThemeName) => void;
   setNavigationLayout: (layout: NavigationLayout) => void;
   setNavigationBehavior: (behavior: NavigationBehavior) => void;
@@ -62,6 +68,7 @@ type PreferencesContextValue = {
 const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
 
 const themeStorageKey = "cms.theme";
+const designStorageKey = "cms.design";
 const navigationLayoutStorageKey = "cms.navigationLayout";
 const navigationBehaviorStorageKey = "cms.navigationBehavior";
 const densityStorageKey = "cms.density";
@@ -90,6 +97,12 @@ const themes: ThemeName[] = [
   "midnight",
   "aurora",
 ];
+const designs: DesignName[] = ["original", "brave", "dossier", "blueprint"];
+const designStylesheetUrls: Record<Exclude<DesignName, "original">, string> = {
+  brave: braveStylesheetUrl,
+  dossier: dossierStylesheetUrl,
+  blueprint: blueprintStylesheetUrl,
+};
 const navigationLayouts: NavigationLayout[] = ["sidebar", "horizontal"];
 const navigationBehaviors: NavigationBehavior[] = ["fixed", "floating", "peek"];
 const densities: DisplayDensity[] = ["compact", "normal", "comfortable"];
@@ -125,6 +138,9 @@ function readStoredNumber<T extends number>(key: string, allowedValues: readonly
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
+  const [design, setDesign] = useState<DesignName>(() =>
+    readStoredValue(designStorageKey, designs, "dossier"),
+  );
   const [theme, setTheme] = useState<ThemeName>(() =>
     readStoredValue(themeStorageKey, themes, "classic"),
   );
@@ -166,6 +182,30 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [showButtonIcons, setShowButtonIcons] = useState(() =>
     readStoredBoolean(showButtonIconsStorageKey, true),
   );
+
+  useEffect(() => {
+    const stylesheetId = "cms-design-stylesheet";
+    const currentStylesheet = document.getElementById(stylesheetId);
+
+    if (design === "original") {
+      currentStylesheet?.remove();
+      window.localStorage.setItem(designStorageKey, design);
+      return;
+    }
+
+    const stylesheet = currentStylesheet instanceof HTMLLinkElement
+      ? currentStylesheet
+      : document.createElement("link");
+    stylesheet.id = stylesheetId;
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = designStylesheetUrls[design];
+
+    if (!currentStylesheet) {
+      document.head.append(stylesheet);
+    }
+
+    window.localStorage.setItem(designStorageKey, design);
+  }, [design]);
 
   useEffect(() => {
     window.localStorage.setItem(themeStorageKey, theme);
@@ -231,6 +271,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<PreferencesContextValue>(
     () => ({
+      design,
       theme,
       navigationLayout,
       navigationBehavior,
@@ -246,6 +287,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       tableStripes,
       reduceMotion,
       showButtonIcons,
+      setDesign,
       setTheme,
       setNavigationLayout,
       setNavigationBehavior,
@@ -264,6 +306,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       t: (key) => translations[language][key],
     }),
     [
+      design,
       contentWidth,
       buttonSize,
       dateFormat,

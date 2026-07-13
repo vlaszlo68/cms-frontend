@@ -36,7 +36,7 @@ The backend must be running. Tests that touch `/api` use the Vite proxy and rela
 | Media | `e2e/admin-media-template-settings.spec.ts` | Uploads a text file, verifies list/details/fallback preview/open-content link, deletes the media item, and cleans up by API if needed. | Yes, test-created media only |
 | Templates | `e2e/admin-media-template-settings.spec.ts` | Uploads a preview image, creates a template using it, verifies edit loading, updates code/name/description/active state, deletes the template, and cleans up media. | Yes, test-created template and media only |
 | Site settings | `e2e/admin-media-template-settings.spec.ts` | Snapshots singleton settings, saves changed identity/contact/social fields, verifies success, and restores the original singleton values. | Yes, singleton update restored in-test |
-| Preferences and i18n | `e2e/preferences-i18n-table.spec.ts` | Persists appearance preferences, reloads to verify storage-backed state, switches to Hungarian and back to English, and restores baseline preferences. | No backend mutation |
+| Preferences and i18n | `e2e/preferences-i18n-table.spec.ts` | Persists the design and colour-palette preferences, reloads to verify storage-backed state, switches to Hungarian and back to English, and restores baseline preferences. | No backend mutation |
 | Table behavior | `e2e/preferences-i18n-table.spec.ts` | Verifies user-list sortable header `aria-sort` transitions for login name. | No |
 | Error handling | `e2e/api-error-handling.spec.ts` | Verifies visible backend envelope error messages and fallback messages when an API request fails at the network layer. | No |
 
