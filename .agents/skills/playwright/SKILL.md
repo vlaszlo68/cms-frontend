@@ -52,6 +52,9 @@ After `dev:bg` prints the process ID, stop it with the printed `Stop-Process` co
 - Use stable expectations for labels, route changes, validation messages, and visible UI states.
 - Prefer small, readable tests over broad end-to-end scripts that are hard to diagnose.
 - Keep CMS admin CRUD tests isolated by creating unique `e2e...` records.
+- Register cleanup as soon as a real backend record is created. In `finally` or reliable teardown, delete every record created by that test, deleting dependent records before parents.
+- Restore singleton mutations, such as site settings, to their exact pre-test value. Never mutate the configured login account or clean up data the test did not create.
+- Treat a failed cleanup as a test failure and report the remaining record identifiers; do not silently swallow cleanup errors.
 
 ## CMS E2E Commands
 

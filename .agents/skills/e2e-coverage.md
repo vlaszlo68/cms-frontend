@@ -61,6 +61,8 @@ New E2E tests should:
 - Use user-visible selectors such as roles, labels, text, and accessible names.
 - Create unique `e2e...` records for destructive coverage.
 - Mutate only records created by that test run unless the test explicitly targets a singleton such as site settings.
+- Register cleanup when each record is created. Delete every test-created record in `finally` or reliable teardown, deleting dependent records before parents.
+- Restore singleton values to their exact pre-test state. Do not silently ignore cleanup failures; report remaining record identifiers and fail the test.
 - Avoid mutating the configured login account.
 - Set `cms.language` to `en` before flows that rely on English labels.
 - Keep assertions tied to user-visible behavior and important API responses.
