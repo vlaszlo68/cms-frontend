@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  apiFetch,
   credentialsAreMissing,
   deleteIfPresent,
   expectNoFormErrors,
@@ -23,6 +24,7 @@ test.describe("admin page block CRUD", () => {
     const blockTitle = `E2E Hero Block ${suffix}`;
     const updatedBlockTitle = `E2E Banner Block ${suffix}`;
     let createdPageId: number | null = null;
+    let createdBlockId: number | null = null;
 
     await loginAsConfiguredUser(page);
 
@@ -44,7 +46,19 @@ test.describe("admin page block CRUD", () => {
       createdPageId = idFromPath(await getRowLinkPath(pageRow, "Edit"), /\/pages\/(\d+)\/edit/);
       await expect(pageRow).toContainText("BLOCK");
 
-      await pageRow.getByRole("link", { name: "Blocks" }).click();
+      await pageRow.getByRole("link", { name: "Edit" }).click();
+      await expect(page.getByRole("heading", { name: "Edit page" })).toBeVisible();
+      await expect(page.getByLabel("Title", { exact: true })).toHaveValue(pageTitle);
+      await expect(page.getByLabel("Slug")).toHaveValue(pageSlug);
+      await expect(page.getByLabel("Status")).toHaveValue("DRAFT");
+      await expect(page.getByLabel("Page type")).toHaveValue("BLOCK");
+      await expect(page.getByText("This BLOCK page is composed from page blocks.")).toBeVisible();
+      await expect(page.getByRole("textbox", { name: "Content" })).toHaveCount(0);
+
+      await page.getByRole("link", { name: "Cancel" }).click();
+      const blockPageRow = await findTableRowByText(page, pageSlug);
+
+      await blockPageRow.getByRole("link", { name: "Blocks" }).click();
       await expect(page.getByRole("heading", { name: /Page blocks/ })).toBeVisible();
       await page.getByRole("link", { name: "New page block" }).click();
 
@@ -57,7 +71,15 @@ test.describe("admin page block CRUD", () => {
         (response) => response.url().includes("/api/page-blocks") && response.request().method() === "POST",
       );
       await page.getByRole("button", { name: "Create page block" }).click();
-      expect((await createResponse).status()).toBeLessThan(400);
+      const createdBlockResponse = await createResponse;
+      expect(createdBlockResponse.status()).toBeLessThan(400);
+      const createdBlockPayload = (await createdBlockResponse.json()) as { data?: { id?: unknown } };
+
+      if (typeof createdBlockPayload.data?.id !== "number") {
+        throw new Error("Created PageBlock response did not contain a numeric ID.");
+      }
+
+      createdBlockId = createdBlockPayload.data.id;
 
       const createdBlockRow = await findTableRowByText(page, blockTitle);
       await expect(createdBlockRow).toContainText("HERO");
@@ -91,11 +113,20 @@ test.describe("admin page block CRUD", () => {
       );
       await page.getByRole("button", { name: "Delete" }).last().click();
       expect((await deleteResponse).status()).toBeLessThan(400);
+      createdBlockId = null;
       await expect(page.getByRole("row").filter({ hasText: updatedBlockTitle })).toHaveCount(0);
       await expectNoFormErrors(page);
     } finally {
-      if (createdPageId !== null) {
-        await deleteIfPresent(page, `/api/pages/${createdPageId}`);
+      try {
+        if (createdBlockId !== null) {
+          await apiFetch(page, `/api/page-blocks/${createdBlockId}`, { method: "DELETE" });
+          createdBlockId = null;
+        }
+      } finally {
+        if (createdPageId !== null) {
+          await deleteIfPresent(page, `/api/pages/${createdPageId}`);
+          createdPageId = null;
+        }
       }
     }
   });

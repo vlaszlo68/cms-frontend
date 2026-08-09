@@ -116,7 +116,7 @@ The detailed coverage matrix and known gaps live in `../e2e-coverage.md`.
 - `e2e/admin-user-approval-authorization.spec.ts`: registers pending users, approves/rejects them, and verifies non-admin routing.
 - `e2e/admin-user-crud.spec.ts`: creates, edits, and deactivates a user.
 - `e2e/admin-page-crud.spec.ts`: creates, edits, and deletes a page.
-- `e2e/admin-page-block-crud.spec.ts`: creates, edits, and deletes a PageBlock on a `BLOCK` page.
+- `e2e/admin-page-block-crud.spec.ts`: opens a `BLOCK` page edit form, then creates, edits, and deletes a PageBlock on it.
 - `e2e/admin-menu-crud.spec.ts`: creates, edits, and deletes a menu.
 - `e2e/admin-menu-item-crud.spec.ts`: validates URL target input and creates, edits, and deletes PAGE-target menu items.
 - `e2e/admin-media-template-settings.spec.ts`: covers media upload/details/preview/delete, template CRUD with preview image, and site settings save/restore.

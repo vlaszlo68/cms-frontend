@@ -218,7 +218,7 @@ type PageType = "CONTENT" | "BLOCK";
 type PageStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 ```
 
-Page fields include `templateCode` and `pageType`. `CONTENT` pages show the HTML textarea, insert toolbar, and sanitized preview. `BLOCK` pages hide the content editor and expose block management from the page list.
+Page fields include `templateCode` and `pageType`. `CONTENT` pages show the HTML textarea, insert toolbar, and sanitized preview. `BLOCK` pages hide the content editor and expose block management from the page list; their detail response may omit or return `null` for `content`, which the form normalizes to an empty string.
 
 PageBlock `configJson` is raw editable text. There is no drag-and-drop ordering, visual builder, schema validation, or block preview.
 

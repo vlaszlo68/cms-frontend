@@ -8,7 +8,7 @@ export type Page = {
   id: number;
   title: string;
   slug: string;
-  content: string;
+  content?: string | null;
   status: PageStatus;
   metaTitle: string;
   metaDescription: string;

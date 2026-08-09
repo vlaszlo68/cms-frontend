@@ -90,7 +90,7 @@ function toFormState(page: Page): PageFormState {
   return {
     title: page.title,
     slug: page.slug,
-    content: page.content,
+    content: page.content ?? "",
     status: page.status,
     metaTitle: page.metaTitle,
     metaDescription: page.metaDescription,
