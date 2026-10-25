@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import { PreferencesProvider } from "./preferences/PreferencesContext";
+import { SiteProvider } from "./sites/SiteContext";
 import "./styles.css";
 
 /**
@@ -14,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <PreferencesProvider>
         <AuthProvider>
-          <App />
+          <SiteProvider><App /></SiteProvider>
         </AuthProvider>
       </PreferencesProvider>
     </BrowserRouter>

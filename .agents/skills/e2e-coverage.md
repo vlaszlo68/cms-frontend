@@ -36,6 +36,7 @@ The backend must be running. Tests that touch `/api` use the Vite proxy and rela
 | Media | `e2e/admin-media-template-settings.spec.ts` | Uploads a text file, verifies list/details/fallback preview/open-content link, deletes the media item, and cleans up by API if needed. | Yes, test-created media only |
 | Templates | `e2e/admin-media-template-settings.spec.ts` | Uploads a preview image, creates a template using it, verifies edit loading, updates code/name/description/active state, deletes the template, and cleans up media. | Yes, test-created template and media only |
 | Site settings | `e2e/admin-media-template-settings.spec.ts` | Snapshots singleton settings, saves changed identity/contact/social fields, verifies success, and restores the original singleton values. | Yes, singleton update restored in-test |
+| Multi-site context | `e2e/multi-site-foundation.spec.ts` | With two pre-provisioned Sites, switches the selector across Pages, Menus, Media, and Site Settings; verifies nested Site requests and a Page-form switch returns safely to the Page list. | No |
 | Preferences and i18n | `e2e/preferences-i18n-table.spec.ts` | Persists the design and colour-palette preferences, reloads to verify storage-backed state, switches to Hungarian and back to English, and restores baseline preferences. | No backend mutation |
 | Table behavior | `e2e/preferences-i18n-table.spec.ts` | Verifies user-list sortable header `aria-sort` transitions for login name. | No |
 | Error handling | `e2e/api-error-handling.spec.ts` | Verifies visible backend envelope error messages and fallback messages when an API request fails at the network layer. | No |
@@ -53,6 +54,7 @@ The backend must be running. Tests that touch `/api` use the Vite proxy and rela
 | Internationalization breadth | Hungarian switching and heading rendering are covered, but every auth/list/form flow is not repeated in Hungarian. |
 | Table breadth | User-list sort state is covered. Pagination, empty states, and every sortable table are not exhaustively tested. |
 | Browser/device matrix | The suite currently runs Chromium desktop only. Mobile/responsive and cross-browser projects are not configured. |
+| Full two-Site data isolation | The focused context test needs `PLAYWRIGHT_SITE_A_CODE` and `PLAYWRIGHT_SITE_B_CODE`. Duplicate slugs/menu codes, scoped PAGE choices, independent settings/media values, and Site create/edit remain manual real-backend verification until isolated test-site lifecycle support is available. |
 
 ## Coverage Standard
 
@@ -66,3 +68,14 @@ New E2E tests should:
 - Avoid mutating the configured login account.
 - Set `cms.language` to `en` before flows that rely on English labels.
 - Keep assertions tied to user-visible behavior and important API responses.
+## Multi-site admin coverage note
+
+Site-owned CRUD coverage runs in the selected Site context. The focused selector flow requires
+pre-provisioned real Site codes:
+
+```powershell
+$env:PLAYWRIGHT_SITE_A_CODE="site-a"; $env:PLAYWRIGHT_SITE_B_CODE="site-b"; npm run test:e2e
+```
+
+The complete two-Site data-isolation flow remains a browser verification requirement: assert
+separate `about` slugs, `MAIN` menus, settings, media, and PAGE target options for each Site.

@@ -1,12 +1,12 @@
 import type { SaveSiteSettingsRequest, SiteSettings } from "../models/siteSettings";
 import { apiGet, apiPut } from "./httpClient";
 
-const SITE_SETTINGS_PATH = "/api/site-settings";
+const settingsPath = (siteCode: string) => `/api/admin/sites/${encodeURIComponent(siteCode)}/site-settings`;
 
-export function getSettings() {
-  return apiGet<SiteSettings>(SITE_SETTINGS_PATH);
+export function getSettings(siteCode: string) {
+  return apiGet<SiteSettings>(settingsPath(siteCode));
 }
 
-export function saveSettings(input: SaveSiteSettingsRequest) {
-  return apiPut<SiteSettings>(SITE_SETTINGS_PATH, input);
+export function saveSettings(siteCode: string, input: SaveSiteSettingsRequest) {
+  return apiPut<SiteSettings>(settingsPath(siteCode), input);
 }

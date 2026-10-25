@@ -41,7 +41,7 @@ test.describe("admin page CRUD", () => {
     await page.getByRole("textbox", { name: "Content" }).fill(`<p>${title} content</p>`);
 
     const createResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/pages") && response.request().method() === "POST",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Create page" }).click();
     expect((await createResponsePromise).status()).toBeLessThan(400);
@@ -60,7 +60,7 @@ test.describe("admin page CRUD", () => {
     const pageLoadResponses = await clickAndWaitForSettledResponses(
       page,
       () => createdRow.getByRole("link", { name: "Edit" }).click(),
-      (request) => request.method() === "GET" && request.url().includes("/api/pages/"),
+      (request) => request.method() === "GET" && request.url().includes("/api/admin/sites/"),
     );
     pageLoadResponses.forEach((response) => expect(response.status()).toBeLessThan(400));
 
@@ -79,7 +79,7 @@ test.describe("admin page CRUD", () => {
     await page.getByRole("textbox", { name: "Content" }).fill(`<p>${updatedTitle} content</p>`);
 
     const updateResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/pages/") && response.request().method() === "PUT",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "PUT",
     );
     await page.getByRole("button", { name: "Save changes" }).click();
     expect((await updateResponsePromise).status()).toBeLessThan(400);
@@ -97,7 +97,7 @@ test.describe("admin page CRUD", () => {
     await expect(page.getByText(`Delete ${updatedTitle}?`)).toBeVisible();
 
     const deleteResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/pages/") && response.request().method() === "DELETE",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "DELETE",
     );
     await page.getByRole("button", { name: "Delete" }).last().click();
     expect((await deleteResponsePromise).status()).toBeLessThan(400);

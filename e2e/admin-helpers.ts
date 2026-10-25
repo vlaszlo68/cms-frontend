@@ -50,6 +50,13 @@ export async function openAdminNavigationPage(page: Page, name: string, path: st
   return true;
 }
 
+export async function selectSiteByCode(page: Page, siteCode: string) {
+  const selector = page.getByLabel("Selected", { exact: true });
+  await expect(selector).toBeVisible();
+  await selector.selectOption(siteCode);
+  await expect(selector).toHaveValue(siteCode);
+}
+
 export async function clickAndWaitForSettledResponses(
   page: Page,
   click: () => Promise<void>,

@@ -1,17 +1,17 @@
 import { apiDelete, apiGet, apiPostForm } from "./httpClient";
 import type { Media } from "../models/media";
 
-const MEDIA_PATH = "/api/media";
+const mediaPath = (siteCode: string) => `/api/admin/sites/${encodeURIComponent(siteCode)}/media`;
 
-export function getMediaList() {
-  return apiGet<Media[]>(MEDIA_PATH);
+export function getMediaList(siteCode: string) {
+  return apiGet<Media[]>(`${mediaPath(siteCode)}?activeOnly=false`);
 }
 
-export function getMedia(id: number) {
-  return apiGet<Media>(`${MEDIA_PATH}/${id}`);
+export function getMedia(siteCode: string, id: number) {
+  return apiGet<Media>(`${mediaPath(siteCode)}/${id}`);
 }
 
-export function uploadMedia(file: File, description?: string) {
+export function uploadMedia(siteCode: string, file: File, description?: string) {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -19,9 +19,11 @@ export function uploadMedia(file: File, description?: string) {
     formData.append("description", description);
   }
 
-  return apiPostForm<Media>(MEDIA_PATH, formData);
+  return apiPostForm<Media>(mediaPath(siteCode), formData);
 }
 
-export function deleteMedia(id: number) {
-  return apiDelete<boolean>(`${MEDIA_PATH}/${id}`);
+export function deleteMedia(siteCode: string, id: number) {
+  return apiDelete<boolean>(`${mediaPath(siteCode)}/${id}`);
 }
+
+export function getMediaContentUrl(siteCode: string, id: number) { return `${mediaPath(siteCode)}/${id}/content`; }

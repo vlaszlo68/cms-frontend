@@ -14,6 +14,7 @@ import type {
 } from "../models/page";
 import type { Template } from "../models/template";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 const pageStatuses: PageStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 const pageTypes: PageType[] = ["CONTENT", "BLOCK"];
@@ -209,6 +210,7 @@ function sanitizeHtml(input: string) {
 export default function PageFormPage() {
   const navigate = useNavigate();
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const { id } = useParams();
   const editedPageId = id === undefined ? null : Number(id);
   const isEditMode = editedPageId !== null;
@@ -236,7 +238,7 @@ export default function PageFormPage() {
       try {
         const [loadedTemplates, page] = await Promise.all([
           templateApi.getTemplates(),
-          editedPageId ? pageApi.getPage(editedPageId) : Promise.resolve(null),
+          editedPageId && selectedSite ? pageApi.getPage(selectedSite.code, editedPageId) : Promise.resolve(null),
         ]);
         setTemplates(loadedTemplates);
 
@@ -251,7 +253,7 @@ export default function PageFormPage() {
     }
 
     void loadData();
-  }, [editedPageId, hasInvalidPageId, t]);
+  }, [editedPageId, hasInvalidPageId, selectedSite?.code, t]);
 
   if (hasInvalidPageId) {
     return <Navigate to="/pages" replace />;
@@ -376,9 +378,11 @@ export default function PageFormPage() {
       };
 
       if (editedPageId) {
-        await pageApi.updatePage(editedPageId, input);
+        if (!selectedSite) return;
+        await pageApi.updatePage(selectedSite.code, editedPageId, input);
       } else {
-        await pageApi.createPage(input);
+        if (!selectedSite) return;
+        await pageApi.createPage(selectedSite.code, input);
       }
 
       navigate("/pages");

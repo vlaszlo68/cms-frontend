@@ -5,6 +5,7 @@ import ButtonLabel from "../ui/ButtonLabel";
 import DraggableDialog from "../ui/DraggableDialog";
 import type { Media } from "../../models/media";
 import { usePreferences } from "../../preferences/PreferencesContext";
+import { useSiteContext } from "../../sites/SiteContext";
 
 type MediaUploadDialogProps = {
   onClose: () => void;
@@ -13,6 +14,7 @@ type MediaUploadDialogProps = {
 
 export default function MediaUploadDialog({ onClose, onUploadSuccess }: MediaUploadDialogProps) {
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -28,7 +30,8 @@ export default function MediaUploadDialog({ onClose, onUploadSuccess }: MediaUpl
     setError("");
 
     try {
-      const uploadedMedia = await mediaApi.uploadMedia(file, description);
+      if (!selectedSite) return;
+      const uploadedMedia = await mediaApi.uploadMedia(selectedSite.code, file, description);
       onUploadSuccess(uploadedMedia);
       onClose();
     } catch (caughtError) {

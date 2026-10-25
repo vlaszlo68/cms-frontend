@@ -5,6 +5,7 @@ import ButtonLabel from "../ui/ButtonLabel";
 import type { Language } from "../../i18n/translations";
 import type { DateFormat } from "../../preferences/PreferencesContext";
 import { usePreferences } from "../../preferences/PreferencesContext";
+import { useSiteContext } from "../../sites/SiteContext";
 
 function formatHeaderDateTime(
   value: Date,
@@ -35,6 +36,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { dateFormat, language, showDate, showTime, t } = usePreferences();
+  const { sites, selectedSite, selectSite, isLoading: sitesLoading } = useSiteContext();
   const [now, setNow] = useState(() => new Date());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const shouldShowClock = showDate || showTime;
@@ -70,6 +72,7 @@ export default function Header() {
             {formatHeaderDateTime(now, language, dateFormat, showDate, showTime)}
           </time>
         )}
+        {user?.role === "ADMIN" && <label className="site-selector">{t("site")} <select aria-label={t("selectedSite")} disabled={sitesLoading || sites.length === 0} onChange={(event) => { selectSite(event.target.value); if (/^\/(pages|menus)(\/|$)/.test(location.pathname) || location.pathname === "/media" || location.pathname === "/site-settings") navigate(location.pathname.includes("menus") ? "/menus" : location.pathname.includes("pages") ? "/pages" : location.pathname); }} value={selectedSite?.code ?? ""}><option value="">{sitesLoading ? t("loadingSites") : t("noSiteSelected")}</option>{sites.map(site => <option key={site.code} value={site.code}>{site.name} ({site.code}){site.active ? "" : ` — ${t("inactive")}`}</option>)}</select></label>}
         <span className="app-header__login-name">{user?.loginName}</span>
         <button
           className="secondary-button"

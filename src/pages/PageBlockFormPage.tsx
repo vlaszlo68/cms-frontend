@@ -7,6 +7,7 @@ import * as pageBlockApi from "../api/pageBlockApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import type { Page } from "../models/page";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type PageBlockFormState = {
   title: string;
@@ -31,6 +32,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 export default function PageBlockFormPage() {
   const navigate = useNavigate();
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const { id, blockId } = useParams();
   const pageId = id === undefined ? null : Number(id);
   const editedBlockId = blockId === undefined ? null : Number(blockId);
@@ -60,9 +62,9 @@ export default function PageBlockFormPage() {
 
       try {
         const [loadedPage, block] = await Promise.all([
-          pageApi.getPage(pageId as number),
+          pageApi.getPage(selectedSite!.code, pageId as number),
           editedBlockId
-            ? pageBlockApi.getBlock(editedBlockId)
+            ? pageBlockApi.getBlock(selectedSite!.code, pageId as number, editedBlockId)
             : Promise.resolve(null),
         ]);
         setPage(loadedPage);
@@ -89,7 +91,7 @@ export default function PageBlockFormPage() {
     }
 
     void loadData();
-  }, [editedBlockId, hasInvalidId, pageId, t]);
+  }, [editedBlockId, hasInvalidId, pageId, selectedSite?.code, t]);
 
   if (hasInvalidId) {
     return <Navigate replace to="/pages" />;
@@ -120,9 +122,11 @@ export default function PageBlockFormPage() {
       };
 
       if (editedBlockId) {
-        await pageBlockApi.updateBlock(editedBlockId, input);
+        if (!selectedSite) return;
+        await pageBlockApi.updateBlock(selectedSite.code, validPageId, editedBlockId, input);
       } else {
-        await pageBlockApi.createBlock(input);
+        if (!selectedSite) return;
+        await pageBlockApi.createBlock(selectedSite.code, validPageId, input);
       }
 
       navigate(`/pages/${validPageId}/blocks`);

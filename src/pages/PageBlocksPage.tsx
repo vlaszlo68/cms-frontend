@@ -8,6 +8,7 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { Page } from "../models/page";
 import type { PageBlock } from "../models/pageBlock";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
@@ -15,6 +16,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function PageBlocksPage() {
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const { id } = useParams();
   const pageId = id === undefined ? null : Number(id);
   const hasInvalidId =
@@ -41,8 +43,8 @@ export default function PageBlocksPage() {
 
     try {
       const [loadedPage, loadedBlocks] = await Promise.all([
-        pageApi.getPage(targetPageId),
-        pageBlockApi.getBlocks(targetPageId),
+        pageApi.getPage(selectedSite!.code, targetPageId),
+        pageBlockApi.getBlocks(selectedSite!.code, targetPageId),
       ]);
       setPage(loadedPage);
       setBlocks(loadedBlocks);
@@ -54,10 +56,10 @@ export default function PageBlocksPage() {
   }
 
   useEffect(() => {
-    if (!hasInvalidId && pageId) {
+    if (!hasInvalidId && pageId && selectedSite) {
       void loadData(pageId);
     }
-  }, [hasInvalidId, pageId]);
+  }, [hasInvalidId, pageId, selectedSite?.code]);
 
   if (hasInvalidId) {
     return <Navigate replace to="/pages" />;
@@ -70,7 +72,8 @@ export default function PageBlocksPage() {
     setPendingDeleteId(block.id);
 
     try {
-      await pageBlockApi.deleteBlock(block.id);
+      if (!selectedSite) return;
+      await pageBlockApi.deleteBlock(selectedSite.code, validPageId, block.id);
       setBlocks((current) => current.filter((item) => item.id !== block.id));
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("pageBlockCouldNotBeDeleted")));

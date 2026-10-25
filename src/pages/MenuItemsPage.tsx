@@ -9,6 +9,7 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { Menu, MenuItem, MenuItemTargetType } from "../models/menu";
 import type { PageListItem } from "../models/page";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type MenuItemFormState = {
   pageId: string;
@@ -36,6 +37,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function MenuItemsPage() {
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const { id } = useParams();
   const menuId = id === undefined ? null : Number(id);
   const hasInvalidId =
@@ -72,9 +74,9 @@ export default function MenuItemsPage() {
 
     try {
       const [loadedMenu, loadedItems, loadedPages] = await Promise.all([
-        menuApi.getMenu(targetMenuId),
-        menuApi.getMenuItems(targetMenuId),
-        pageApi.getPages(),
+        menuApi.getMenu(selectedSite!.code, targetMenuId),
+        menuApi.getMenuItems(selectedSite!.code, targetMenuId),
+        pageApi.getPages(selectedSite!.code),
       ]);
       setMenu(loadedMenu);
       setItems(loadedItems);
@@ -87,10 +89,10 @@ export default function MenuItemsPage() {
   }
 
   useEffect(() => {
-    if (!hasInvalidId && menuId) {
+    if (!hasInvalidId && menuId && selectedSite) {
       void loadData(menuId);
     }
-  }, [hasInvalidId, menuId]);
+  }, [hasInvalidId, menuId, selectedSite?.code]);
 
   if (hasInvalidId) {
     return <Navigate replace to="/menus" />;
@@ -152,12 +154,14 @@ export default function MenuItemsPage() {
       };
 
       if (editedItemId) {
-        const updatedItem = await menuApi.updateMenuItem(editedItemId, input);
+        if (!selectedSite) return;
+        const updatedItem = await menuApi.updateMenuItem(selectedSite.code, validMenuId, editedItemId, input);
         setItems((current) =>
           current.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
         );
       } else {
-        const createdItem = await menuApi.createMenuItem(input);
+        if (!selectedSite) return;
+        const createdItem = await menuApi.createMenuItem(selectedSite.code, validMenuId, input);
         setItems((current) => [...current, createdItem]);
       }
 
@@ -173,7 +177,8 @@ export default function MenuItemsPage() {
     setError("");
 
     try {
-      await menuApi.deleteMenuItem(item.id);
+      if (!selectedSite) return;
+      await menuApi.deleteMenuItem(selectedSite.code, validMenuId, item.id);
       setItems((current) => current.filter((candidate) => candidate.id !== item.id));
 
       if (editedItemId === item.id) {

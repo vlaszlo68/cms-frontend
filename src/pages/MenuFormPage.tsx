@@ -6,6 +6,7 @@ import * as menuApi from "../api/menuApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import type { Menu } from "../models/menu";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type MenuFormState = Pick<Menu, "name" | "code" | "active">;
 
@@ -22,6 +23,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 export default function MenuFormPage() {
   const navigate = useNavigate();
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const { id } = useParams();
   const editedMenuId = id === undefined ? null : Number(id);
   const isEditMode = editedMenuId !== null;
@@ -43,7 +45,8 @@ export default function MenuFormPage() {
       setError("");
 
       try {
-        const menu = await menuApi.getMenu(menuId);
+        if (!selectedSite) return;
+        const menu = await menuApi.getMenu(selectedSite.code, menuId);
         setForm({ name: menu.name, code: menu.code, active: menu.active });
       } catch (caughtError) {
         setError(getErrorMessage(caughtError, t("menuCouldNotBeLoaded")));
@@ -53,7 +56,7 @@ export default function MenuFormPage() {
     }
 
     void loadMenu(editedMenuId);
-  }, [editedMenuId, t]);
+  }, [editedMenuId, selectedSite?.code, t]);
 
   if (hasInvalidId) {
     return <Navigate replace to="/menus" />;
@@ -76,9 +79,11 @@ export default function MenuFormPage() {
       };
 
       if (editedMenuId) {
-        await menuApi.updateMenu(editedMenuId, input);
+        if (!selectedSite) return;
+        await menuApi.updateMenu(selectedSite.code, editedMenuId, input);
       } else {
-        await menuApi.createMenu(input);
+        if (!selectedSite) return;
+        await menuApi.createMenu(selectedSite.code, input);
       }
 
       navigate("/menus");
