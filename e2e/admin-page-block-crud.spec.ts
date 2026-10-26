@@ -68,7 +68,7 @@ test.describe("admin page block CRUD", () => {
       await page.getByLabel("Config JSON").fill('{"headline":"Hello","theme":"primary"}');
 
       const createResponse = page.waitForResponse(
-        (response) => response.url().includes("/api/page-blocks") && response.request().method() === "POST",
+        (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "POST",
       );
       await page.getByRole("button", { name: "Create page block" }).click();
       const createdBlockResponse = await createResponse;
@@ -96,7 +96,7 @@ test.describe("admin page block CRUD", () => {
       await page.getByLabel("Config JSON").fill('{"headline":"Updated","theme":"secondary"}');
 
       const updateResponse = page.waitForResponse(
-        (response) => response.url().includes("/api/page-blocks/") && response.request().method() === "PUT",
+        (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "PUT",
       );
       await page.getByRole("button", { name: "Save changes" }).click();
       expect((await updateResponse).status()).toBeLessThan(400);
@@ -109,7 +109,7 @@ test.describe("admin page block CRUD", () => {
       await updatedBlockRow.getByRole("button", { name: "Delete" }).click();
       await expect(page.getByRole("heading", { name: "Confirm deletion" })).toBeVisible();
       const deleteResponse = page.waitForResponse(
-        (response) => response.url().includes("/api/page-blocks/") && response.request().method() === "DELETE",
+        (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "DELETE",
       );
       await page.getByRole("button", { name: "Delete" }).last().click();
       expect((await deleteResponse).status()).toBeLessThan(400);

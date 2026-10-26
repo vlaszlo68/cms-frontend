@@ -8,6 +8,7 @@ import MediaUploadDialog from "../components/media/MediaUploadDialog";
 import type { Media } from "../models/media";
 import type { DateFormat } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type SortDirection = "asc" | "desc";
 type MediaSortKey = "originalFileName" | "mimeType" | "fileSize" | "storageType" | "createdAt";
@@ -53,6 +54,7 @@ function formatFileSize(bytes: number) {
 
 export default function MediaPage() {
   const { dateFormat, language, tablePageSize, t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,7 +88,7 @@ export default function MediaPage() {
     setError("");
 
     try {
-      setMedia(await mediaApi.getMediaList());
+      setMedia(selectedSite ? await mediaApi.getMediaList(selectedSite.code) : []);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("mediaCouldNotBeLoaded")));
     } finally {
@@ -96,7 +98,7 @@ export default function MediaPage() {
 
   useEffect(() => {
     void loadMedia();
-  }, []);
+  }, [selectedSite?.code]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -145,7 +147,8 @@ export default function MediaPage() {
     setPendingDeleteMediaId(mediaItem.id);
 
     try {
-      await mediaApi.deleteMedia(mediaItem.id);
+      if (!selectedSite) return;
+      await mediaApi.deleteMedia(selectedSite.code, mediaItem.id);
       setMedia((current) => current.filter((item) => item.id !== mediaItem.id));
       setMediaToShowDetails((current) => (current?.id === mediaItem.id ? null : current));
       setMediaToPreview((current) => (current?.id === mediaItem.id ? null : current));
@@ -170,7 +173,7 @@ export default function MediaPage() {
   }
 
   function getContentUrl(mediaItem: Media) {
-    return `/api/media/${mediaItem.id}/content`;
+    return selectedSite ? mediaApi.getMediaContentUrl(selectedSite.code, mediaItem.id) : "#";
   }
 
   function renderPreviewContent(mediaItem: Media) {

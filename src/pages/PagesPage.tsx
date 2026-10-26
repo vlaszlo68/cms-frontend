@@ -7,6 +7,7 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { PageListItem } from "../models/page";
 import type { DateFormat } from "../preferences/PreferencesContext";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type SortDirection = "asc" | "desc";
 type PageSortKey =
@@ -48,6 +49,7 @@ function compareValues(left: string | boolean | null, right: string | boolean | 
 
 export default function PagesPage() {
   const { dateFormat, language, tablePageSize, t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const [pages, setPages] = useState<PageListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,7 +83,7 @@ export default function PagesPage() {
     setError("");
 
     try {
-      setPages(await pageApi.getPages());
+      setPages(selectedSite ? await pageApi.getPages(selectedSite.code) : []);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("pagesCouldNotBeLoaded")));
     } finally {
@@ -91,7 +93,7 @@ export default function PagesPage() {
 
   useEffect(() => {
     void loadPages();
-  }, []);
+  }, [selectedSite?.code]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -140,7 +142,8 @@ export default function PagesPage() {
     setPendingDeletePageId(page.id);
 
     try {
-      await pageApi.deletePage(page.id);
+      if (!selectedSite) return;
+      await pageApi.deletePage(selectedSite.code, page.id);
       setPages((current) => current.filter((item) => item.id !== page.id));
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("pageCouldNotBeDeleted")));

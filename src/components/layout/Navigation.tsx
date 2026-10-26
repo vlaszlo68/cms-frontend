@@ -9,6 +9,7 @@ import { usePreferences } from "../../preferences/PreferencesContext";
 const navigationItems = [
   { labelKey: "dashboard", to: "/" },
   { labelKey: "users", to: "/users" },
+  { labelKey: "sites", to: "/sites" },
   { labelKey: "pages", to: "/pages" },
   { labelKey: "menus", to: "/menus" },
   { labelKey: "templates", to: "/templates" },
@@ -25,7 +26,7 @@ export default function Navigation() {
   const { t } = usePreferences();
   const visibleItems = navigationItems.filter(
     (item) =>
-      !["/users", "/pages", "/menus", "/templates", "/media", "/site-settings"].includes(
+      !["/users", "/sites", "/pages", "/menus", "/templates", "/media", "/site-settings"].includes(
         item.to,
       ) || user?.role === "ADMIN",
   );

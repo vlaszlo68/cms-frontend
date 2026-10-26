@@ -6,6 +6,7 @@ import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { Menu } from "../models/menu";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
@@ -13,6 +14,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function MenusPage() {
   const { tablePageSize, t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const [menus, setMenus] = useState<Menu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,7 +36,7 @@ export default function MenusPage() {
     setError("");
 
     try {
-      setMenus(await menuApi.getMenus());
+      setMenus(selectedSite ? await menuApi.getMenus(selectedSite.code) : []);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("menusCouldNotBeLoaded")));
     } finally {
@@ -44,7 +46,7 @@ export default function MenusPage() {
 
   useEffect(() => {
     void loadMenus();
-  }, []);
+  }, [selectedSite?.code]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -59,7 +61,8 @@ export default function MenusPage() {
     setPendingDeleteId(menu.id);
 
     try {
-      await menuApi.deleteMenu(menu.id);
+      if (!selectedSite) return;
+      await menuApi.deleteMenu(selectedSite.code, menu.id);
       setMenus((current) => current.filter((item) => item.id !== menu.id));
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("menuCouldNotBeDeleted")));

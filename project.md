@@ -153,6 +153,9 @@ Current routes:
 - `/users`: ADMIN-only user list
 - `/users/new`: ADMIN-only user create form
 - `/users/:userId/edit`: ADMIN-only user edit form
+- `/sites`: ADMIN-only Site list
+- `/sites/new`: ADMIN-only Site create form
+- `/sites/:siteCode/edit`: ADMIN-only Site edit form
 - `/pages`: ADMIN-only page list
 - `/pages/new`: ADMIN-only page create form
 - `/pages/:id/edit`: ADMIN-only page edit form
@@ -171,7 +174,7 @@ Current routes:
 - `/settings`: protected appearance and preference settings
 - `*`: redirect to `/`
 
-Authenticated pages render inside `src/components/layout/AppLayout.tsx`. Navigation shows Dashboard and Settings for authenticated users, and Users, Pages, Menus, Templates, Media, and Site Settings only for ADMIN users.
+Authenticated pages render inside `src/components/layout/AppLayout.tsx`. Navigation shows Dashboard and Settings for authenticated users, and Users, Sites, Pages, Menus, Templates, Media, and Site Settings only for ADMIN users.
 
 ## Implemented Feature Slices
 
@@ -314,34 +317,39 @@ DELETE /api/users/{id}
 POST   /api/users/{id}/approve
 POST   /api/users/{id}/reject
 
-GET    /api/pages
-GET    /api/pages/{id}
-GET    /api/pages/slug/{slug}
-POST   /api/pages
-PUT    /api/pages/{id}
-DELETE /api/pages/{id}
+GET    /api/admin/sites
+POST   /api/admin/sites
+GET    /api/admin/sites/{siteCode}
+PUT    /api/admin/sites/{siteCode}
 
-GET    /api/pages/{pageId}/blocks
-GET    /api/page-blocks/{id}
-POST   /api/page-blocks
-PUT    /api/page-blocks/{id}
-DELETE /api/page-blocks/{id}
+GET    /api/admin/sites/{siteCode}/pages
+GET    /api/admin/sites/{siteCode}/pages/{pageId}
+GET    /api/admin/sites/{siteCode}/pages/slug/{slug}
+POST   /api/admin/sites/{siteCode}/pages
+PUT    /api/admin/sites/{siteCode}/pages/{pageId}
+DELETE /api/admin/sites/{siteCode}/pages/{pageId}
 
-GET    /api/media
-GET    /api/media/{id}
-GET    /api/media/{id}/content
-POST   /api/media
-DELETE /api/media/{id}
+GET    /api/admin/sites/{siteCode}/pages/{pageId}/blocks
+GET    /api/admin/sites/{siteCode}/pages/{pageId}/blocks/{blockId}
+POST   /api/admin/sites/{siteCode}/pages/{pageId}/blocks
+PUT    /api/admin/sites/{siteCode}/pages/{pageId}/blocks/{blockId}
+DELETE /api/admin/sites/{siteCode}/pages/{pageId}/blocks/{blockId}
 
-GET    /api/menus
-GET    /api/menus/{id}
-POST   /api/menus
-PUT    /api/menus/{id}
-DELETE /api/menus/{id}
-GET    /api/menus/{id}/items
-POST   /api/menu-items
-PUT    /api/menu-items/{id}
-DELETE /api/menu-items/{id}
+GET    /api/admin/sites/{siteCode}/media?activeOnly=false
+GET    /api/admin/sites/{siteCode}/media/{mediaId}
+GET    /api/admin/sites/{siteCode}/media/{mediaId}/content
+POST   /api/admin/sites/{siteCode}/media
+DELETE /api/admin/sites/{siteCode}/media/{mediaId}
+
+GET    /api/admin/sites/{siteCode}/menus
+GET    /api/admin/sites/{siteCode}/menus/{menuId}
+POST   /api/admin/sites/{siteCode}/menus
+PUT    /api/admin/sites/{siteCode}/menus/{menuId}
+DELETE /api/admin/sites/{siteCode}/menus/{menuId}
+GET    /api/admin/sites/{siteCode}/menus/{menuId}/items
+POST   /api/admin/sites/{siteCode}/menus/{menuId}/items
+PUT    /api/admin/sites/{siteCode}/menus/{menuId}/items/{itemId}
+DELETE /api/admin/sites/{siteCode}/menus/{menuId}/items/{itemId}
 
 GET    /api/templates
 GET    /api/templates/{id}
@@ -349,11 +357,34 @@ POST   /api/templates
 PUT    /api/templates/{id}
 DELETE /api/templates/{id}
 
-GET /api/site-settings
-PUT /api/site-settings
+GET /api/admin/sites/{siteCode}/site-settings
+PUT /api/admin/sites/{siteCode}/site-settings
 ```
 
 ## Backend Contracts Under Development
+
+## Multi-site Admin Foundation
+
+Admin Site selection is explicit frontend context, persisted by site `code` in
+`localStorage` and validated against `GET /api/admin/sites` after sign-in. Site-owned
+administration calls use `/api/admin/sites/{siteCode}/...`; Pages, PageBlocks,
+Menus, MenuItems, Site Settings, and Media are scoped this way. Templates and
+Users/Auth remain global. The selector remounts site-owned screens when its context
+changes so an edit from the prior Site cannot be submitted under the new Site.
+
+The real-backend Playwright flow in `e2e/multi-site-foundation.spec.ts` creates or
+reuses `e2e-feature05-a` and requires an existing `PLAYWRIGHT_SITE_B_CODE`. It checks
+duplicate `about` slugs and `MAIN` menus, nested PageBlock requests, cross-Site PAGE
+target filtering and stale Page edit isolation, independent settings and Media/logo
+choices, global Templates, Site create/edit including inactive state, and unauthenticated
+route protection. It restores settings and deletes test content; the Site remains because
+the admin API does not provide Site deletion.
+
+Run it against the deployed backend with:
+
+```powershell
+$env:PLAYWRIGHT_LOGIN_NAME="tester"; $env:PLAYWRIGHT_PASSWORD="pw"; $env:PLAYWRIGHT_SITE_B_CODE="e2e-multisite"; npm.cmd run test:e2e -- e2e/multi-site-foundation.spec.ts --workers=1
+```
 
 The Template, Site Settings, Page template, PageType, PageBlock, registration approval, CAPTCHA, and password-policy contracts should be reconciled against the backend as they settle.
 
@@ -366,9 +397,9 @@ Current frontend assumptions:
 - page template field: `templateCode`
 - page type field: `pageType`
 - template API: `/api/templates`
-- site settings API: `/api/site-settings`
-- PageBlock list: `/api/pages/{pageId}/blocks`
-- PageBlock item CRUD: `/api/page-blocks`
+- Site management API: `/api/admin/sites` and `/api/admin/sites/{siteCode}`
+- Site settings API: `/api/admin/sites/{siteCode}/site-settings`
+- PageBlock CRUD: `/api/admin/sites/{siteCode}/pages/{pageId}/blocks`
 - Menu item target fields: `targetType`, `pageId`, `targetUrl`
 
 Update the API wrappers and model files first when the backend contract changes, then adjust pages and this document.

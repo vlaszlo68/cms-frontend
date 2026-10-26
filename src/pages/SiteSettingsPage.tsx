@@ -6,6 +6,7 @@ import * as siteSettingsApi from "../api/siteSettingsApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import type { Media } from "../models/media";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { useSiteContext } from "../sites/SiteContext";
 
 type SiteSettingsFormState = {
   siteName: string;
@@ -37,6 +38,7 @@ function nullable(value: string) {
 
 export default function SiteSettingsPage() {
   const { t } = usePreferences();
+  const { selectedSite } = useSiteContext();
   const [form, setForm] = useState<SiteSettingsFormState>(emptyForm);
   const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,8 +53,8 @@ export default function SiteSettingsPage() {
 
       try {
         const [settings, loadedMedia] = await Promise.all([
-          siteSettingsApi.getSettings(),
-          mediaApi.getMediaList(),
+          siteSettingsApi.getSettings(selectedSite!.code),
+          mediaApi.getMediaList(selectedSite!.code),
         ]);
         setMedia(loadedMedia);
         setForm({
@@ -73,7 +75,7 @@ export default function SiteSettingsPage() {
     }
 
     void loadData();
-  }, [t]);
+  }, [selectedSite?.code, t]);
 
   function updateForm<K extends keyof SiteSettingsFormState>(
     key: K,
@@ -89,7 +91,8 @@ export default function SiteSettingsPage() {
     setIsSubmitting(true);
 
     try {
-      const savedSettings = await siteSettingsApi.saveSettings({
+      if (!selectedSite) return;
+      const savedSettings = await siteSettingsApi.saveSettings(selectedSite.code, {
         siteName: form.siteName.trim(),
         logoMediaId: form.logoMediaId ? Number(form.logoMediaId) : null,
         footerText: nullable(form.footerText),

@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router";
 import { useAuth } from "./auth/AuthContext";
 import AppLayout from "./components/layout/AppLayout";
 import { usePreferences } from "./preferences/PreferencesContext";
+import { useSiteContext } from "./sites/SiteContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import MediaPage from "./pages/MediaPage";
@@ -20,6 +21,8 @@ import TemplateFormPage from "./pages/TemplateFormPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import UserFormPage from "./pages/UserFormPage";
 import UsersPage from "./pages/UsersPage";
+import SitesPage from "./pages/SitesPage";
+import SiteFormPage from "./pages/SiteFormPage";
 
 /**
  * Guards routes that require an authenticated CMS session.
@@ -50,6 +53,14 @@ function AdminRoute({ children }: { children: ReactNode }) {
   }
 
   return children;
+}
+
+/** Re-mount site-owned screens on context changes so old async/form state cannot be reused. */
+function SiteOwnedRoute({ children }: { children: ReactNode }) {
+  const { isLoading, selectedSite } = useSiteContext();
+  if (isLoading) return <div className="page-status">Loading sites…</div>;
+  if (!selectedSite) return <Navigate to="/sites" replace />;
+  return <div key={selectedSite.code}>{children}</div>;
 }
 
 /**
@@ -106,6 +117,12 @@ export default function App() {
         }
       />
       <Route
+        path="/sites"
+        element={<ProtectedRoute><AdminRoute><AppLayout><SitesPage /></AppLayout></AdminRoute></ProtectedRoute>}
+      />
+      <Route path="/sites/new" element={<ProtectedRoute><AdminRoute><AppLayout><SiteFormPage /></AppLayout></AdminRoute></ProtectedRoute>} />
+      <Route path="/sites/:siteCode/edit" element={<ProtectedRoute><AdminRoute><AppLayout><SiteFormPage /></AppLayout></AdminRoute></ProtectedRoute>} />
+      <Route
         path="/users"
         element={
           <ProtectedRoute>
@@ -147,7 +164,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PagesPage />
+              <SiteOwnedRoute><PagesPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -159,7 +176,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <MediaPage />
+              <SiteOwnedRoute><MediaPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -171,7 +188,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <MenusPage />
+              <SiteOwnedRoute><MenusPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -183,7 +200,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <MenuFormPage />
+              <SiteOwnedRoute><MenuFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -195,7 +212,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <MenuFormPage />
+              <SiteOwnedRoute><MenuFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -207,7 +224,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <MenuItemsPage />
+              <SiteOwnedRoute><MenuItemsPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -219,7 +236,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PageFormPage />
+              <SiteOwnedRoute><PageFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -267,7 +284,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <SiteSettingsPage />
+              <SiteOwnedRoute><SiteSettingsPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -279,7 +296,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PageFormPage />
+              <SiteOwnedRoute><PageFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -291,7 +308,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PageBlocksPage />
+              <SiteOwnedRoute><PageBlocksPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -303,7 +320,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PageBlockFormPage />
+              <SiteOwnedRoute><PageBlockFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>
@@ -315,7 +332,7 @@ export default function App() {
           <ProtectedRoute>
             <AdminRoute>
               <AppLayout>
-                <PageBlockFormPage />
+              <SiteOwnedRoute><PageBlockFormPage /></SiteOwnedRoute>
               </AppLayout>
             </AdminRoute>
           </ProtectedRoute>

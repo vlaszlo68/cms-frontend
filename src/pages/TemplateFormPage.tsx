@@ -2,10 +2,8 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
-import * as mediaApi from "../api/mediaApi";
 import * as templateApi from "../api/templateApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
-import type { Media } from "../models/media";
 import { usePreferences } from "../preferences/PreferencesContext";
 
 type TemplateFormState = {
@@ -40,7 +38,6 @@ export default function TemplateFormPage() {
       !Number.isInteger(editedTemplateId) ||
       editedTemplateId <= 0);
   const [form, setForm] = useState<TemplateFormState>(emptyForm);
-  const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -51,11 +48,9 @@ export default function TemplateFormPage() {
       setError("");
 
       try {
-        const [loadedMedia, template] = await Promise.all([
-          mediaApi.getMediaList(),
-          editedTemplateId ? templateApi.getTemplate(editedTemplateId) : Promise.resolve(null),
-        ]);
-        setMedia(loadedMedia);
+        const template = editedTemplateId
+          ? await templateApi.getTemplate(editedTemplateId)
+          : null;
 
         if (template) {
           setForm({
@@ -172,19 +167,15 @@ export default function TemplateFormPage() {
             </label>
 
             <label>
-              {t("previewImage")}
-              <select
+              {t("previewImageMediaId")}
+              <input
+                min="1"
                 name="previewImageMediaId"
                 onChange={(event) => updateForm("previewImageMediaId", event.target.value)}
+                placeholder={t("noMediaSelected")}
+                type="number"
                 value={form.previewImageMediaId}
-              >
-                <option value="">{t("noMediaSelected")}</option>
-                {media.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.originalFileName}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
 
             <label className="checkbox-field">

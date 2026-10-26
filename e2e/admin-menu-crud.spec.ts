@@ -37,7 +37,7 @@ test.describe("admin menu CRUD", () => {
     await page.getByLabel("Code").fill(code);
 
     const createResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/menus") && response.request().method() === "POST",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Create menu" }).click();
     expect((await createResponsePromise).status()).toBeLessThan(400);
@@ -53,7 +53,7 @@ test.describe("admin menu CRUD", () => {
     const menuLoadResponses = await clickAndWaitForSettledResponses(
       page,
       () => createdRow.getByRole("link", { name: "Edit" }).click(),
-      (request) => request.method() === "GET" && request.url().includes("/api/menus/"),
+      (request) => request.method() === "GET" && request.url().includes("/api/admin/sites/"),
     );
     menuLoadResponses.forEach((response) => expect(response.status()).toBeLessThan(400));
 
@@ -67,7 +67,7 @@ test.describe("admin menu CRUD", () => {
     await page.getByLabel("Active").uncheck();
 
     const updateResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/menus/") && response.request().method() === "PUT",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "PUT",
     );
     await page.getByRole("button", { name: "Save changes" }).click();
     expect((await updateResponsePromise).status()).toBeLessThan(400);
@@ -85,7 +85,7 @@ test.describe("admin menu CRUD", () => {
     await expect(page.getByText(`Delete ${updatedName}?`)).toBeVisible();
 
     const deleteResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("/api/menus/") && response.request().method() === "DELETE",
+      (response) => response.url().includes("/api/admin/sites/") && response.request().method() === "DELETE",
     );
     await page.getByRole("button", { name: "Delete" }).last().click();
     expect((await deleteResponsePromise).status()).toBeLessThan(400);
