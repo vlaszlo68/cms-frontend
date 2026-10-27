@@ -4,14 +4,17 @@ import { Link, Navigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as menuApi from "../api/menuApi";
 import * as pageApi from "../api/pageApi";
+import * as applicationApi from "../api/applicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { Menu, MenuItem, MenuItemTargetType } from "../models/menu";
 import type { PageListItem } from "../models/page";
+import type { Application } from "../models/application";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
 
 type MenuItemFormState = {
+  applicationId: string;
   pageId: string;
   parentId: string;
   targetType: MenuItemTargetType;
@@ -22,6 +25,7 @@ type MenuItemFormState = {
 };
 
 const emptyForm: MenuItemFormState = {
+  applicationId: "",
   pageId: "",
   parentId: "",
   targetType: "PAGE",
@@ -45,6 +49,7 @@ export default function MenuItemsPage() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [pages, setPages] = useState<PageListItem[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [form, setForm] = useState<MenuItemFormState>(emptyForm);
   const [editedItemId, setEditedItemId] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
@@ -54,6 +59,10 @@ export default function MenuItemsPage() {
   const pageById = useMemo(
     () => new Map(pages.map((page) => [page.id, page])),
     [pages],
+  );
+  const applicationById = useMemo(
+    () => new Map(applications.map((application) => [application.id, application])),
+    [applications],
   );
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -73,14 +82,16 @@ export default function MenuItemsPage() {
     setError("");
 
     try {
-      const [loadedMenu, loadedItems, loadedPages] = await Promise.all([
+      const [loadedMenu, loadedItems, loadedPages, loadedApplications] = await Promise.all([
         menuApi.getMenu(selectedSite!.code, targetMenuId),
         menuApi.getMenuItems(selectedSite!.code, targetMenuId),
         pageApi.getPages(selectedSite!.code),
+        applicationApi.getApplications(selectedSite!.code),
       ]);
       setMenu(loadedMenu);
       setItems(loadedItems);
       setPages(loadedPages);
+      setApplications(loadedApplications);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("menuItemsCouldNotBeLoaded")));
     } finally {
@@ -115,6 +126,7 @@ export default function MenuItemsPage() {
   function startEdit(item: MenuItem) {
     setEditedItemId(item.id);
     setForm({
+      applicationId: item.applicationId == null ? "" : String(item.applicationId),
       pageId: item.pageId == null ? "" : String(item.pageId),
       parentId: item.parentId == null ? "" : String(item.parentId),
       targetType: item.targetType ?? "PAGE",
@@ -139,6 +151,11 @@ export default function MenuItemsPage() {
       return;
     }
 
+    if (form.targetType === "APPLICATION" && !form.applicationId) {
+      setError(t("applicationSelectionRequired"));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -146,6 +163,7 @@ export default function MenuItemsPage() {
         menuId: validMenuId,
         parentId: form.parentId ? Number(form.parentId) : null,
         pageId: form.targetType === "PAGE" ? Number(form.pageId) : null,
+        applicationId: form.targetType === "APPLICATION" ? Number(form.applicationId) : null,
         targetType: form.targetType,
         targetUrl: form.targetType === "URL" ? form.targetUrl.trim() : null,
         title: form.title.trim(),
@@ -245,6 +263,7 @@ export default function MenuItemsPage() {
                       ...current,
                       targetType,
                       pageId: targetType === "PAGE" ? current.pageId : "",
+                      applicationId: targetType === "APPLICATION" ? current.applicationId : "",
                       targetUrl: targetType === "URL" ? current.targetUrl : "",
                     }));
                   }}
@@ -253,6 +272,7 @@ export default function MenuItemsPage() {
                 >
                   <option value="PAGE">{t("page")}</option>
                   <option value="URL">{t("externalUrl")}</option>
+                  <option value="APPLICATION">{t("application")}</option>
                 </select>
               </label>
 
@@ -273,7 +293,7 @@ export default function MenuItemsPage() {
                     ))}
                   </select>
                 </label>
-              ) : (
+              ) : form.targetType === "URL" ? (
                 <label>
                   {t("targetUrl")}
                   <input
@@ -284,6 +304,30 @@ export default function MenuItemsPage() {
                     type="url"
                     value={form.targetUrl}
                   />
+                </label>
+              ) : (
+                <label>
+                  {t("application")}
+                  <select
+                    name="applicationId"
+                    onChange={(event) => updateForm("applicationId", event.target.value)}
+                    required
+                    value={form.applicationId}
+                  >
+                    <option value="">{t("selectApplication")}</option>
+                    {applications.map((application) => {
+                      const isCurrentInactive =
+                        application.id === Number(form.applicationId) && !application.active;
+                      return (
+                        <option disabled={!application.active && !isCurrentInactive} key={application.id} value={application.id}>
+                          {application.name} ({application.code}){application.active ? "" : ` — ${t("inactive")}`}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {form.applicationId && !applicationById.get(Number(form.applicationId)) && (
+                    <span className="field-error">{t("applicationUnavailable")}</span>
+                  )}
                 </label>
               )}
 
@@ -331,7 +375,9 @@ export default function MenuItemsPage() {
             <div className="form-actions">
               <button
                 disabled={
-                  isSubmitting || (form.targetType === "PAGE" && pages.length === 0)
+                  isSubmitting ||
+                  (form.targetType === "PAGE" && pages.length === 0) ||
+                  (form.targetType === "APPLICATION" && applications.filter((application) => application.active).length === 0 && !editedItemId)
                 }
                 type="submit"
               >
@@ -375,9 +421,11 @@ export default function MenuItemsPage() {
                       <td>
                         {item.targetType === "URL"
                           ? item.targetUrl ?? "-"
-                          : item.pageId == null
-                            ? "-"
-                            : pageById.get(item.pageId)?.title ?? `#${item.pageId}`}
+                          : item.targetType === "APPLICATION"
+                            ? item.applicationName ?? applicationById.get(item.applicationId ?? -1)?.name ?? item.applicationCode ?? `#${item.applicationId ?? "-"}`
+                            : item.pageId == null
+                              ? "-"
+                              : pageById.get(item.pageId)?.title ?? `#${item.pageId}`}
                       </td>
                       <td>
                         {item.parentId == null

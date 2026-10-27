@@ -7,13 +7,17 @@ export interface Menu {
 
 export type MenuItemTargetType =
   | "PAGE"
-  | "URL";
+  | "URL"
+  | "APPLICATION";
 
 export interface MenuItem {
   id: number;
   menuId: number;
   parentId?: number;
   pageId?: number;
+  applicationId?: number;
+  applicationCode?: string;
+  applicationName?: string;
   targetType: MenuItemTargetType;
   targetUrl?: string;
   title: string;
@@ -29,6 +33,7 @@ export type CreateMenuItemRequest = {
   menuId: number;
   parentId: number | null;
   pageId: number | null;
+  applicationId: number | null;
   targetType: MenuItemTargetType;
   targetUrl: string | null;
   title: string;

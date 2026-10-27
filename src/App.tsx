@@ -23,6 +23,8 @@ import UserFormPage from "./pages/UserFormPage";
 import UsersPage from "./pages/UsersPage";
 import SitesPage from "./pages/SitesPage";
 import SiteFormPage from "./pages/SiteFormPage";
+import ApplicationsPage from "./pages/ApplicationsPage";
+import ApplicationFormPage from "./pages/ApplicationFormPage";
 
 /**
  * Guards routes that require an authenticated CMS session.
@@ -157,6 +159,18 @@ export default function App() {
             </AdminRoute>
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/applications"
+        element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ApplicationsPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>}
+      />
+      <Route
+        path="/applications/new"
+        element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ApplicationFormPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>}
+      />
+      <Route
+        path="/applications/:id/edit"
+        element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ApplicationFormPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>}
       />
       <Route
         path="/pages"
