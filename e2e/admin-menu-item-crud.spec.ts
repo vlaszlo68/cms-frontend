@@ -56,6 +56,15 @@ test.describe("admin menu item CRUD", () => {
       await menuRow.getByRole("link", { name: "Menu items" }).click();
 
       await expect(page.getByRole("heading", { name: /Menu items/ })).toBeVisible();
+      await page.getByLabel("Target type").selectOption("APPLICATION");
+      await expect(page.locator('select[name="applicationId"]')).toBeVisible();
+      await expect(page.locator('select[name="pageId"]')).toHaveCount(0);
+      await expect(page.getByLabel("Target URL")).toHaveCount(0);
+
+      await page.getByLabel("Target type").selectOption("URL");
+      await expect(page.locator('select[name="applicationId"]')).toHaveCount(0);
+      await expect(page.locator('select[name="pageId"]')).toHaveCount(0);
+      await expect(page.getByLabel("Target URL")).toBeVisible();
       await page.getByLabel("Target type").selectOption("URL");
       await page.getByLabel("Title").fill(`E2E URL Validation ${suffix}`);
       await page.getByRole("button", { name: "Create menu item" }).click();

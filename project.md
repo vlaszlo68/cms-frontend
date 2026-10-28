@@ -162,6 +162,9 @@ Current routes:
 - `/pages/:id/blocks`: ADMIN-only PageBlock list
 - `/pages/:id/blocks/new`: ADMIN-only PageBlock create form
 - `/pages/:id/blocks/:blockId/edit`: ADMIN-only PageBlock edit form
+- `/applications`: ADMIN-only Site-scoped Application list
+- `/applications/new`: ADMIN-only Application create form
+- `/applications/:id/edit`: ADMIN-only Application edit form
 - `/media`: ADMIN-only media library
 - `/menus`: ADMIN-only menu list
 - `/menus/new`: ADMIN-only menu create form
@@ -249,12 +252,23 @@ Files:
 Menu items use:
 
 ```ts
-type MenuItemTargetType = "PAGE" | "URL";
+type MenuItemTargetType = "PAGE" | "URL" | "APPLICATION";
 ```
 
-The editor supports parent items, ordering, visibility, Page targets, and URL target form state. Requests include `targetType` and clear the inactive target field with `null`.
+The editor supports parent items, ordering, visibility, Page targets, URL target form state, and Site-scoped Application targets. Requests include `targetType` and clear both inactive target fields with `null`. APPLICATION requests use `applicationId`, never an application code or function identifier. Inactive existing Applications remain identifiable while editing, but are unavailable for a new target.
 
 Known backend compatibility note: frontend models and UI support URL targets, but backend service support must be verified before URL menu items are considered complete end to end.
+
+### Applications
+
+Files:
+
+- `src/models/application.ts`
+- `src/api/applicationApi.ts`
+- `src/pages/ApplicationsPage.tsx`
+- `src/pages/ApplicationFormPage.tsx`
+
+Applications are Site-owned configuration records with `id`, `code`, `name`, and `active`. They intentionally expose no function implementation, endpoint, credential, arbitrary JSON, or frontend-component configuration. The deployed backend validates `code` against its source-code registry; no registry-list endpoint exists, so the admin form accepts the stable code and displays the backend validation message when unsupported.
 
 ### Templates And Site Settings
 
@@ -351,6 +365,11 @@ POST   /api/admin/sites/{siteCode}/menus/{menuId}/items
 PUT    /api/admin/sites/{siteCode}/menus/{menuId}/items/{itemId}
 DELETE /api/admin/sites/{siteCode}/menus/{menuId}/items/{itemId}
 
+GET    /api/admin/sites/{siteCode}/applications
+POST   /api/admin/sites/{siteCode}/applications
+GET    /api/admin/sites/{siteCode}/applications/{applicationId}
+PUT    /api/admin/sites/{siteCode}/applications/{applicationId}
+
 GET    /api/templates
 GET    /api/templates/{id}
 POST   /api/templates
@@ -400,6 +419,7 @@ Current frontend assumptions:
 - Site management API: `/api/admin/sites` and `/api/admin/sites/{siteCode}`
 - Site settings API: `/api/admin/sites/{siteCode}/site-settings`
 - PageBlock CRUD: `/api/admin/sites/{siteCode}/pages/{pageId}/blocks`
-- Menu item target fields: `targetType`, `pageId`, `targetUrl`
+- Menu item target fields: `targetType`, `pageId`, `targetUrl`, `applicationId`
+- Application fields: `code`, `name`, `active`
 
 Update the API wrappers and model files first when the backend contract changes, then adjust pages and this document.
