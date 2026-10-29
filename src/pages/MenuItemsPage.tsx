@@ -7,6 +7,7 @@ import * as pageApi from "../api/pageApi";
 import * as applicationApi from "../api/applicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Menu, MenuItem, MenuItemTargetType } from "../models/menu";
 import type { PageListItem } from "../models/page";
 import type { Application } from "../models/application";
@@ -68,14 +69,19 @@ export default function MenuItemsPage() {
     () => new Map(items.map((item) => [item.id, item])),
     [items],
   );
-  const sortedItems = useMemo(
-    () =>
-      [...items].sort(
-        (left, right) =>
-          left.sortOrder - right.sortOrder || left.title.localeCompare(right.title),
-      ),
-    [items],
+  const sortableItems = useMemo(
+    () => items.map((item) => ({
+      ...item,
+      parentLabel: item.parentId == null ? "" : itemById.get(item.parentId)?.title ?? `#${item.parentId}`,
+      targetLabel: item.targetType === "URL"
+        ? item.targetUrl ?? ""
+        : item.targetType === "APPLICATION"
+          ? item.applicationName ?? applicationById.get(item.applicationId ?? -1)?.name ?? item.applicationCode ?? `#${item.applicationId ?? ""}`
+          : item.pageId == null ? "" : pageById.get(item.pageId)?.title ?? `#${item.pageId}`,
+    })),
+    [applicationById, itemById, items, pageById],
   );
+  const { getAriaSort, sort, sortedItems, toggleSort } = useTableSort(sortableItems);
 
   async function loadData(targetMenuId: number) {
     setIsLoading(true);
@@ -404,12 +410,12 @@ export default function MenuItemsPage() {
               <table className="users-table users-table--menu-items">
                 <thead>
                   <tr>
-                    <th>{t("title")}</th>
-                    <th>{t("targetType")}</th>
-                    <th>{t("target")}</th>
-                    <th>{t("parent")}</th>
-                    <th>{t("sortOrder")}</th>
-                    <th>{t("visible")}</th>
+                    <th aria-sort={getAriaSort("title")}><SortableHeader direction={sort?.key === "title" ? sort.direction : null} label={t("title")} onClick={() => toggleSort("title")} /></th>
+                    <th aria-sort={getAriaSort("targetType")}><SortableHeader direction={sort?.key === "targetType" ? sort.direction : null} label={t("targetType")} onClick={() => toggleSort("targetType")} /></th>
+                    <th aria-sort={getAriaSort("targetLabel")}><SortableHeader direction={sort?.key === "targetLabel" ? sort.direction : null} label={t("target")} onClick={() => toggleSort("targetLabel")} /></th>
+                    <th aria-sort={getAriaSort("parentLabel")}><SortableHeader direction={sort?.key === "parentLabel" ? sort.direction : null} label={t("parent")} onClick={() => toggleSort("parentLabel")} /></th>
+                    <th aria-sort={getAriaSort("sortOrder")}><SortableHeader direction={sort?.key === "sortOrder" ? sort.direction : null} label={t("sortOrder")} onClick={() => toggleSort("sortOrder")} /></th>
+                    <th aria-sort={getAriaSort("visible")}><SortableHeader direction={sort?.key === "visible" ? sort.direction : null} label={t("visible")} onClick={() => toggleSort("visible")} /></th>
                     <th>{t("actions")}</th>
                   </tr>
                 </thead>

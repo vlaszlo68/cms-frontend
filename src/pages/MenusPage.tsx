@@ -4,6 +4,7 @@ import { ApiError } from "../api/httpClient";
 import * as menuApi from "../api/menuApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Menu } from "../models/menu";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
@@ -21,10 +22,7 @@ export default function MenusPage() {
   const [menuToDelete, setMenuToDelete] = useState<Menu | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const sortedMenus = useMemo(
-    () => [...menus].sort((left, right) => left.name.localeCompare(right.name)),
-    [menus],
-  );
+  const { getAriaSort, sort, sortedItems: sortedMenus, toggleSort } = useTableSort(menus);
   const totalPages = Math.max(1, Math.ceil(sortedMenus.length / tablePageSize));
   const paginatedMenus = useMemo(
     () => sortedMenus.slice((currentPage - 1) * tablePageSize, currentPage * tablePageSize),
@@ -50,7 +48,7 @@ export default function MenusPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [tablePageSize]);
+  }, [sort, tablePageSize]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -101,9 +99,9 @@ export default function MenusPage() {
             <table className="users-table users-table--menus">
               <thead>
                 <tr>
-                  <th>{t("name")}</th>
-                  <th>{t("code")}</th>
-                  <th>{t("active")}</th>
+                  <th aria-sort={getAriaSort("name")}><SortableHeader direction={sort?.key === "name" ? sort.direction : null} label={t("name")} onClick={() => toggleSort("name")} /></th>
+                  <th aria-sort={getAriaSort("code")}><SortableHeader direction={sort?.key === "code" ? sort.direction : null} label={t("code")} onClick={() => toggleSort("code")} /></th>
+                  <th aria-sort={getAriaSort("active")}><SortableHeader direction={sort?.key === "active" ? sort.direction : null} label={t("active")} onClick={() => toggleSort("active")} /></th>
                   <th>{t("actions")}</th>
                 </tr>
               </thead>
