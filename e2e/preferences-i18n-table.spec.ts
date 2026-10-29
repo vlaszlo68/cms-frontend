@@ -61,6 +61,12 @@ test.describe("preferences, i18n, and table behavior", () => {
     await loginNameHeader.getByRole("button", { name: /Login name/ }).click();
     await expect(loginNameHeader).toHaveAttribute("aria-sort", "descending");
 
+    await openAdminNavigationPage(page, "Applications", "/applications");
+    const applicationNameHeader = page.getByRole("columnheader", { name: /Name/ });
+    await expect(applicationNameHeader).toHaveAttribute("aria-sort", "none");
+    await applicationNameHeader.getByRole("button", { name: /Name/ }).click();
+    await expect(applicationNameHeader).toHaveAttribute("aria-sort", "ascending");
+
     await page.goto("/settings");
     await page.getByLabel("Design").selectOption("original");
     await page.getByLabel("Colour theme").selectOption("classic");

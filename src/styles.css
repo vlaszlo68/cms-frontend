@@ -1297,13 +1297,15 @@ button:disabled {
 .users-table--media :is(th, td):nth-child(4),
 .users-table--media :is(th, td):nth-child(5) { white-space: nowrap; }
 
-.users-table--menu-items :is(th, td):nth-child(1) { width: 16%; }
-.users-table--menu-items :is(th, td):nth-child(2) { width: 13%; white-space: nowrap; }
-.users-table--menu-items :is(th, td):nth-child(3) { width: 23%; }
-.users-table--menu-items :is(th, td):nth-child(4) { width: 15%; }
-.users-table--menu-items :is(th, td):nth-child(5) { width: 12%; white-space: nowrap; }
-.users-table--menu-items :is(th, td):nth-child(6) { width: 11%; white-space: nowrap; }
-.users-table--menu-items :is(th, td):nth-child(7) { width: 10%; }
+/* Reserve room for the paired row actions so a fixed-layout table stays
+   within its container and the header remains aligned with its rows. */
+.users-table--menu-items :is(th, td):nth-child(1) { width: 15%; }
+.users-table--menu-items :is(th, td):nth-child(2) { width: 12%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(3) { width: 21%; }
+.users-table--menu-items :is(th, td):nth-child(4) { width: 14%; }
+.users-table--menu-items :is(th, td):nth-child(5) { width: 11%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(6) { width: 10%; white-space: nowrap; }
+.users-table--menu-items :is(th, td):nth-child(7) { width: 17%; }
 .users-table--templates :is(th, td):nth-child(4) { white-space: nowrap; }
 
 /* Dates include time and can use the full localized format. */

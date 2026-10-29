@@ -4,6 +4,7 @@ import { ApiError } from "../api/httpClient";
 import * as templateApi from "../api/templateApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Template } from "../models/template";
 import { usePreferences } from "../preferences/PreferencesContext";
 
@@ -19,10 +20,7 @@ export default function TemplatesPage() {
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const sortedTemplates = useMemo(
-    () => [...templates].sort((left, right) => left.code.localeCompare(right.code)),
-    [templates],
-  );
+  const { getAriaSort, sort, sortedItems: sortedTemplates, toggleSort } = useTableSort(templates);
   const totalPages = Math.max(1, Math.ceil(sortedTemplates.length / tablePageSize));
   const paginatedTemplates = useMemo(
     () =>
@@ -52,7 +50,7 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [tablePageSize]);
+  }, [sort, tablePageSize]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -102,10 +100,10 @@ export default function TemplatesPage() {
             <table className="users-table users-table--templates">
               <thead>
                 <tr>
-                  <th>{t("code")}</th>
-                  <th>{t("name")}</th>
-                  <th>{t("description")}</th>
-                  <th>{t("active")}</th>
+                  <th aria-sort={getAriaSort("code")}><SortableHeader direction={sort?.key === "code" ? sort.direction : null} label={t("code")} onClick={() => toggleSort("code")} /></th>
+                  <th aria-sort={getAriaSort("name")}><SortableHeader direction={sort?.key === "name" ? sort.direction : null} label={t("name")} onClick={() => toggleSort("name")} /></th>
+                  <th aria-sort={getAriaSort("description")}><SortableHeader direction={sort?.key === "description" ? sort.direction : null} label={t("description")} onClick={() => toggleSort("description")} /></th>
+                  <th aria-sort={getAriaSort("active")}><SortableHeader direction={sort?.key === "active" ? sort.direction : null} label={t("active")} onClick={() => toggleSort("active")} /></th>
                   <th>{t("actions")}</th>
                 </tr>
               </thead>

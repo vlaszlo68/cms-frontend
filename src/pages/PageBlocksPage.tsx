@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as pageApi from "../api/pageApi";
 import * as pageBlockApi from "../api/pageBlockApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Page } from "../models/page";
 import type { PageBlock } from "../models/pageBlock";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -27,15 +28,7 @@ export default function PageBlocksPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const sortedBlocks = useMemo(
-    () =>
-      [...blocks].sort(
-        (left, right) =>
-          left.sortOrder - right.sortOrder ||
-          (left.title ?? "").localeCompare(right.title ?? ""),
-      ),
-    [blocks],
-  );
+  const { getAriaSort, sort, sortedItems: sortedBlocks, toggleSort } = useTableSort(blocks);
 
   async function loadData(targetPageId: number) {
     setIsLoading(true);
@@ -121,10 +114,10 @@ export default function PageBlocksPage() {
           <table className="users-table users-table--page-blocks">
             <thead>
               <tr>
-                <th>{t("title")}</th>
-                <th>{t("blockType")}</th>
-                <th>{t("sortOrder")}</th>
-                <th>{t("visible")}</th>
+                <th aria-sort={getAriaSort("title")}><SortableHeader direction={sort?.key === "title" ? sort.direction : null} label={t("title")} onClick={() => toggleSort("title")} /></th>
+                <th aria-sort={getAriaSort("blockType")}><SortableHeader direction={sort?.key === "blockType" ? sort.direction : null} label={t("blockType")} onClick={() => toggleSort("blockType")} /></th>
+                <th aria-sort={getAriaSort("sortOrder")}><SortableHeader direction={sort?.key === "sortOrder" ? sort.direction : null} label={t("sortOrder")} onClick={() => toggleSort("sortOrder")} /></th>
+                <th aria-sort={getAriaSort("visible")}><SortableHeader direction={sort?.key === "visible" ? sort.direction : null} label={t("visible")} onClick={() => toggleSort("visible")} /></th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>

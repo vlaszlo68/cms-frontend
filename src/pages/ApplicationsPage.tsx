@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as applicationApi from "../api/applicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
+import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Application } from "../models/application";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
@@ -17,6 +18,7 @@ export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const { getAriaSort, sort, sortedItems: sortedApplications, toggleSort } = useTableSort(applications);
 
   async function loadApplications() {
     setIsLoading(true);
@@ -56,15 +58,20 @@ export default function ApplicationsPage() {
       <div className="users-table-wrap">
         {isLoading ? (
           <div className="inline-status">{t("loadingApplications")}</div>
-        ) : applications.length === 0 ? (
+        ) : sortedApplications.length === 0 ? (
           <div className="inline-status">{t("noApplications")}</div>
         ) : (
           <table className="users-table">
             <thead>
-              <tr><th>{t("name")}</th><th>{t("code")}</th><th>{t("active")}</th><th>{t("actions")}</th></tr>
+              <tr>
+                <th aria-sort={getAriaSort("name")}><SortableHeader direction={sort?.key === "name" ? sort.direction : null} label={t("name")} onClick={() => toggleSort("name")} /></th>
+                <th aria-sort={getAriaSort("code")}><SortableHeader direction={sort?.key === "code" ? sort.direction : null} label={t("code")} onClick={() => toggleSort("code")} /></th>
+                <th aria-sort={getAriaSort("active")}><SortableHeader direction={sort?.key === "active" ? sort.direction : null} label={t("active")} onClick={() => toggleSort("active")} /></th>
+                <th>{t("actions")}</th>
+              </tr>
             </thead>
             <tbody>
-              {applications.map((application) => (
+              {sortedApplications.map((application) => (
                 <tr key={application.id}>
                   <td>{application.name}</td>
                   <td>{application.code}</td>

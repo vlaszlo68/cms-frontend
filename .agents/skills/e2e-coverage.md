@@ -39,7 +39,7 @@ The backend must be running. Tests that touch `/api` use the Vite proxy and rela
 | Site settings | `e2e/admin-media-template-settings.spec.ts` | Snapshots singleton settings, saves changed identity/contact/social fields, verifies success, and restores the original singleton values. | Yes, singleton update restored in-test |
 | Multi-site context | `e2e/multi-site-foundation.spec.ts` | With two pre-provisioned Sites, switches the selector across Pages, Menus, Media, and Site Settings; verifies nested Site requests and a Page-form switch returns safely to the Page list. | No |
 | Preferences and i18n | `e2e/preferences-i18n-table.spec.ts` | Persists the design and colour-palette preferences, reloads to verify storage-backed state, switches to Hungarian and back to English, and restores baseline preferences. | No backend mutation |
-| Table behavior | `e2e/preferences-i18n-table.spec.ts` | Verifies user-list sortable header `aria-sort` transitions for login name. | No |
+| Table behavior | `e2e/preferences-i18n-table.spec.ts` | Verifies reusable sortable-header `aria-sort` transitions on Users and Applications. | No |
 | Error handling | `e2e/api-error-handling.spec.ts` | Verifies visible backend envelope error messages and fallback messages when an API request fails at the network layer. | No |
 
 ## Known Coverage Gaps
