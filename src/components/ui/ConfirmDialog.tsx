@@ -4,6 +4,7 @@ import DraggableDialog from "./DraggableDialog";
 type ConfirmDialogProps = {
   cancelLabel: string;
   confirmLabel: string;
+  confirmDisabled?: boolean;
   isDanger?: boolean;
   message: string;
   onCancel: () => void;
@@ -14,6 +15,7 @@ type ConfirmDialogProps = {
 export default function ConfirmDialog({
   cancelLabel,
   confirmLabel,
+  confirmDisabled = false,
   isDanger = false,
   message,
   onCancel,
@@ -30,7 +32,7 @@ export default function ConfirmDialog({
           <button className="secondary-button" onClick={onCancel} type="button">
             <ButtonLabel icon="cancel">{cancelLabel}</ButtonLabel>
           </button>
-          <button className={isDanger ? "danger-button" : undefined} onClick={onConfirm} type="button">
+          <button className={isDanger ? "danger-button" : undefined} disabled={confirmDisabled} onClick={onConfirm} type="button">
             <ButtonLabel icon="deactivate">{confirmLabel}</ButtonLabel>
           </button>
         </div>

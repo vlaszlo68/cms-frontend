@@ -263,8 +263,8 @@ Known backend compatibility note: frontend models and UI support URL targets, bu
 
 Files:
 
-- `src/models/application.ts`
-- `src/api/applicationApi.ts`
+- `src/models/siteApplication.ts`
+- `src/api/siteApplicationApi.ts`
 - `src/pages/ApplicationsPage.tsx`
 - `src/pages/ApplicationFormPage.tsx`
 
@@ -396,8 +396,11 @@ reuses `e2e-feature05-a` and requires an existing `PLAYWRIGHT_SITE_B_CODE`. It c
 duplicate `about` slugs and `MAIN` menus, nested PageBlock requests, cross-Site PAGE
 target filtering and stale Page edit isolation, independent settings and Media/logo
 choices, global Templates, Site create/edit including inactive state, and unauthenticated
-route protection. It restores settings and deletes test content; the Site remains because
-the admin API does not provide Site deletion.
+route protection. It restores settings and deletes test content.
+
+`e2e/admin-site-management.spec.ts` creates a disposable Site, verifies backend theme
+selection, authoritative usage blockers and `409 SITE_IN_USE` handling, then deletes the
+empty selected Site.
 
 Run it against the deployed backend with:
 
@@ -420,6 +423,6 @@ Current frontend assumptions:
 - Site settings API: `/api/admin/sites/{siteCode}/site-settings`
 - PageBlock CRUD: `/api/admin/sites/{siteCode}/pages/{pageId}/blocks`
 - Menu item target fields: `targetType`, `pageId`, `targetUrl`, `applicationId`
-- Application fields: `code`, `name`, `active`
+- SiteApplication fields: `id`, `code`, `name`, `active`; create/update payloads: `code`, `name`, `active`
 
 Update the API wrappers and model files first when the backend contract changes, then adjust pages and this document.

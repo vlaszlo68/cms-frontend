@@ -2,13 +2,13 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
-import * as applicationApi from "../api/applicationApi";
+import * as siteApplicationApi from "../api/siteApplicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
-import type { CreateApplicationRequest } from "../models/application";
+import type { CreateSiteApplicationRequest } from "../models/siteApplication";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
 
-const emptyForm: CreateApplicationRequest = { code: "", name: "", active: true };
+const emptyForm: CreateSiteApplicationRequest = { code: "", name: "", active: true };
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
@@ -23,7 +23,7 @@ export default function ApplicationFormPage() {
   const isEditMode = applicationId !== null;
   const hasInvalidId =
     id !== undefined && (applicationId === null || !Number.isInteger(applicationId) || applicationId <= 0);
-  const [form, setForm] = useState<CreateApplicationRequest>(emptyForm);
+  const [form, setForm] = useState<CreateSiteApplicationRequest>(emptyForm);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +37,7 @@ export default function ApplicationFormPage() {
       setIsLoading(true);
       setError("");
       try {
-        const application = await applicationApi.getApplication(siteCode, targetApplicationId);
+        const application = await siteApplicationApi.getSiteApplication(siteCode, targetApplicationId);
         setForm({ code: application.code, name: application.name, active: application.active });
       } catch (caughtError) {
         setError(getErrorMessage(caughtError, t("applicationCouldNotBeLoaded")));
@@ -51,7 +51,7 @@ export default function ApplicationFormPage() {
 
   if (hasInvalidId) return <Navigate replace to="/applications" />;
 
-  function updateForm<K extends keyof CreateApplicationRequest>(key: K, value: CreateApplicationRequest[K]) {
+  function updateForm<K extends keyof CreateSiteApplicationRequest>(key: K, value: CreateSiteApplicationRequest[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
@@ -62,8 +62,8 @@ export default function ApplicationFormPage() {
     setIsSubmitting(true);
     try {
       const input = { code: form.code.trim(), name: form.name.trim(), active: form.active };
-      if (applicationId) await applicationApi.updateApplication(selectedSite.code, applicationId, input);
-      else await applicationApi.createApplication(selectedSite.code, input);
+      if (applicationId) await siteApplicationApi.updateSiteApplication(selectedSite.code, applicationId, input);
+      else await siteApplicationApi.createSiteApplication(selectedSite.code, input);
       navigate("/applications");
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("applicationCouldNotBeSaved")));

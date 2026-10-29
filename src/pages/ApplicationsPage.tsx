@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { ApiError } from "../api/httpClient";
-import * as applicationApi from "../api/applicationApi";
+import * as siteApplicationApi from "../api/siteApplicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
-import type { Application } from "../models/application";
+import type { SiteApplication } from "../models/siteApplication";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
 
@@ -15,7 +15,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 export default function ApplicationsPage() {
   const { t } = usePreferences();
   const { selectedSite } = useSiteContext();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<SiteApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const { getAriaSort, sort, sortedItems: sortedApplications, toggleSort } = useTableSort(applications);
@@ -24,7 +24,7 @@ export default function ApplicationsPage() {
     setIsLoading(true);
     setError("");
     try {
-      setApplications(selectedSite ? await applicationApi.getApplications(selectedSite.code) : []);
+      setApplications(selectedSite ? await siteApplicationApi.getSiteApplications(selectedSite.code) : []);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, t("applicationsCouldNotBeLoaded")));
     } finally {
