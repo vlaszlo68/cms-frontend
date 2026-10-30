@@ -4,13 +4,13 @@ import { Link, Navigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as menuApi from "../api/menuApi";
 import * as pageApi from "../api/pageApi";
-import * as applicationApi from "../api/applicationApi";
+import * as siteApplicationApi from "../api/siteApplicationApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import SortableHeader, { useTableSort } from "../components/ui/SortableHeader";
 import type { Menu, MenuItem, MenuItemTargetType } from "../models/menu";
 import type { PageListItem } from "../models/page";
-import type { Application } from "../models/application";
+import type { SiteApplication } from "../models/siteApplication";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
 
@@ -50,7 +50,7 @@ export default function MenuItemsPage() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [pages, setPages] = useState<PageListItem[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<SiteApplication[]>([]);
   const [form, setForm] = useState<MenuItemFormState>(emptyForm);
   const [editedItemId, setEditedItemId] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
@@ -92,7 +92,7 @@ export default function MenuItemsPage() {
         menuApi.getMenu(selectedSite!.code, targetMenuId),
         menuApi.getMenuItems(selectedSite!.code, targetMenuId),
         pageApi.getPages(selectedSite!.code),
-        applicationApi.getApplications(selectedSite!.code),
+        siteApplicationApi.getSiteApplications(selectedSite!.code),
       ]);
       setMenu(loadedMenu);
       setItems(loadedItems);

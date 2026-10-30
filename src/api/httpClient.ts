@@ -9,6 +9,7 @@ export class ApiError extends Error {
   body: unknown;
   code?: string;
   validationErrors?: string[];
+  details?: unknown;
 
   constructor(status: number, body: unknown, fallbackMessage: string, code?: string) {
     super(getErrorMessage(body, fallbackMessage));
@@ -17,6 +18,7 @@ export class ApiError extends Error {
     this.body = body;
     this.code = code;
     this.validationErrors = isApiErrorBody(body) ? body.validationErrors : undefined;
+    this.details = isApiErrorBody(body) ? body.details : undefined;
   }
 }
 
