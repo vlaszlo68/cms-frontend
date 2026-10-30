@@ -268,7 +268,7 @@ Files:
 - `src/pages/ApplicationsPage.tsx`
 - `src/pages/ApplicationFormPage.tsx`
 
-Applications are Site-owned configuration records with `id`, `code`, `name`, and `active`. They intentionally expose no function implementation, endpoint, credential, arbitrary JSON, or frontend-component configuration. The deployed backend validates `code` against its source-code registry; no registry-list endpoint exists, so the admin form accepts the stable code and displays the backend validation message when unsupported.
+Applications are Site-owned configuration records with `id`, `code`, `name`, and `active`. They intentionally expose no function implementation, endpoint, credential, arbitrary JSON, or frontend-component configuration. The deployed backend validates `code` against its source-code registry; no registry-list endpoint exists, so the admin form accepts the stable code and displays the backend validation message when unsupported. The focused Application E2E uses disposable Sites to verify a supported `WEATHER_EXPLORER` configuration, APPLICATION MenuItem persistence, Site isolation, and disable state without mutating `default`.
 
 ### Templates And Site Settings
 

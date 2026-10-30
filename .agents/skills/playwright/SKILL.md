@@ -119,6 +119,7 @@ The detailed coverage matrix and known gaps live in `../e2e-coverage.md`.
 - `e2e/admin-page-block-crud.spec.ts`: opens a `BLOCK` page edit form, then creates, edits, and deletes a PageBlock on it.
 - `e2e/admin-menu-crud.spec.ts`: creates, edits, and deletes a menu.
 - `e2e/admin-menu-item-crud.spec.ts`: validates URL target input and creates, edits, and deletes PAGE-target menu items.
+- `e2e/admin-application-platform.spec.ts`: verifies unsupported application feedback and the disposable two-Site `WEATHER_EXPLORER` SiteApplication/APPLICATION-menu flow without mutating `default`.
 - `e2e/admin-media-template-settings.spec.ts`: covers media upload/details/preview/delete, template CRUD with preview image, and site settings save/restore.
 - `e2e/preferences-i18n-table.spec.ts`: covers persisted preferences, Hungarian language switching, and table sort controls.
 - `e2e/api-error-handling.spec.ts`: covers visible backend envelope errors and network fallback errors.
