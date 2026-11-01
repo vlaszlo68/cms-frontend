@@ -71,7 +71,7 @@ test.describe("admin media, template, and site settings flows", () => {
       await page.getByRole("button", { name: "Preview" }).click();
       await expect(page.getByText("Preview is not available for this file type.")).toBeVisible();
       const contentHref = await page.getByRole("link", { name: "Open content" }).last().getAttribute("href");
-      mediaId = idFromPath(contentHref ?? "", /\/api\/media\/(\d+)\/content/);
+      mediaId = idFromPath(contentHref ?? "", /\/api\/admin\/sites\/[^/]+\/media\/(\d+)\/content/);
       await page.getByRole("button", { name: "Cancel" }).last().click();
       await page.getByRole("button", { name: "Cancel" }).last().click();
 
@@ -84,7 +84,7 @@ test.describe("admin media, template, and site settings flows", () => {
       await expectNoFormErrors(page);
     } finally {
       if (mediaId !== null) {
-        await deleteIfPresent(page, `/api/media/${mediaId}`);
+        await deleteIfPresent(page, `/api/admin/sites/default/media/${mediaId}`);
       }
     }
   });
@@ -117,7 +117,7 @@ test.describe("admin media, template, and site settings flows", () => {
       await mediaRow.getByRole("button", { name: "Details" }).click();
       await page.getByRole("button", { name: "Preview" }).click();
       const contentHref = await page.getByRole("link", { name: "Open content" }).last().getAttribute("href");
-      mediaId = idFromPath(contentHref ?? "", /\/api\/media\/(\d+)\/content/);
+      mediaId = idFromPath(contentHref ?? "", /\/api\/admin\/sites\/[^/]+\/media\/(\d+)\/content/);
       await page.getByRole("button", { name: "Cancel" }).last().click();
       await page.getByRole("button", { name: "Cancel" }).last().click();
 
@@ -126,7 +126,7 @@ test.describe("admin media, template, and site settings flows", () => {
       await page.getByLabel("Code").fill(code);
       await page.getByLabel("Name").fill(name);
       await page.getByLabel("Description").fill(`E2E template description ${suffix}`);
-      await page.getByLabel("Preview image").selectOption({ label: imageName });
+      await page.getByLabel("Preview image").fill(String(mediaId));
       await page.getByRole("button", { name: "Create template" }).click();
 
       const createdRow = await findTableRowByText(page, code);
@@ -157,7 +157,7 @@ test.describe("admin media, template, and site settings flows", () => {
         await deleteIfPresent(page, `/api/templates/${templateId}`);
       }
       if (mediaId !== null) {
-        await deleteIfPresent(page, `/api/media/${mediaId}`);
+        await deleteIfPresent(page, `/api/admin/sites/default/media/${mediaId}`);
       }
     }
   });
@@ -169,7 +169,7 @@ test.describe("admin media, template, and site settings flows", () => {
     await loginAsConfiguredUser(page);
 
     try {
-      originalSettings = await apiFetch<SiteSettings>(page, "/api/site-settings");
+      originalSettings = await apiFetch<SiteSettings>(page, "/api/admin/sites/default/site-settings");
       await openAdminNavigationPage(page, "Site Settings", "/site-settings");
 
       await page.getByLabel("Site name").fill(`E2E CMS ${suffix}`);
@@ -186,7 +186,7 @@ test.describe("admin media, template, and site settings flows", () => {
       await expectNoFormErrors(page);
     } finally {
       if (originalSettings !== null) {
-        await apiFetch(page, "/api/site-settings", {
+        await apiFetch(page, "/api/admin/sites/default/site-settings", {
           method: "PUT",
           body: originalSettings,
         });

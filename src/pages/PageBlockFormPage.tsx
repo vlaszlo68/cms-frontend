@@ -4,10 +4,13 @@ import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/httpClient";
 import * as pageApi from "../api/pageApi";
 import * as pageBlockApi from "../api/pageBlockApi";
+import { getCollections } from "../api/contentApi";
 import ButtonLabel from "../components/ui/ButtonLabel";
 import type { Page } from "../models/page";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { useSiteContext } from "../sites/SiteContext";
+import { parseContentCollectionBlockConfig, type ContentCollectionBlockConfig } from "../models/pageBlock";
+import type { ContentCollection } from "../models/content";
 
 type PageBlockFormState = {
   title: string;
@@ -50,6 +53,9 @@ export default function PageBlockFormPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [collections, setCollections] = useState<ContentCollection[]>([]);
+  const [collectionConfig, setCollectionConfig] = useState<ContentCollectionBlockConfig>(parseContentCollectionBlockConfig());
+  const [collectionLoadError, setCollectionLoadError] = useState("");
 
   useEffect(() => {
     if (hasInvalidId || !pageId) {
@@ -59,15 +65,18 @@ export default function PageBlockFormPage() {
     async function loadData() {
       setIsLoading(true);
       setError("");
+      setCollectionLoadError("");
 
       try {
-        const [loadedPage, block] = await Promise.all([
+        const [loadedPage, block, loadedCollections] = await Promise.all([
           pageApi.getPage(selectedSite!.code, pageId as number),
           editedBlockId
             ? pageBlockApi.getBlock(selectedSite!.code, pageId as number, editedBlockId)
             : Promise.resolve(null),
+          getCollections(selectedSite!.code),
         ]);
         setPage(loadedPage);
+        setCollections(loadedCollections);
 
         if (block) {
           if (block.pageId !== pageId) {
@@ -82,9 +91,12 @@ export default function PageBlockFormPage() {
             visible: block.visible,
             configJson: block.configJson ?? "",
           });
+          if (block.blockType === "CONTENT_COLLECTION") setCollectionConfig(parseContentCollectionBlockConfig(block.configJson));
         }
       } catch (caughtError) {
-        setError(getErrorMessage(caughtError, t("pageBlockCouldNotBeLoaded")));
+        const message = getErrorMessage(caughtError, t("pageBlockCouldNotBeLoaded"));
+        setError(message);
+        setCollectionLoadError(message);
       } finally {
         setIsLoading(false);
       }
@@ -109,6 +121,10 @@ export default function PageBlockFormPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    if (form.blockType === "CONTENT_COLLECTION" && !collectionConfig.collectionCode.trim()) {
+      setError("Select a collection before saving this block.");
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -118,7 +134,9 @@ export default function PageBlockFormPage() {
         blockType: form.blockType.trim(),
         sortOrder: Number(form.sortOrder),
         visible: form.visible,
-        configJson: form.configJson.trim() || null,
+        configJson: form.blockType === "CONTENT_COLLECTION"
+          ? JSON.stringify({ ...collectionConfig, collectionCode: collectionConfig.collectionCode.trim().toUpperCase() })
+          : form.configJson.trim() || null,
       };
 
       if (editedBlockId) {
@@ -175,11 +193,18 @@ export default function PageBlockFormPage() {
                 {t("blockType")}
                 <input
                   name="blockType"
+                  list="page-block-types"
                   onChange={(event) => updateForm("blockType", event.target.value)}
                   required
                   type="text"
                   value={form.blockType}
                 />
+                <datalist id="page-block-types">
+                  <option value="HERO" />
+                  <option value="TEXT" />
+                  <option value="CTA" />
+                  <option value="CONTENT_COLLECTION" />
+                </datalist>
               </label>
 
               <label>
@@ -205,7 +230,19 @@ export default function PageBlockFormPage() {
               </label>
             </div>
 
-            <label>
+            {form.blockType === "CONTENT_COLLECTION" ? <fieldset><legend>Content collection</legend>
+              {collectionLoadError && <div className="error-message">Collections could not be loaded: {collectionLoadError}</div>}
+              <label>Collection
+                <select required value={collectionConfig.collectionCode} onChange={(event) => setCollectionConfig((current) => ({ ...current, collectionCode: event.target.value }))}>
+                  <option value="">Select a collection</option>
+                  {collections.map((collection) => <option key={collection.id} value={collection.code}>{collection.name} ({collection.code}) — {collection.contentType} — {collection.active ? "active" : "inactive"}</option>)}
+                </select>
+              </label>
+              {collectionConfig.collectionCode && !collections.some((collection) => collection.code === collectionConfig.collectionCode) && <div className="error-message">The saved collection is no longer available for this Site. Select another collection.</div>}
+              {!collections.find((collection) => collection.code === collectionConfig.collectionCode)?.active && collectionConfig.collectionCode && <p className="form-help">Inactive collections remain editable but are unavailable publicly.</p>}
+              <label>Display mode<select value={collectionConfig.displayMode} onChange={(event) => setCollectionConfig((current) => ({ ...current, displayMode: event.target.value as ContentCollectionBlockConfig["displayMode"] }))}><option value="CARDS">Cards</option><option value="COMPACT_LIST">Compact list</option></select></label>
+              <label className="checkbox-field"><input checked={collectionConfig.paginationEnabled} type="checkbox" onChange={(event) => setCollectionConfig((current) => ({ ...current, paginationEnabled: event.target.checked }))} />Enable pagination</label>
+            </fieldset> : <label>
               {t("configJson")}
               <textarea
                 name="configJson"
@@ -214,7 +251,7 @@ export default function PageBlockFormPage() {
                 rows={16}
                 value={form.configJson}
               />
-            </label>
+            </label>}
 
             <div className="form-actions">
               <button disabled={isSubmitting} type="submit">
