@@ -119,15 +119,48 @@ test.describe("admin page block CRUD", () => {
     } finally {
       try {
         if (createdBlockId !== null) {
-          await apiFetch(page, `/api/page-blocks/${createdBlockId}`, { method: "DELETE" });
+          await apiFetch(page, `/api/admin/sites/default/pages/${createdPageId}/blocks/${createdBlockId}`, { method: "DELETE" });
           createdBlockId = null;
         }
       } finally {
         if (createdPageId !== null) {
-          await deleteIfPresent(page, `/api/pages/${createdPageId}`);
+          await deleteIfPresent(page, `/api/admin/sites/default/pages/${createdPageId}`);
           createdPageId = null;
         }
       }
+    }
+  });
+
+  test("persists CONTENT_COLLECTION presentation configuration", async ({ page }) => {
+    const suffix = Date.now().toString();
+    let collectionId: number | null = null;
+    let pageId: number | null = null;
+    let blockId: number | null = null;
+    await loginAsConfiguredUser(page);
+    try {
+      const collection = await apiFetch<{ id: number; code: string }>(page, "/api/admin/sites/default/content-collections", { method: "POST", body: { code: `E2E-COLLECTION-${suffix}`, name: `E2E Collection ${suffix}`, contentType: "NEWS", groupCode: null, sort: "PUBLISHED_DESC", pageSize: 12, active: true } });
+      collectionId = collection.id;
+      const createdPage = await apiFetch<{ id: number }>(page, "/api/admin/sites/default/pages", { method: "POST", body: { title: `E2E Collection Page ${suffix}`, slug: `e2e-collection-page-${suffix}`, content: null, pageType: "BLOCK", status: "DRAFT", templateCode: null, homepage: false, menuVisible: false } });
+      pageId = createdPage.id;
+      await openAdminNavigationPage(page, "Pages", "/pages");
+      const pageRow = await findTableRowByText(page, `e2e-collection-page-${suffix}`);
+      await pageRow.getByRole("link", { name: "Blocks" }).click();
+      await page.getByRole("link", { name: "New page block" }).click();
+      await page.getByLabel("Block type").fill("CONTENT_COLLECTION");
+      await page.getByLabel("Collection").selectOption(collection.code);
+      await page.getByLabel("Display mode").selectOption("COMPACT_LIST");
+      await page.getByLabel("Enable pagination").uncheck();
+      await page.getByRole("button", { name: "Create page block" }).click();
+      const row = await findTableRowByText(page, "CONTENT_COLLECTION");
+      blockId = idFromPath(await getRowLinkPath(row, "Edit"), /\/blocks\/(\d+)\/edit/);
+      await row.getByRole("link", { name: "Edit" }).click();
+      await expect(page.getByLabel("Collection")).toHaveValue(collection.code);
+      await expect(page.getByLabel("Display mode")).toHaveValue("COMPACT_LIST");
+      await expect(page.getByLabel("Enable pagination")).not.toBeChecked();
+    } finally {
+      if (blockId !== null && pageId !== null) await deleteIfPresent(page, `/api/admin/sites/default/pages/${pageId}/blocks/${blockId}`);
+      if (pageId !== null) await deleteIfPresent(page, `/api/admin/sites/default/pages/${pageId}`);
+      if (collectionId !== null) await deleteIfPresent(page, `/api/admin/sites/default/content-collections/${collectionId}`);
     }
   });
 });

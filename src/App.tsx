@@ -25,6 +25,10 @@ import SitesPage from "./pages/SitesPage";
 import SiteFormPage from "./pages/SiteFormPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
 import ApplicationFormPage from "./pages/ApplicationFormPage";
+import ContentPage from "./pages/ContentPage";
+import ContentFormPage from "./pages/ContentFormPage";
+import TagsPage from "./pages/TagsPage";
+import ContentCollectionsPage from "./pages/ContentCollectionsPage";
 
 /**
  * Guards routes that require an authenticated CMS session.
@@ -160,6 +164,14 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/content"
+        element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ContentPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>}
+      />
+      <Route path="/content/new" element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ContentFormPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>} />
+      <Route path="/content/:id/edit" element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ContentFormPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>} />
+      <Route path="/content/tags" element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><TagsPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>} />
+      <Route path="/content/collections" element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ContentCollectionsPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>} />
       <Route
         path="/applications"
         element={<ProtectedRoute><AdminRoute><AppLayout><SiteOwnedRoute><ApplicationsPage /></SiteOwnedRoute></AppLayout></AdminRoute></ProtectedRoute>}
